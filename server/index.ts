@@ -4,6 +4,57 @@ import cors from "cors";
 import crypto from "crypto";
 import { handleDemo } from "./routes/demo";
 
+// Initialize database tables
+async function initializeAdminTable() {
+  try {
+    const baseUrl = "https://cornbelt.co.ke";
+
+    // Create admin_users table
+    const adminTableData = {
+      create_table: true,
+      columns: {
+        id: "INT AUTO_INCREMENT PRIMARY KEY",
+        email: "VARCHAR(255) NOT NULL UNIQUE",
+        password: "VARCHAR(255) NOT NULL",
+        fullName: "VARCHAR(255) NOT NULL",
+        createdAt: "DATETIME DEFAULT CURRENT_TIMESTAMP",
+      },
+    };
+
+    await fetch(`${baseUrl}/api.php?table=admin_users`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(adminTableData),
+    });
+
+    console.log("Admin table initialized");
+
+    // Create contact_submissions table
+    const contactTableData = {
+      create_table: true,
+      columns: {
+        id: "INT AUTO_INCREMENT PRIMARY KEY",
+        fullName: "VARCHAR(255) NOT NULL",
+        email: "VARCHAR(255) NOT NULL",
+        phone: "VARCHAR(20) NOT NULL",
+        subject: "VARCHAR(255) NOT NULL",
+        message: "TEXT NOT NULL",
+        createdAt: "DATETIME DEFAULT CURRENT_TIMESTAMP",
+      },
+    };
+
+    await fetch(`${baseUrl}/api.php?table=contact_submissions`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(contactTableData),
+    });
+
+    console.log("Contact submissions table initialized");
+  } catch (error) {
+    console.error("Error initializing tables:", error);
+  }
+}
+
 // Hash password utility
 function hashPassword(password: string): string {
   return crypto.createHash("sha256").update(password).digest("hex");
