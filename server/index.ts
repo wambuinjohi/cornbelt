@@ -50,6 +50,28 @@ async function initializeAdminTable() {
     });
 
     console.log("Contact submissions table initialized");
+
+    // Create hero_slider_images table
+    const heroTableData = {
+      create_table: true,
+      columns: {
+        id: "INT AUTO_INCREMENT PRIMARY KEY",
+        filename: "VARCHAR(255) NOT NULL",
+        imageUrl: "VARCHAR(500) NOT NULL",
+        altText: "VARCHAR(255)",
+        displayOrder: "INT DEFAULT 0",
+        createdAt: "DATETIME DEFAULT CURRENT_TIMESTAMP",
+        updatedAt: "DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
+      },
+    };
+
+    await fetch(`${baseUrl}/api.php?table=hero_slider_images`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(heroTableData),
+    });
+
+    console.log("Hero slider images table initialized");
   } catch (error) {
     console.error("Error initializing tables:", error);
   }
