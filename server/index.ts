@@ -235,24 +235,44 @@ export function createServer() {
       });
     }
 
-    // Log contact submission (in a real app, you'd save to database or send email)
-    console.log("New contact form submission:", {
-      timestamp: new Date().toISOString(),
-      fullName,
-      email,
-      phone,
-      subject,
-      message,
-    });
+    try {
+      // Save to database
+      const result = await apiCall("POST", "contact_submissions", {
+        fullName,
+        email,
+        phone,
+        subject,
+        message,
+        createdAt: new Date().toISOString(),
+      });
 
-    // Send success response
-    res.json({
-      success: true,
-      message: "Your message has been received. We will get back to you soon.",
-      data: {
-        submittedAt: new Date().toISOString(),
-      },
-    });
+      console.log("New contact form submission saved:", {
+        id: result.id,
+        timestamp: new Date().toISOString(),
+        fullName,
+        email,
+      });
+
+      // Send success response
+      res.json({
+        success: true,
+        message: "Your message has been received. We will get back to you soon.",
+        data: {
+          submittedAt: new Date().toISOString(),
+          id: result.id,
+        },
+      });
+    } catch (error) {
+      console.error("Error saving contact submission:", error);
+      // Still return success to user but log the error
+      res.json({
+        success: true,
+        message: "Your message has been received. We will get back to you soon.",
+        data: {
+          submittedAt: new Date().toISOString(),
+        },
+      });
+    }
   });
 
   return app;
