@@ -310,10 +310,11 @@ export function createServer() {
 
     try {
       const filename = `hero-${Date.now()}-${Math.random().toString(36).substr(2, 9)}.jpg`;
+      const storagePath = `https://cornbelt.co.ke/sliderimages/${filename}`;
 
       const result = await apiCall("POST", "hero_slider_images", {
         filename,
-        imageUrl,
+        imageUrl: storagePath,
         altText: altText || "Hero slider image",
         displayOrder: displayOrder || 0,
       });
@@ -326,6 +327,7 @@ export function createServer() {
         success: true,
         message: "Image added successfully",
         id: result.id,
+        imageUrl: storagePath,
       });
     } catch (error) {
       console.error("Error adding hero image:", error);
