@@ -68,26 +68,26 @@ export default function Index() {
             {/* Stats */}
             <div className="grid grid-cols-3 gap-4 md:gap-8 max-w-2xl mx-auto">
               <div className="text-center">
-                <div className="text-3xl md:text-4xl font-bold text-primary mb-2">
+                <div className="text-3xl md:text-4xl font-bold text-secondary mb-2 drop-shadow">
                   25+
                 </div>
-                <p className="text-sm md:text-base text-muted-foreground">
+                <p className="text-sm md:text-base text-white/80 drop-shadow">
                   Years Operating
                 </p>
               </div>
               <div className="text-center">
-                <div className="text-3xl md:text-4xl font-bold text-primary mb-2">
+                <div className="text-3xl md:text-4xl font-bold text-secondary mb-2 drop-shadow">
                   100K+
                 </div>
-                <p className="text-sm md:text-base text-muted-foreground">
+                <p className="text-sm md:text-base text-white/80 drop-shadow">
                   Happy Families
                 </p>
               </div>
               <div className="text-center">
-                <div className="text-3xl md:text-4xl font-bold text-primary mb-2">
+                <div className="text-3xl md:text-4xl font-bold text-secondary mb-2 drop-shadow">
                   2
                 </div>
-                <p className="text-sm md:text-base text-muted-foreground">
+                <p className="text-sm md:text-base text-white/80 drop-shadow">
                   Premium Products
                 </p>
               </div>
