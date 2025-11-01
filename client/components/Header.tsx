@@ -11,11 +11,13 @@ export default function Header() {
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2 font-bold text-lg">
           <div className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
-              <span className="text-white font-bold text-sm">CB</span>
-            </div>
+            <img
+              src="https://cdn.builder.io/api/v1/image/assets%2Fbf7a511dd4454ae88c7c49627a9a0f54%2F80b3bed3a8e14bf3ae5cc941d2cfab50?format=webp&width=100"
+              alt="Cornbelt Logo"
+              className="w-10 h-10 object-contain"
+            />
             <div className="hidden sm:block">
-              <div className="text-primary font-bold">CORNBELT</div>
+              <div className="text-primary font-bold text-sm">CORNBELT</div>
               <div className="text-xs text-muted-foreground">FLOUR MILL</div>
             </div>
           </div>
