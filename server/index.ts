@@ -1170,7 +1170,8 @@ export function createServer() {
 
   app.get("/api/chat/history", async (req, res) => {
     const sessionId = req.query.sessionId as string;
-    if (!sessionId) return res.status(400).json({ error: "sessionId required" });
+    if (!sessionId)
+      return res.status(400).json({ error: "sessionId required" });
 
     try {
       const all = await apiCall("GET", "chats");
@@ -1187,7 +1188,8 @@ export function createServer() {
   // Admin endpoints to manage bot responses and view chats
   app.get("/api/admin/bot-responses", async (req, res) => {
     const token = req.headers.authorization?.split(" ")[1];
-    if (!token || !verifyToken(token)) return res.status(401).json({ error: "Unauthorized" });
+    if (!token || !verifyToken(token))
+      return res.status(401).json({ error: "Unauthorized" });
     try {
       const responses = await apiCall("GET", "bot_responses");
       res.json(Array.isArray(responses) ? responses : []);
@@ -1199,11 +1201,17 @@ export function createServer() {
 
   app.post("/api/admin/bot-responses", async (req, res) => {
     const token = req.headers.authorization?.split(" ")[1];
-    if (!token || !verifyToken(token)) return res.status(401).json({ error: "Unauthorized" });
+    if (!token || !verifyToken(token))
+      return res.status(401).json({ error: "Unauthorized" });
     const { keyword, answer } = req.body;
-    if (!keyword || !answer) return res.status(400).json({ error: "keyword and answer required" });
+    if (!keyword || !answer)
+      return res.status(400).json({ error: "keyword and answer required" });
     try {
-      const result = await apiCall("POST", "bot_responses", { keyword, answer, createdAt: new Date().toISOString() });
+      const result = await apiCall("POST", "bot_responses", {
+        keyword,
+        answer,
+        createdAt: new Date().toISOString(),
+      });
       res.json({ success: true, id: result.id });
     } catch (error) {
       console.error("Error creating bot response:", error);
@@ -1213,13 +1221,15 @@ export function createServer() {
 
   app.put("/api/admin/bot-responses/:id", async (req, res) => {
     const token = req.headers.authorization?.split(" ")[1];
-    if (!token || !verifyToken(token)) return res.status(401).json({ error: "Unauthorized" });
+    if (!token || !verifyToken(token))
+      return res.status(401).json({ error: "Unauthorized" });
     const { id } = req.params;
     const { keyword, answer } = req.body;
     const updates: any = {};
     if (keyword !== undefined) updates.keyword = keyword;
     if (answer !== undefined) updates.answer = answer;
-    if (Object.keys(updates).length === 0) return res.status(400).json({ error: "No fields to update" });
+    if (Object.keys(updates).length === 0)
+      return res.status(400).json({ error: "No fields to update" });
     try {
       await apiCall("PUT", "bot_responses", updates, parseInt(id));
       res.json({ success: true });
@@ -1231,7 +1241,8 @@ export function createServer() {
 
   app.delete("/api/admin/bot-responses/:id", async (req, res) => {
     const token = req.headers.authorization?.split(" ")[1];
-    if (!token || !verifyToken(token)) return res.status(401).json({ error: "Unauthorized" });
+    if (!token || !verifyToken(token))
+      return res.status(401).json({ error: "Unauthorized" });
     const { id } = req.params;
     try {
       await apiCall("DELETE", "bot_responses", null, parseInt(id));
@@ -1244,7 +1255,8 @@ export function createServer() {
 
   app.get("/api/admin/chat-sessions", async (req, res) => {
     const token = req.headers.authorization?.split(" ")[1];
-    if (!token || !verifyToken(token)) return res.status(401).json({ error: "Unauthorized" });
+    if (!token || !verifyToken(token))
+      return res.status(401).json({ error: "Unauthorized" });
     try {
       const all = await apiCall("GET", "chats");
       const sessions: Record<string, any[]> = {};
@@ -1254,7 +1266,12 @@ export function createServer() {
           sessions[m.sessionId].push(m);
         }
       }
-      const sessionList = Object.keys(sessions).map((sid) => ({ sessionId: sid, lastMessageAt: sessions[sid][sessions[sid].length - 1]?.createdAt || null, messages: sessions[sid] }));
+      const sessionList = Object.keys(sessions).map((sid) => ({
+        sessionId: sid,
+        lastMessageAt:
+          sessions[sid][sessions[sid].length - 1]?.createdAt || null,
+        messages: sessions[sid],
+      }));
       res.json(sessionList);
     } catch (error) {
       console.error("Error fetching chat sessions:", error);
@@ -1264,11 +1281,14 @@ export function createServer() {
 
   app.get("/api/admin/chat/:sessionId", async (req, res) => {
     const token = req.headers.authorization?.split(" ")[1];
-    if (!token || !verifyToken(token)) return res.status(401).json({ error: "Unauthorized" });
+    if (!token || !verifyToken(token))
+      return res.status(401).json({ error: "Unauthorized" });
     const { sessionId } = req.params;
     try {
       const all = await apiCall("GET", "chats");
-      const messages = (Array.isArray(all) ? all.filter((m: any) => m.sessionId === sessionId) : []);
+      const messages = Array.isArray(all)
+        ? all.filter((m: any) => m.sessionId === sessionId)
+        : [];
       res.json(messages);
     } catch (error) {
       console.error("Error fetching chat messages:", error);

@@ -13,17 +13,27 @@ export default function ChatWidget() {
   const [open, setOpen] = useState(false);
   const [sessionId] = useState(generateSessionId());
   const [input, setInput] = useState("");
-  const [messages, setMessages] = useState<{ sender: string; message: string; createdAt?: string }[]>([]);
+  const [messages, setMessages] = useState<
+    { sender: string; message: string; createdAt?: string }[]
+  >([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     // load history
     const load = async () => {
       try {
-        const res = await fetch(`/api/chat/history?sessionId=${encodeURIComponent(sessionId)}`);
+        const res = await fetch(
+          `/api/chat/history?sessionId=${encodeURIComponent(sessionId)}`,
+        );
         if (res.ok) {
           const data = await res.json();
-          setMessages(data.map((m: any) => ({ sender: m.sender, message: m.message, createdAt: m.createdAt })));
+          setMessages(
+            data.map((m: any) => ({
+              sender: m.sender,
+              message: m.message,
+              createdAt: m.createdAt,
+            })),
+          );
         }
       } catch (e) {
         console.error(e);
@@ -35,7 +45,10 @@ export default function ChatWidget() {
   const sendMessage = async () => {
     if (!input.trim()) return;
     const text = input.trim();
-    setMessages((m) => [...m, { sender: "user", message: text, createdAt: new Date().toISOString() }]);
+    setMessages((m) => [
+      ...m,
+      { sender: "user", message: text, createdAt: new Date().toISOString() },
+    ]);
     setInput("");
     setLoading(true);
     try {
@@ -47,7 +60,14 @@ export default function ChatWidget() {
       if (res.ok) {
         const data = await res.json();
         if (data.reply) {
-          setMessages((m) => [...m, { sender: "bot", message: data.reply, createdAt: new Date().toISOString() }]);
+          setMessages((m) => [
+            ...m,
+            {
+              sender: "bot",
+              message: data.reply,
+              createdAt: new Date().toISOString(),
+            },
+          ]);
         }
       }
     } catch (e) {
@@ -62,11 +82,21 @@ export default function ChatWidget() {
       <div className="flex flex-col items-end">
         {open && (
           <div className="w-80 max-h-96 bg-background rounded-lg shadow-lg border border-primary/10 overflow-hidden flex flex-col">
-            <div className="px-4 py-2 bg-primary/5 border-b border-primary/10 font-semibold">Help Chat</div>
-            <div className="p-3 overflow-auto flex-1 space-y-2" style={{ minHeight: 200 }}>
+            <div className="px-4 py-2 bg-primary/5 border-b border-primary/10 font-semibold">
+              Help Chat
+            </div>
+            <div
+              className="p-3 overflow-auto flex-1 space-y-2"
+              style={{ minHeight: 200 }}
+            >
               {messages.map((m, idx) => (
-                <div key={idx} className={`flex ${m.sender === "bot" ? "justify-start" : "justify-end"}`}>
-                  <div className={`px-3 py-2 rounded-md ${m.sender === "bot" ? "bg-primary/5 text-foreground" : "bg-primary text-white"}`}>
+                <div
+                  key={idx}
+                  className={`flex ${m.sender === "bot" ? "justify-start" : "justify-end"}`}
+                >
+                  <div
+                    className={`px-3 py-2 rounded-md ${m.sender === "bot" ? "bg-primary/5 text-foreground" : "bg-primary text-white"}`}
+                  >
                     {m.message}
                   </div>
                 </div>
@@ -83,7 +113,11 @@ export default function ChatWidget() {
                   className="flex-1 border border-primary/10 rounded-md px-3 py-2 bg-transparent"
                   placeholder="Type your message..."
                 />
-                <button onClick={sendMessage} disabled={loading} className="px-3 py-2 bg-primary text-white rounded-md">
+                <button
+                  onClick={sendMessage}
+                  disabled={loading}
+                  className="px-3 py-2 bg-primary text-white rounded-md"
+                >
                   Send
                 </button>
               </div>
