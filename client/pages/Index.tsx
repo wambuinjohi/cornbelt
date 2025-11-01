@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import HeroSlider from "@/components/HeroSlider";
+import ProductGallery from "@/components/ProductGallery";
 import {
   Leaf,
   Award,
@@ -158,7 +159,7 @@ export default function Index() {
                 <div className="h-72 bg-gradient-to-br from-secondary to-secondary/50 flex items-center justify-center">
                   <div className="text-center space-y-3">
                     <div className="inline-flex items-center justify-center w-32 h-32 bg-white/20 rounded-2xl">
-                      <span className="text-6xl">😊</span>
+                      <span className="text-6xl">���</span>
                     </div>
                   </div>
                 </div>
