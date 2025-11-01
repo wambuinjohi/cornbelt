@@ -589,6 +589,56 @@ export default function Index() {
           </div>
         </section>
 
+        {/* Brand Presence Section */}
+        <section className="py-20 bg-gradient-to-br from-primary/5 via-background to-secondary/5">
+          <div className="container mx-auto px-4 md:px-6">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+                Cornbelt in Your Community
+              </h2>
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                Find us at retailers, markets, and events across Kenya
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
+                <img src="https://cdn.builder.io/api/v1/image/assets%2F1ffce8bff4d5493bafecc479d3963466%2F5ff5547835bc43a1b1765ac4be6ec727?format=webp&width=800" alt="Cornbelt teardrop flag at events" className="w-full h-64 object-cover" />
+                <div className="p-4 bg-white">
+                  <h3 className="font-semibold text-foreground">Event Marketing</h3>
+                  <p className="text-sm text-muted-foreground">Cornbelt at community events</p>
+                </div>
+              </div>
+
+              <div className="rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
+                <img src="https://cdn.builder.io/api/v1/image/assets%2F1ffce8bff4d5493bafecc479d3963466%2F16328bab2c0943c487599e9b3169b599?format=webp&width=800" alt="Cornbelt rollup banner display" className="w-full h-64 object-cover" />
+                <div className="p-4 bg-white">
+                  <h3 className="font-semibold text-foreground">Brand Displays</h3>
+                  <p className="text-sm text-muted-foreground">Visible in stores nationwide</p>
+                </div>
+              </div>
+
+              <div className="rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
+                <img src="https://cdn.builder.io/api/v1/image/assets%2F1ffce8bff4d5493bafecc479d3963466%2F64d7a753a7854a4bab6cb64fcedc87d9?format=webp&width=800" alt="Jirani with families in communities" className="w-full h-64 object-cover" />
+                <div className="p-4 bg-white">
+                  <h3 className="font-semibold text-foreground">Community Trust</h3>
+                  <p className="text-sm text-muted-foreground">Trusted by Kenyan families</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="rounded-2xl overflow-hidden shadow-lg">
+                <img src="https://cdn.builder.io/api/v1/image/assets%2F1ffce8bff4d5493bafecc479d3963466%2Ff82178ff7d644c3a9cabfabe9e223a8f?format=webp&width=800" alt="Jirani maize meal packaging showcase" className="w-full h-64 object-cover" />
+              </div>
+
+              <div className="rounded-2xl overflow-hidden shadow-lg">
+                <img src="https://cdn.builder.io/api/v1/image/assets%2F1ffce8bff4d5493bafecc479d3963466%2Ff174d02acd5d44648136ae62db46a06a?format=webp&width=800" alt="Jirani products in retail environment" className="w-full h-64 object-cover" />
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* How It's Made Section */}
         <section className="py-20 bg-gradient-to-br from-primary/5 via-background to-secondary/5">
           <div className="container mx-auto px-4 md:px-6">
