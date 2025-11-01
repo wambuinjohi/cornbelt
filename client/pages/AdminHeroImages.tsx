@@ -24,7 +24,7 @@ interface HeroImage {
 }
 
 interface FormData {
-  imageUrl: string;
+  imageUrl?: string;
   altText: string;
   displayOrder: number;
 }
