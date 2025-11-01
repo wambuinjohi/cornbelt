@@ -195,14 +195,28 @@ function hashPassword(password: string): string {
   return crypto.createHash("sha256").update(password).digest("hex");
 }
 
+// Base64URL helpers
+function base64urlEncode(str: string): string {
+  return Buffer.from(str, "utf8")
+    .toString("base64")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
+}
+function base64urlDecode(str: string): string {
+  const pad = str.length % 4 === 0 ? "" : "=".repeat(4 - (str.length % 4));
+  const b64 = str.replace(/-/g, "+").replace(/_/g, "/") + pad;
+  return Buffer.from(b64, "base64").toString("utf8");
+}
+
 // Generate JWT token
 function generateToken(adminId: number): string {
-  const header = btoa(JSON.stringify({ alg: "HS256", typ: "JWT" }));
-  const payload = btoa(
+  const header = base64urlEncode(JSON.stringify({ alg: "HS256", typ: "JWT" }));
+  const payload = base64urlEncode(
     JSON.stringify({
       id: adminId,
       iat: Math.floor(Date.now() / 1000),
-      exp: Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60, // 7 days
+      exp: Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60,
     }),
   );
   const signature = crypto
@@ -218,11 +232,17 @@ function verifyToken(token: string): any {
   try {
     const parts = token.split(".");
     if (parts.length !== 3) return null;
+    const [header, payload, signature] = parts;
 
-    const payload = JSON.parse(atob(parts[1]));
-    if (payload.exp < Math.floor(Date.now() / 1000)) return null;
+    const expectedSig = crypto
+      .createHmac("sha256", process.env.JWT_SECRET || "secret-key")
+      .update(`${header}.${payload}`)
+      .digest("base64url");
+    if (signature !== expectedSig) return null;
 
-    return payload;
+    const payloadJson = JSON.parse(base64urlDecode(payload));
+    if (payloadJson.exp < Math.floor(Date.now() / 1000)) return null;
+    return payloadJson;
   } catch {
     return null;
   }
