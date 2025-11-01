@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import {
@@ -61,12 +61,17 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       >
         {/* Sidebar Header */}
         <div className="flex items-center justify-between h-16 px-6 border-b border-primary/10">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <Settings className="w-5 h-5 text-primary-foreground" />
+          <Link to="/admin/dashboard" className="flex items-center gap-2">
+            <img
+              src="https://cdn.builder.io/api/v1/image/assets%2Fbf7a511dd4454ae88c7c49627a9a0f54%2F80b3bed3a8e14bf3ae5cc941d2cfab50?format=webp&width=100"
+              alt="Cornbelt Logo"
+              className="w-8 h-8 object-contain rounded"
+            />
+            <div className="leading-tight">
+              <div className="font-bold text-sm text-foreground">CORNBELT</div>
+              <div className="text-xs text-muted-foreground">Admin</div>
             </div>
-            <span className="font-bold text-foreground">Cornbelt Admin</span>
-          </div>
+          </Link>
           <Button
             onClick={() => setIsMobileSidebarOpen(false)}
             variant="ghost"
