@@ -1,5 +1,6 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import AdminLayout from "@/components/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -263,30 +264,14 @@ export default function AdminHeroImages() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-primary/10 bg-primary/5">
-        <div className="container mx-auto px-4 md:px-6 py-4">
-          <Button
-            onClick={() => navigate("/admin/dashboard")}
-            variant="ghost"
-            size="sm"
-            className="gap-2 mb-4"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Dashboard
-          </Button>
-          <h1 className="text-3xl font-bold text-primary">
-            Manage Hero Slider Images
-          </h1>
-          <p className="text-muted-foreground mt-2">
-            Add, edit, and organize hero slider images
-          </p>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="container mx-auto px-4 md:px-6 py-12">
+    <AdminLayout>
+      <div className="container mx-auto px-4 md:px-6 py-12">
+        <h1 className="text-3xl font-bold text-primary">
+          Manage Hero Slider Images
+        </h1>
+        <p className="text-muted-foreground mt-2">
+          Add, edit, and organize hero slider images
+        </p>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Add Image Form */}
           <div className="bg-primary/5 p-8 rounded-lg border border-primary/10">
@@ -536,7 +521,7 @@ export default function AdminHeroImages() {
             )}
           </div>
         </div>
-      </main>
-    </div>
+      </div>
+    </AdminLayout>
   );
 }
