@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
-import { LogOut, LayoutDashboard, Mail, Images } from "lucide-react";
+import AdminLayout from "@/components/AdminLayout";
+import { Mail, Images } from "lucide-react";
 
 interface AdminUser {
   id: number;
