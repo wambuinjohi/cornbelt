@@ -74,6 +74,117 @@ async function initializeAdminTable() {
     });
 
     console.log("Hero slider images table initialized");
+
+    // Create product_images table
+    const productTableData = {
+      create_table: true,
+      columns: {
+        id: "INT AUTO_INCREMENT PRIMARY KEY",
+        productId: "VARCHAR(255) NOT NULL",
+        filename: "VARCHAR(255) NOT NULL",
+        imageUrl: "VARCHAR(500) NOT NULL",
+        altText: "VARCHAR(255)",
+        displayOrder: "INT DEFAULT 0",
+        createdAt: "DATETIME DEFAULT CURRENT_TIMESTAMP",
+        updatedAt:
+          "DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
+      },
+    };
+
+    await fetch(`${baseUrl}/api.php?table=product_images`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(productTableData),
+    });
+
+    console.log("Product images table initialized");
+
+    // Create testimonials table
+    const testimonialTableData = {
+      create_table: true,
+      columns: {
+        id: "INT AUTO_INCREMENT PRIMARY KEY",
+        fullName: "VARCHAR(255) NOT NULL",
+        location: "VARCHAR(255)",
+        testimonialText: "TEXT NOT NULL",
+        imageUrl: "VARCHAR(500)",
+        rating: "INT DEFAULT 5",
+        isPublished: "BOOLEAN DEFAULT true",
+        displayOrder: "INT DEFAULT 0",
+        createdAt: "DATETIME DEFAULT CURRENT_TIMESTAMP",
+        updatedAt:
+          "DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
+      },
+    };
+
+    await fetch(`${baseUrl}/api.php?table=testimonials`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(testimonialTableData),
+    });
+
+    console.log("Testimonials table initialized");
+
+    // Seed sample testimonials if table is empty
+    const existingTestimonials = await apiCall("GET", "testimonials");
+    if (
+      !Array.isArray(existingTestimonials) ||
+      existingTestimonials.length === 0
+    ) {
+      const sampleTestimonials = [
+        {
+          fullName: "Margaret Kipchoge",
+          location: "Nairobi, Kenya",
+          testimonialText:
+            "Cornbelt products have become a staple in our home. The quality is unmatched and my family loves the taste!",
+          rating: 5,
+          isPublished: true,
+          displayOrder: 1,
+        },
+        {
+          fullName: "James Mwangi",
+          location: "Kisumu, Kenya",
+          testimonialText:
+            "I trust Cornbelt for my kids' nutrition. The fortification gives me peace of mind knowing they're getting quality nutrition.",
+          rating: 5,
+          isPublished: true,
+          displayOrder: 2,
+        },
+        {
+          fullName: "Grace Omondi",
+          location: "Mombasa, Kenya",
+          testimonialText:
+            "The best maize meal I've used. Consistent quality, great taste, and I can always find it at my local shop!",
+          rating: 5,
+          isPublished: true,
+          displayOrder: 3,
+        },
+        {
+          fullName: "David Kariuki",
+          location: "Nakuru, Kenya",
+          testimonialText:
+            "Cornbelt's commitment to quality is evident in every package. I recommend it to all my friends and family.",
+          rating: 5,
+          isPublished: true,
+          displayOrder: 4,
+        },
+        {
+          fullName: "Ruth Kipkorir",
+          location: "Eldoret, Kenya",
+          testimonialText:
+            "The fortified maize meal has made a difference in my family's health. We've noticed improved energy levels.",
+          rating: 5,
+          isPublished: true,
+          displayOrder: 5,
+        },
+      ];
+
+      for (const testimonial of sampleTestimonials) {
+        await apiCall("POST", "testimonials", testimonial);
+      }
+
+      console.log("Sample testimonials seeded");
+    }
   } catch (error) {
     console.error("Error initializing tables:", error);
   }
@@ -310,10 +421,11 @@ export function createServer() {
 
     try {
       const filename = `hero-${Date.now()}-${Math.random().toString(36).substr(2, 9)}.jpg`;
+      const storagePath = `https://cornbelt.co.ke/sliderimages/${filename}`;
 
       const result = await apiCall("POST", "hero_slider_images", {
         filename,
-        imageUrl,
+        imageUrl: storagePath,
         altText: altText || "Hero slider image",
         displayOrder: displayOrder || 0,
       });
@@ -326,6 +438,7 @@ export function createServer() {
         success: true,
         message: "Image added successfully",
         id: result.id,
+        imageUrl: storagePath,
       });
     } catch (error) {
       console.error("Error adding hero image:", error);
@@ -469,6 +582,366 @@ export function createServer() {
       res.json(sortedImages);
     } catch (error) {
       console.error("Error fetching hero images:", error);
+      res.json([]);
+    }
+  });
+
+  // Admin product images management
+  app.get("/api/admin/product-images", async (req, res) => {
+    const token = req.headers.authorization?.split(" ")[1];
+
+    if (!token || !verifyToken(token)) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    try {
+      const images = await apiCall("GET", "product_images");
+      const sortedImages = Array.isArray(images)
+        ? images.sort((a: any, b: any) => a.displayOrder - b.displayOrder)
+        : [];
+      res.json(sortedImages);
+    } catch (error) {
+      console.error("Error fetching product images:", error);
+      res.json([]);
+    }
+  });
+
+  app.post("/api/admin/product-images", async (req, res) => {
+    const token = req.headers.authorization?.split(" ")[1];
+
+    if (!token || !verifyToken(token)) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const { productId, imageUrl, altText, displayOrder } = req.body;
+
+    if (!productId || !imageUrl) {
+      return res
+        .status(400)
+        .json({ error: "Product ID and image URL are required" });
+    }
+
+    try {
+      const filename = `product-${productId}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}.jpg`;
+      const storagePath = `https://cornbelt.co.ke/productimages/${filename}`;
+
+      const result = await apiCall("POST", "product_images", {
+        productId,
+        filename,
+        imageUrl: storagePath,
+        altText: altText || "Product image",
+        displayOrder: displayOrder || 0,
+      });
+
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      res.json({
+        success: true,
+        message: "Product image added successfully",
+        id: result.id,
+        imageUrl: storagePath,
+      });
+    } catch (error) {
+      console.error("Error adding product image:", error);
+      res.status(500).json({
+        error: error instanceof Error ? error.message : "Failed to add image",
+      });
+    }
+  });
+
+  app.put("/api/admin/product-images/:id", async (req, res) => {
+    const token = req.headers.authorization?.split(" ")[1];
+
+    if (!token || !verifyToken(token)) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const { id } = req.params;
+    const { altText, displayOrder } = req.body;
+
+    try {
+      const updates: any = {};
+      if (altText !== undefined) updates.altText = altText;
+      if (displayOrder !== undefined) updates.displayOrder = displayOrder;
+
+      if (Object.keys(updates).length === 0) {
+        return res.status(400).json({ error: "No fields to update" });
+      }
+
+      const result = await apiCall(
+        "PUT",
+        "product_images",
+        updates,
+        parseInt(id),
+      );
+
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      res.json({
+        success: true,
+        message: "Product image updated successfully",
+      });
+    } catch (error) {
+      console.error("Error updating product image:", error);
+      res.status(500).json({
+        error:
+          error instanceof Error ? error.message : "Failed to update image",
+      });
+    }
+  });
+
+  app.delete("/api/admin/product-images/:id", async (req, res) => {
+    const token = req.headers.authorization?.split(" ")[1];
+
+    if (!token || !verifyToken(token)) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const { id } = req.params;
+
+    try {
+      const result = await apiCall(
+        "DELETE",
+        "product_images",
+        null,
+        parseInt(id),
+      );
+
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      res.json({
+        success: true,
+        message: "Product image deleted successfully",
+      });
+    } catch (error) {
+      console.error("Error deleting product image:", error);
+      res.status(500).json({
+        error:
+          error instanceof Error ? error.message : "Failed to delete image",
+      });
+    }
+  });
+
+  // Public endpoint to get product images
+  app.get("/api/product-images", async (req, res) => {
+    try {
+      const productId = req.query.productId as string;
+      const images = await apiCall("GET", "product_images");
+
+      let productImages = Array.isArray(images) ? images : [];
+
+      if (productId) {
+        productImages = productImages.filter(
+          (img: any) => img.productId === productId,
+        );
+      }
+
+      const sortedImages = productImages.sort(
+        (a: any, b: any) => a.displayOrder - b.displayOrder,
+      );
+
+      res.json(sortedImages);
+    } catch (error) {
+      console.error("Error fetching product images:", error);
+      res.json([]);
+    }
+  });
+
+  // Admin testimonials management
+  app.get("/api/admin/testimonials", async (req, res) => {
+    const token = req.headers.authorization?.split(" ")[1];
+
+    if (!token || !verifyToken(token)) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    try {
+      const testimonials = await apiCall("GET", "testimonials");
+      const sortedTestimonials = Array.isArray(testimonials)
+        ? testimonials.sort((a: any, b: any) => a.displayOrder - b.displayOrder)
+        : [];
+      res.json(sortedTestimonials);
+    } catch (error) {
+      console.error("Error fetching testimonials:", error);
+      res.json([]);
+    }
+  });
+
+  app.post("/api/admin/testimonials", async (req, res) => {
+    const token = req.headers.authorization?.split(" ")[1];
+
+    if (!token || !verifyToken(token)) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const {
+      fullName,
+      location,
+      testimonialText,
+      imageUrl,
+      rating,
+      displayOrder,
+      isPublished,
+    } = req.body;
+
+    if (!fullName || !testimonialText) {
+      return res.status(400).json({
+        error: "Full name and testimonial text are required",
+      });
+    }
+
+    try {
+      const filename = imageUrl
+        ? `testimonial-${Date.now()}-${Math.random().toString(36).substr(2, 9)}.jpg`
+        : null;
+      const storagePath = filename
+        ? `https://cornbelt.co.ke/testimonials/${filename}`
+        : null;
+
+      const result = await apiCall("POST", "testimonials", {
+        fullName,
+        location: location || null,
+        testimonialText,
+        imageUrl: storagePath,
+        rating: rating || 5,
+        displayOrder: displayOrder || 0,
+        isPublished: isPublished !== false,
+      });
+
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      res.json({
+        success: true,
+        message: "Testimonial added successfully",
+        id: result.id,
+        imageUrl: storagePath,
+      });
+    } catch (error) {
+      console.error("Error adding testimonial:", error);
+      res.status(500).json({
+        error:
+          error instanceof Error ? error.message : "Failed to add testimonial",
+      });
+    }
+  });
+
+  app.put("/api/admin/testimonials/:id", async (req, res) => {
+    const token = req.headers.authorization?.split(" ")[1];
+
+    if (!token || !verifyToken(token)) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const { id } = req.params;
+    const {
+      fullName,
+      location,
+      testimonialText,
+      rating,
+      displayOrder,
+      isPublished,
+    } = req.body;
+
+    try {
+      const updates: any = {};
+      if (fullName !== undefined) updates.fullName = fullName;
+      if (location !== undefined) updates.location = location;
+      if (testimonialText !== undefined)
+        updates.testimonialText = testimonialText;
+      if (rating !== undefined) updates.rating = rating;
+      if (displayOrder !== undefined) updates.displayOrder = displayOrder;
+      if (isPublished !== undefined) updates.isPublished = isPublished;
+
+      if (Object.keys(updates).length === 0) {
+        return res.status(400).json({ error: "No fields to update" });
+      }
+
+      const result = await apiCall(
+        "PUT",
+        "testimonials",
+        updates,
+        parseInt(id),
+      );
+
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      res.json({
+        success: true,
+        message: "Testimonial updated successfully",
+      });
+    } catch (error) {
+      console.error("Error updating testimonial:", error);
+      res.status(500).json({
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to update testimonial",
+      });
+    }
+  });
+
+  app.delete("/api/admin/testimonials/:id", async (req, res) => {
+    const token = req.headers.authorization?.split(" ")[1];
+
+    if (!token || !verifyToken(token)) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const { id } = req.params;
+
+    try {
+      const result = await apiCall(
+        "DELETE",
+        "testimonials",
+        null,
+        parseInt(id),
+      );
+
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      res.json({
+        success: true,
+        message: "Testimonial deleted successfully",
+      });
+    } catch (error) {
+      console.error("Error deleting testimonial:", error);
+      res.status(500).json({
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to delete testimonial",
+      });
+    }
+  });
+
+  // Public endpoint to get testimonials
+  app.get("/api/testimonials", async (_req, res) => {
+    try {
+      const testimonials = await apiCall("GET", "testimonials");
+
+      let publishedTestimonials = Array.isArray(testimonials)
+        ? testimonials.filter((t: any) => t.isPublished !== false)
+        : [];
+
+      const sortedTestimonials = publishedTestimonials.sort(
+        (a: any, b: any) => a.displayOrder - b.displayOrder,
+      );
+
+      res.json(sortedTestimonials);
+    } catch (error) {
+      console.error("Error fetching testimonials:", error);
       res.json([]);
     }
   });

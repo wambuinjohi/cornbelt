@@ -2,6 +2,8 @@ import { Link } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import HeroSlider from "@/components/HeroSlider";
+import ProductGallery from "@/components/ProductGallery";
+import TestimonialsSection from "@/components/TestimonialsSection";
 import {
   Leaf,
   Award,
@@ -112,13 +114,12 @@ export default function Index() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
               {/* Jirani Product */}
               <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow border border-border">
-                <div className="h-72 bg-gradient-to-br from-primary to-primary/50 flex items-center justify-center">
-                  <div className="text-center space-y-3">
-                    <div className="inline-flex items-center justify-center w-32 h-32 bg-white/20 rounded-2xl">
-                      <span className="text-6xl">🌾</span>
-                    </div>
-                  </div>
-                </div>
+                <ProductGallery
+                  productId="jirani"
+                  productName="Jirani Fortified Maize Meal"
+                  fallbackImage="https://cdn.builder.io/api/v1/image/assets%2F1ffce8bff4d5493bafecc479d3963466%2F70ce74f71c7443cc97f0aac39bf3a2e2?format=webp&width=800"
+                  fallbackAlt="Jirani Fortified Maize Meal packaging"
+                />
                 <div className="p-8 space-y-6">
                   <div>
                     <h3 className="text-2xl font-bold text-foreground mb-2">
@@ -155,13 +156,12 @@ export default function Index() {
 
               {/* Tabasamu Product */}
               <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow border border-border">
-                <div className="h-72 bg-gradient-to-br from-secondary to-secondary/50 flex items-center justify-center">
-                  <div className="text-center space-y-3">
-                    <div className="inline-flex items-center justify-center w-32 h-32 bg-white/20 rounded-2xl">
-                      <span className="text-6xl">😊</span>
-                    </div>
-                  </div>
-                </div>
+                <ProductGallery
+                  productId="tabasamu"
+                  productName="Tabasamu Grade 1 Maize Meal"
+                  fallbackImage="https://cdn.builder.io/api/v1/image/assets%2F1ffce8bff4d5493bafecc479d3963466%2F948057ebdd744e77a4a0eb1cca9a3e75?format=webp&width=800"
+                  fallbackAlt="Tabasamu Grade 1 Maize Meal packaging"
+                />
                 <div className="p-8 space-y-6">
                   <div>
                     <h3 className="text-2xl font-bold text-foreground mb-2">
@@ -523,68 +523,85 @@ export default function Index() {
         </section>
 
         {/* Testimonials Section */}
-        <section className="py-20 bg-background">
+        <TestimonialsSection />
+
+        {/* Brand Presence Section */}
+        <section className="py-20 bg-gradient-to-br from-primary/5 via-background to-secondary/5">
           <div className="container mx-auto px-4 md:px-6">
             <div className="text-center mb-12">
               <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-                What Our Customers Say
+                Cornbelt in Your Community
               </h2>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                Join thousands of Kenyan families who trust Cornbelt for quality
-                nutrition
+                Find us at retailers, markets, and events across Kenya
               </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="bg-gradient-to-br from-primary/5 to-primary/10 rounded-2xl p-8 border border-primary/20">
-                <div className="flex items-center gap-1 mb-4">
-                  {[...Array(5)].map((_, i) => (
-                    <span key={i} className="text-secondary text-lg">
-                      ★
-                    </span>
-                  ))}
+              <div className="rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
+                <img
+                  src="https://cdn.builder.io/api/v1/image/assets%2F1ffce8bff4d5493bafecc479d3963466%2F5ff5547835bc43a1b1765ac4be6ec727?format=webp&width=800"
+                  alt="Cornbelt teardrop flag at events"
+                  className="w-full h-64 object-cover"
+                />
+                <div className="p-4 bg-white">
+                  <h3 className="font-semibold text-foreground">
+                    Event Marketing
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    Cornbelt at community events
+                  </p>
                 </div>
-                <p className="text-foreground mb-4">
-                  "Cornbelt products have become a staple in our home. The
-                  quality is unmatched and my family loves the taste!"
-                </p>
-                <p className="font-semibold text-foreground">
-                  Margaret Kipchoge
-                </p>
-                <p className="text-sm text-muted-foreground">Nairobi, Kenya</p>
               </div>
 
-              <div className="bg-gradient-to-br from-primary/5 to-primary/10 rounded-2xl p-8 border border-primary/20">
-                <div className="flex items-center gap-1 mb-4">
-                  {[...Array(5)].map((_, i) => (
-                    <span key={i} className="text-secondary text-lg">
-                      ★
-                    </span>
-                  ))}
+              <div className="rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
+                <img
+                  src="https://cdn.builder.io/api/v1/image/assets%2F1ffce8bff4d5493bafecc479d3963466%2F16328bab2c0943c487599e9b3169b599?format=webp&width=800"
+                  alt="Cornbelt rollup banner display"
+                  className="w-full h-64 object-cover"
+                />
+                <div className="p-4 bg-white">
+                  <h3 className="font-semibold text-foreground">
+                    Brand Displays
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    Visible in stores nationwide
+                  </p>
                 </div>
-                <p className="text-foreground mb-4">
-                  "I trust Cornbelt for my kids' nutrition. The fortification
-                  gives me peace of mind knowing they're getting quality
-                  nutrition."
-                </p>
-                <p className="font-semibold text-foreground">James Mwangi</p>
-                <p className="text-sm text-muted-foreground">Kisumu, Kenya</p>
               </div>
 
-              <div className="bg-gradient-to-br from-primary/5 to-primary/10 rounded-2xl p-8 border border-primary/20">
-                <div className="flex items-center gap-1 mb-4">
-                  {[...Array(5)].map((_, i) => (
-                    <span key={i} className="text-secondary text-lg">
-                      ★
-                    </span>
-                  ))}
+              <div className="rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
+                <img
+                  src="https://cdn.builder.io/api/v1/image/assets%2F1ffce8bff4d5493bafecc479d3963466%2F64d7a753a7854a4bab6cb64fcedc87d9?format=webp&width=800"
+                  alt="Jirani with families in communities"
+                  className="w-full h-64 object-cover"
+                />
+                <div className="p-4 bg-white">
+                  <h3 className="font-semibold text-foreground">
+                    Community Trust
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    Trusted by Kenyan families
+                  </p>
                 </div>
-                <p className="text-foreground mb-4">
-                  "The best maize meal I've used. Consistent quality, great
-                  taste, and I can always find it at my local shop!"
-                </p>
-                <p className="font-semibold text-foreground">Grace Omondi</p>
-                <p className="text-sm text-muted-foreground">Mombasa, Kenya</p>
+              </div>
+            </div>
+
+            <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="rounded-2xl overflow-hidden shadow-lg">
+                <img
+                  src="https://cdn.builder.io/api/v1/image/assets%2F1ffce8bff4d5493bafecc479d3963466%2Ff82178ff7d644c3a9cabfabe9e223a8f?format=webp&width=800"
+                  alt="Jirani maize meal packaging showcase"
+                  className="w-full h-64 object-cover"
+                />
+              </div>
+
+              <div className="rounded-2xl overflow-hidden shadow-lg">
+                <img
+                  src="https://cdn.builder.io/api/v1/image/assets%2F1ffce8bff4d5493bafecc479d3963466%2Ff174d02acd5d44648136ae62db46a06a?format=webp&width=800"
+                  alt="Jirani products in retail environment"
+                  className="w-full h-64 object-cover"
+                />
               </div>
             </div>
           </div>
@@ -602,88 +619,93 @@ export default function Index() {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <div className="text-center">
-                <div className="w-16 h-16 bg-primary text-primary-foreground rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold">
-                  1
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+              <div className="space-y-4">
+                <div>
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="w-12 h-12 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-lg font-bold">
+                      1
+                    </div>
+                    <h3 className="text-xl font-bold text-foreground">
+                      Selection
+                    </h3>
+                  </div>
+                  <p className="text-muted-foreground">
+                    We carefully select the finest locally-grown maize from
+                    trusted farmers
+                  </p>
                 </div>
-                <h3 className="text-xl font-bold text-foreground mb-2">
-                  Selection
-                </h3>
-                <p className="text-muted-foreground text-sm">
-                  We carefully select the finest locally-grown maize from
-                  trusted farmers
-                </p>
+                <img
+                  src="https://cdn.builder.io/api/v1/image/assets%2F1ffce8bff4d5493bafecc479d3963466%2F55c0c6e3f31e42738894312205f182a7?format=webp&width=800"
+                  alt="Raw maize selection and storage"
+                  className="rounded-lg shadow-lg w-full object-cover h-48"
+                />
               </div>
 
-              <div className="text-center">
-                <div className="w-16 h-16 bg-primary text-primary-foreground rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold">
-                  2
+              <div className="space-y-4">
+                <div>
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="w-12 h-12 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-lg font-bold">
+                      2
+                    </div>
+                    <h3 className="text-xl font-bold text-foreground">
+                      Cleaning & Processing
+                    </h3>
+                  </div>
+                  <p className="text-muted-foreground">
+                    Thorough cleaning and inspection to remove impurities and
+                    debris using advanced technology
+                  </p>
                 </div>
-                <h3 className="text-xl font-bold text-foreground mb-2">
-                  Cleaning
-                </h3>
-                <p className="text-muted-foreground text-sm">
-                  Thorough cleaning and inspection to remove impurities and
-                  debris
-                </p>
+                <img
+                  src="https://cdn.builder.io/api/v1/image/assets%2F1ffce8bff4d5493bafecc479d3963466%2Fc0b896d25ac84b8e9382dd61577b5a45?format=webp&width=800"
+                  alt="Milling and processing equipment"
+                  className="rounded-lg shadow-lg w-full object-cover h-48"
+                />
               </div>
 
-              <div className="text-center">
-                <div className="w-16 h-16 bg-primary text-primary-foreground rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold">
-                  3
+              <div className="space-y-4">
+                <div>
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="w-12 h-12 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-lg font-bold">
+                      3
+                    </div>
+                    <h3 className="text-xl font-bold text-foreground">
+                      Milling & Fortification
+                    </h3>
+                  </div>
+                  <p className="text-muted-foreground">
+                    Advanced milling technology to achieve perfect texture with
+                    essential vitamins and minerals
+                  </p>
                 </div>
-                <h3 className="text-xl font-bold text-foreground mb-2">
-                  Milling
-                </h3>
-                <p className="text-muted-foreground text-sm">
-                  Advanced milling technology to achieve perfect texture and
-                  consistency
-                </p>
+                <img
+                  src="https://cdn.builder.io/api/v1/image/assets%2F1ffce8bff4d5493bafecc479d3963466%2Fb22c9c0270ed47d8bb4da53c14df93e1?format=webp&width=800"
+                  alt="Industrial maize processing facility"
+                  className="rounded-lg shadow-lg w-full object-cover h-48"
+                />
               </div>
 
-              <div className="text-center">
-                <div className="w-16 h-16 bg-primary text-primary-foreground rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold">
-                  4
+              <div className="space-y-4">
+                <div>
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="w-12 h-12 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-lg font-bold">
+                      4
+                    </div>
+                    <h3 className="text-xl font-bold text-foreground">
+                      Quality & Distribution
+                    </h3>
+                  </div>
+                  <p className="text-muted-foreground">
+                    Rigorous testing and hygienic packaging ensures products
+                    reach customers fresh and on time
+                  </p>
                 </div>
-                <h3 className="text-xl font-bold text-foreground mb-2">
-                  Fortification
-                </h3>
-                <p className="text-muted-foreground text-sm">
-                  Adding essential vitamins and minerals for enhanced nutrition
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-white rounded-2xl p-8 border border-border">
-                <h3 className="text-xl font-bold text-foreground mb-3">
-                  Quality Control
-                </h3>
-                <p className="text-muted-foreground">
-                  Every batch undergoes rigorous testing to ensure it meets our
-                  high quality standards and safety requirements.
-                </p>
-              </div>
-
-              <div className="bg-white rounded-2xl p-8 border border-border">
-                <h3 className="text-xl font-bold text-foreground mb-3">
-                  Hygienic Packaging
-                </h3>
-                <p className="text-muted-foreground">
-                  Products are packaged in food-grade materials in our clean,
-                  sanitary facility to ensure freshness and safety.
-                </p>
-              </div>
-
-              <div className="bg-white rounded-2xl p-8 border border-border">
-                <h3 className="text-xl font-bold text-foreground mb-3">
-                  Distribution
-                </h3>
-                <p className="text-muted-foreground">
-                  Our reliable network ensures products reach retailers and
-                  customers fresh and on time, across Kenya.
-                </p>
+                <img
+                  src="https://cdn.builder.io/api/v1/image/assets%2F1ffce8bff4d5493bafecc479d3963466%2F899164802be54df0a1d17b956615ba47?format=webp&width=800"
+                  alt="Final product packaging and quality control"
+                  className="rounded-lg shadow-lg w-full object-cover h-48"
+                />
               </div>
             </div>
           </div>
