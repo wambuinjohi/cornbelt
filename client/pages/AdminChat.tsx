@@ -233,6 +233,26 @@ export default function AdminChat() {
     }
   };
 
+  const reseedDefaultResponses = async () => {
+    try {
+      const res = await fetch("/api/admin/reseed-bot-responses", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!res.ok) throw new Error("Failed to reseed responses");
+
+      const data = await res.json();
+      toast.success(
+        `Default responses loaded (${data.count} responses)`,
+      );
+      await fetchResponses();
+    } catch (e) {
+      console.error(e);
+      toast.error("Failed to reseed default responses");
+    }
+  };
+
   const handleEdit = (response: BotResponse) => {
     setEditingId(response.id);
     setKeyword(response.keyword);
