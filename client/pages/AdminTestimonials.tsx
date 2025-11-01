@@ -1,6 +1,16 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import AdminLayout from "@/components/AdminLayout";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
 import { X, Plus, Edit2, Trash2 } from "lucide-react";
 
 interface Testimonial {
@@ -31,6 +41,17 @@ export default function AdminTestimonials() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
+  // Image upload state
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+
+  // Delete modal state
+  const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+
   useEffect(() => {
     const token = localStorage.getItem("adminToken");
     if (!token) {
@@ -57,6 +78,37 @@ export default function AdminTestimonials() {
     }
   };
 
+  const uploadFile = async (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+
+      reader.onload = async () => {
+        try {
+          const base64Data = (reader.result as string).split(",")[1];
+          const token = localStorage.getItem("adminToken");
+          const response = await fetch("/api/admin/upload", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ fileData: base64Data, fileName: file.name }),
+          });
+
+          if (!response.ok) throw new Error("Failed to upload file");
+
+          const result = await response.json();
+          resolve(result.imageUrl);
+        } catch (error) {
+          reject(error);
+        }
+      };
+
+      reader.onerror = () => reject(new Error("Failed to read file"));
+      reader.readAsDataURL(file);
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -67,11 +119,24 @@ export default function AdminTestimonials() {
       return;
     }
 
+    setIsSaving(true);
+    setUploadProgress(0);
+
     try {
+      // If a file is selected, upload it first
+      let imageUrl = formData.imageUrl || null;
+      if (selectedFile) {
+        setUploadProgress(30);
+        imageUrl = await uploadFile(selectedFile);
+        setUploadProgress(100);
+      }
+
       const method = editingId ? "PUT" : "POST";
       const url = editingId
         ? `/api/admin/testimonials/${editingId}`
         : "/api/admin/testimonials";
+
+      const payload = { ...formData, imageUrl };
 
       const response = await fetch(url, {
         method,
@@ -79,7 +144,7 @@ export default function AdminTestimonials() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
 
       const data = await response.json();
@@ -89,10 +154,10 @@ export default function AdminTestimonials() {
       }
 
       setSuccess(
-        editingId
-          ? "Testimonial updated successfully"
-          : "Testimonial added successfully",
+        editingId ? "Testimonial updated successfully" : "Testimonial added successfully",
       );
+
+      // Reset form
       setShowForm(false);
       setEditingId(null);
       setFormData({
@@ -103,11 +168,17 @@ export default function AdminTestimonials() {
         displayOrder: 0,
         isPublished: true,
       });
-      fetchTestimonials();
+      setSelectedFile(null);
+      setPreviewUrl(null);
+      if (fileInputRef.current) fileInputRef.current.value = "";
 
+      fetchTestimonials();
       setTimeout(() => setSuccess(""), 3000);
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
+    } finally {
+      setIsSaving(false);
+      setUploadProgress(0);
     }
   };
 
@@ -117,26 +188,30 @@ export default function AdminTestimonials() {
     setShowForm(true);
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm("Are you sure you want to delete this testimonial?")) {
-      return;
-    }
+  const handleDelete = (id: number) => {
+    setDeleteId(id);
+    setDeleteOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteId) return;
 
     try {
-      const response = await fetch(`/api/admin/testimonials/${id}`, {
+      const response = await fetch(`/api/admin/testimonials/${deleteId}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to delete testimonial");
-      }
+      if (!response.ok) throw new Error("Failed to delete testimonial");
 
       setSuccess("Testimonial deleted successfully");
       fetchTestimonials();
       setTimeout(() => setSuccess(""), 3000);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to delete");
+    } finally {
+      setDeleteOpen(false);
+      setDeleteId(null);
     }
   };
 
@@ -257,22 +332,70 @@ export default function AdminTestimonials() {
                       />
                     </div>
 
+                    {/* File Upload or Image URL */}
                     <div>
                       <label className="block text-sm font-medium mb-2">
-                        Image URL (optional)
+                        Upload Image (optional, max 5MB)
                       </label>
-                      <input
-                        type="url"
-                        value={formData.imageUrl || ""}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            imageUrl: e.target.value,
-                          })
-                        }
-                        placeholder="https://cornbelt.co.ke/testimonials/..."
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
-                      />
+                      <div className="space-y-2">
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            // Validate
+                            if (!file.type.startsWith("image/")) {
+                              setError("Please select a valid image file");
+                              return;
+                            }
+                            if (file.size > 5 * 1024 * 1024) {
+                              setError("File size must be less than 5MB");
+                              return;
+                            }
+                            setSelectedFile(file);
+                            const reader = new FileReader();
+                            reader.onload = (ev) => setPreviewUrl(ev.target?.result as string);
+                            reader.readAsDataURL(file);
+                          }}
+                          disabled={isSaving}
+                          className="block w-full text-sm text-muted-foreground
+                            file:mr-4 file:py-2 file:px-4
+                            file:rounded-lg file:border-0
+                            file:text-sm file:font-semibold
+                            file:bg-primary file:text-primary-foreground
+                            hover:file:bg-primary/90
+                            cursor-pointer"
+                        />
+
+                        <div className="relative">
+                          <div className="absolute inset-0 flex items-center">
+                            <div className="w-full border-t border-primary/10"></div>
+                          </div>
+                          <div className="relative flex justify-center text-sm">
+                            <span className="px-2 bg-primary/5 text-muted-foreground">OR</span>
+                          </div>
+                        </div>
+
+                        <input
+                          type="url"
+                          value={formData.imageUrl || ""}
+                          onChange={(e) => {
+                            setFormData({ ...formData, imageUrl: e.target.value });
+                            if (!selectedFile) setPreviewUrl(e.target.value);
+                          }}
+                          placeholder="https://cornbelt.co.ke/testimonials/..."
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                          disabled={isSaving || !!selectedFile}
+                        />
+
+                        {previewUrl && (
+                          <div className="relative w-full h-48 bg-black rounded-lg overflow-hidden">
+                            <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" onError={() => setPreviewUrl(null)} />
+                          </div>
+                        )}
+                      </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
