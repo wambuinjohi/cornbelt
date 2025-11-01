@@ -52,6 +52,83 @@ async function initializeAdminTable() {
 
     console.log("Contact submissions table initialized");
 
+    // Create chats table (stores chat session messages)
+    const chatsTableData = {
+      create_table: true,
+      columns: {
+        id: "INT AUTO_INCREMENT PRIMARY KEY",
+        sessionId: "VARCHAR(255) NOT NULL",
+        sender: "VARCHAR(50) NOT NULL", // 'user' | 'bot' | 'admin'
+        message: "TEXT NOT NULL",
+        createdAt: "DATETIME DEFAULT CURRENT_TIMESTAMP",
+      },
+    };
+
+    await fetch(`${baseUrl}/api.php?table=chats`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(chatsTableData),
+    });
+
+    console.log("Chats table initialized");
+
+    // Create bot_responses table (admin-managed Q/A pairs)
+    const botResponsesTableData = {
+      create_table: true,
+      columns: {
+        id: "INT AUTO_INCREMENT PRIMARY KEY",
+        keyword: "VARCHAR(255) NOT NULL",
+        answer: "TEXT NOT NULL",
+        createdAt: "DATETIME DEFAULT CURRENT_TIMESTAMP",
+      },
+    };
+
+    await fetch(`${baseUrl}/api.php?table=bot_responses`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(botResponsesTableData),
+    });
+
+    console.log("Bot responses table initialized");
+
+    // Seed basic bot responses if none exist
+    const existingBot = await apiCall("GET", "bot_responses");
+    if (!Array.isArray(existingBot) || existingBot.length === 0) {
+      const defaultResponses = [
+        {
+          keyword: "hours",
+          answer:
+            "Our business hours are Monday - Friday: 8:00 AM - 5:00 PM, Saturday: 9:00 AM - 2:00 PM, Sunday: Closed.",
+        },
+        {
+          keyword: "location",
+          answer:
+            "We are located at Cornbelt Flour Mill Limited, National Cereals & Produce Board Land, Kenya.",
+        },
+        {
+          keyword: "contact",
+          answer:
+            "You can reach us via email at info@cornbeltmill.com or support@cornbeltmill.com, or use the contact form on our website.",
+        },
+        {
+          keyword: "products",
+          answer:
+            "We offer a range of fortified maize meal and other products. Visit our Products page for more details.",
+        },
+        {
+          keyword: "shipping",
+          answer:
+            "For shipping inquiries, please contact our support team via email and provide your location so we can advise on availability and rates.",
+        },
+      ];
+
+      for (const r of defaultResponses) {
+        await apiCall("POST", "bot_responses", r);
+      }
+
+      console.log("Default bot responses seeded");
+    }
+
     // Create hero_slider_images table
     const heroTableData = {
       create_table: true,
