@@ -49,6 +49,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       label: "Contact Submissions",
       href: "/admin/submissions",
     },
+    {
+      icon: Settings,
+      label: "Testimonials",
+      href: "/admin/testimonials",
+    },
   ];
 
   const handleLogout = () => {
