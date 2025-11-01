@@ -523,72 +523,7 @@ export default function Index() {
         </section>
 
         {/* Testimonials Section */}
-        <section className="py-20 bg-background">
-          <div className="container mx-auto px-4 md:px-6">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-                What Our Customers Say
-              </h2>
-              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                Join thousands of Kenyan families who trust Cornbelt for quality
-                nutrition
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="bg-gradient-to-br from-primary/5 to-primary/10 rounded-2xl p-8 border border-primary/20">
-                <div className="flex items-center gap-1 mb-4">
-                  {[...Array(5)].map((_, i) => (
-                    <span key={i} className="text-secondary text-lg">
-                      ★
-                    </span>
-                  ))}
-                </div>
-                <p className="text-foreground mb-4">
-                  "Cornbelt products have become a staple in our home. The
-                  quality is unmatched and my family loves the taste!"
-                </p>
-                <p className="font-semibold text-foreground">
-                  Margaret Kipchoge
-                </p>
-                <p className="text-sm text-muted-foreground">Nairobi, Kenya</p>
-              </div>
-
-              <div className="bg-gradient-to-br from-primary/5 to-primary/10 rounded-2xl p-8 border border-primary/20">
-                <div className="flex items-center gap-1 mb-4">
-                  {[...Array(5)].map((_, i) => (
-                    <span key={i} className="text-secondary text-lg">
-                      ★
-                    </span>
-                  ))}
-                </div>
-                <p className="text-foreground mb-4">
-                  "I trust Cornbelt for my kids' nutrition. The fortification
-                  gives me peace of mind knowing they're getting quality
-                  nutrition."
-                </p>
-                <p className="font-semibold text-foreground">James Mwangi</p>
-                <p className="text-sm text-muted-foreground">Kisumu, Kenya</p>
-              </div>
-
-              <div className="bg-gradient-to-br from-primary/5 to-primary/10 rounded-2xl p-8 border border-primary/20">
-                <div className="flex items-center gap-1 mb-4">
-                  {[...Array(5)].map((_, i) => (
-                    <span key={i} className="text-secondary text-lg">
-                      ★
-                    </span>
-                  ))}
-                </div>
-                <p className="text-foreground mb-4">
-                  "The best maize meal I've used. Consistent quality, great
-                  taste, and I can always find it at my local shop!"
-                </p>
-                <p className="font-semibold text-foreground">Grace Omondi</p>
-                <p className="text-sm text-muted-foreground">Mombasa, Kenya</p>
-              </div>
-            </div>
-          </div>
-        </section>
+        <TestimonialsSection />
 
         {/* Brand Presence Section */}
         <section className="py-20 bg-gradient-to-br from-primary/5 via-background to-secondary/5">
