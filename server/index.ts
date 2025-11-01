@@ -499,6 +499,173 @@ export function createServer() {
     }
   });
 
+  // Admin product images management
+  app.get("/api/admin/product-images", async (req, res) => {
+    const token = req.headers.authorization?.split(" ")[1];
+
+    if (!token || !verifyToken(token)) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    try {
+      const images = await apiCall("GET", "product_images");
+      const sortedImages = Array.isArray(images)
+        ? images.sort((a: any, b: any) => a.displayOrder - b.displayOrder)
+        : [];
+      res.json(sortedImages);
+    } catch (error) {
+      console.error("Error fetching product images:", error);
+      res.json([]);
+    }
+  });
+
+  app.post("/api/admin/product-images", async (req, res) => {
+    const token = req.headers.authorization?.split(" ")[1];
+
+    if (!token || !verifyToken(token)) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const { productId, imageUrl, altText, displayOrder } = req.body;
+
+    if (!productId || !imageUrl) {
+      return res
+        .status(400)
+        .json({ error: "Product ID and image URL are required" });
+    }
+
+    try {
+      const filename = `product-${productId}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}.jpg`;
+      const storagePath = `https://cornbelt.co.ke/productimages/${filename}`;
+
+      const result = await apiCall("POST", "product_images", {
+        productId,
+        filename,
+        imageUrl: storagePath,
+        altText: altText || "Product image",
+        displayOrder: displayOrder || 0,
+      });
+
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      res.json({
+        success: true,
+        message: "Product image added successfully",
+        id: result.id,
+        imageUrl: storagePath,
+      });
+    } catch (error) {
+      console.error("Error adding product image:", error);
+      res.status(500).json({
+        error: error instanceof Error ? error.message : "Failed to add image",
+      });
+    }
+  });
+
+  app.put("/api/admin/product-images/:id", async (req, res) => {
+    const token = req.headers.authorization?.split(" ")[1];
+
+    if (!token || !verifyToken(token)) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const { id } = req.params;
+    const { altText, displayOrder } = req.body;
+
+    try {
+      const updates: any = {};
+      if (altText !== undefined) updates.altText = altText;
+      if (displayOrder !== undefined) updates.displayOrder = displayOrder;
+
+      if (Object.keys(updates).length === 0) {
+        return res.status(400).json({ error: "No fields to update" });
+      }
+
+      const result = await apiCall(
+        "PUT",
+        "product_images",
+        updates,
+        parseInt(id),
+      );
+
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      res.json({
+        success: true,
+        message: "Product image updated successfully",
+      });
+    } catch (error) {
+      console.error("Error updating product image:", error);
+      res.status(500).json({
+        error:
+          error instanceof Error ? error.message : "Failed to update image",
+      });
+    }
+  });
+
+  app.delete("/api/admin/product-images/:id", async (req, res) => {
+    const token = req.headers.authorization?.split(" ")[1];
+
+    if (!token || !verifyToken(token)) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const { id } = req.params;
+
+    try {
+      const result = await apiCall(
+        "DELETE",
+        "product_images",
+        null,
+        parseInt(id),
+      );
+
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      res.json({
+        success: true,
+        message: "Product image deleted successfully",
+      });
+    } catch (error) {
+      console.error("Error deleting product image:", error);
+      res.status(500).json({
+        error:
+          error instanceof Error ? error.message : "Failed to delete image",
+      });
+    }
+  });
+
+  // Public endpoint to get product images
+  app.get("/api/product-images", async (req, res) => {
+    try {
+      const productId = req.query.productId as string;
+      const images = await apiCall("GET", "product_images");
+
+      let productImages = Array.isArray(images) ? images : [];
+
+      if (productId) {
+        productImages = productImages.filter(
+          (img: any) => img.productId === productId,
+        );
+      }
+
+      const sortedImages = productImages.sort(
+        (a: any, b: any) => a.displayOrder - b.displayOrder,
+      );
+
+      res.json(sortedImages);
+    } catch (error) {
+      console.error("Error fetching product images:", error);
+      res.json([]);
+    }
+  });
+
   // Contact form endpoint
   app.post("/api/contact", async (req, res) => {
     const { fullName, email, phone, subject, message } = req.body;
