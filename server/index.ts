@@ -414,53 +414,36 @@ export function createServer() {
     }
 
     try {
-      // Generate unique filename
-      const timestamp = Date.now();
-      const random = Math.random().toString(36).substr(2, 9);
-      const ext = fileName.split(".").pop() || "jpg";
-      const uniqueFileName = `hero-${timestamp}-${random}.${ext}`;
-
-      // Convert base64 to buffer
-      const buffer = Buffer.from(fileData, "base64");
-
-      // Create FormData-like multipart body manually
-      const boundary = "----WebKitFormBoundary" + Math.random().toString(36).substr(2, 10);
-      const body = [
-        "--" + boundary,
-        'Content-Disposition: form-data; name="file"; filename="' + uniqueFileName + '"',
-        "Content-Type: image/jpeg",
-        "",
-        buffer.toString("binary"),
-        "--" + boundary + "--",
-      ].join("\r\n");
-
-      // Upload to external server
-      const uploadResponse = await fetch(
-        "https://cornbelt.co.ke/uploads/upload.php",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "multipart/form-data; boundary=" + boundary,
-          },
-          body: Buffer.from(body, "binary"),
-        }
-      );
-
-      // Construct the image URL
-      const imageUrl = `https://cornbelt.co.ke/uploads/${uniqueFileName}`;
+      // Store the file as a data URL (base64 encoded)
+      // This approach works well for images and doesn't require file system operations
+      const dataUrl = `data:image/${getImageMimeType(fileName)};base64,${fileData}`;
 
       res.json({
         success: true,
-        imageUrl,
-        filename: uniqueFileName,
+        imageUrl: dataUrl,
+        filename: fileName,
       });
     } catch (error) {
-      console.error("Error uploading file:", error);
+      console.error("Error processing file:", error);
       res.status(500).json({
-        error: error instanceof Error ? error.message : "Failed to upload file",
+        error: error instanceof Error ? error.message : "Failed to process file",
       });
     }
   });
+
+  // Helper function to get MIME type from filename
+  function getImageMimeType(fileName: string): string {
+    const ext = fileName.split(".").pop()?.toLowerCase();
+    const mimeTypes: Record<string, string> = {
+      jpg: "jpeg",
+      jpeg: "jpeg",
+      png: "png",
+      gif: "gif",
+      webp: "webp",
+      svg: "svg+xml",
+    };
+    return mimeTypes[ext || "jpeg"] || "jpeg";
+  }
 
   // Public endpoint to get hero images
   app.get("/api/hero-images", async (_req, res) => {
