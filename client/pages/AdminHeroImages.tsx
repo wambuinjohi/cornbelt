@@ -414,8 +414,21 @@ export default function AdminHeroImages() {
                   )}
                 />
 
-                <Button type="submit" disabled={isSaving} className="w-full">
-                  {isSaving ? "Adding..." : "Add Image"}
+                <Button
+                  type="submit"
+                  disabled={isSaving || (!selectedFile && !form.getValues("imageUrl"))}
+                  className="w-full gap-2"
+                >
+                  <FileUp className="w-4 h-4" />
+                  {isSaving ? (
+                    <>
+                      {uploadProgress > 0 && uploadProgress < 100
+                        ? `Uploading... ${uploadProgress}%`
+                        : "Processing..."}
+                    </>
+                  ) : (
+                    "Add Image"
+                  )}
                 </Button>
               </form>
             </Form>
