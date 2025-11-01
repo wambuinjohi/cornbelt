@@ -52,6 +52,83 @@ async function initializeAdminTable() {
 
     console.log("Contact submissions table initialized");
 
+    // Create chats table (stores chat session messages)
+    const chatsTableData = {
+      create_table: true,
+      columns: {
+        id: "INT AUTO_INCREMENT PRIMARY KEY",
+        sessionId: "VARCHAR(255) NOT NULL",
+        sender: "VARCHAR(50) NOT NULL", // 'user' | 'bot' | 'admin'
+        message: "TEXT NOT NULL",
+        createdAt: "DATETIME DEFAULT CURRENT_TIMESTAMP",
+      },
+    };
+
+    await fetch(`${baseUrl}/api.php?table=chats`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(chatsTableData),
+    });
+
+    console.log("Chats table initialized");
+
+    // Create bot_responses table (admin-managed Q/A pairs)
+    const botResponsesTableData = {
+      create_table: true,
+      columns: {
+        id: "INT AUTO_INCREMENT PRIMARY KEY",
+        keyword: "VARCHAR(255) NOT NULL",
+        answer: "TEXT NOT NULL",
+        createdAt: "DATETIME DEFAULT CURRENT_TIMESTAMP",
+      },
+    };
+
+    await fetch(`${baseUrl}/api.php?table=bot_responses`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(botResponsesTableData),
+    });
+
+    console.log("Bot responses table initialized");
+
+    // Seed basic bot responses if none exist
+    const existingBot = await apiCall("GET", "bot_responses");
+    if (!Array.isArray(existingBot) || existingBot.length === 0) {
+      const defaultResponses = [
+        {
+          keyword: "hours",
+          answer:
+            "Our business hours are Monday - Friday: 8:00 AM - 5:00 PM, Saturday: 9:00 AM - 2:00 PM, Sunday: Closed.",
+        },
+        {
+          keyword: "location",
+          answer:
+            "We are located at Cornbelt Flour Mill Limited, National Cereals & Produce Board Land, Kenya.",
+        },
+        {
+          keyword: "contact",
+          answer:
+            "You can reach us via email at info@cornbeltmill.com or support@cornbeltmill.com, or use the contact form on our website.",
+        },
+        {
+          keyword: "products",
+          answer:
+            "We offer a range of fortified maize meal and other products. Visit our Products page for more details.",
+        },
+        {
+          keyword: "shipping",
+          answer:
+            "For shipping inquiries, please contact our support team via email and provide your location so we can advise on availability and rates.",
+        },
+      ];
+
+      for (const r of defaultResponses) {
+        await apiCall("POST", "bot_responses", r);
+      }
+
+      console.log("Default bot responses seeded");
+    }
+
     // Create hero_slider_images table
     const heroTableData = {
       create_table: true,
@@ -195,14 +272,28 @@ function hashPassword(password: string): string {
   return crypto.createHash("sha256").update(password).digest("hex");
 }
 
+// Base64URL helpers
+function base64urlEncode(str: string): string {
+  return Buffer.from(str, "utf8")
+    .toString("base64")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
+}
+function base64urlDecode(str: string): string {
+  const pad = str.length % 4 === 0 ? "" : "=".repeat(4 - (str.length % 4));
+  const b64 = str.replace(/-/g, "+").replace(/_/g, "/") + pad;
+  return Buffer.from(b64, "base64").toString("utf8");
+}
+
 // Generate JWT token
 function generateToken(adminId: number): string {
-  const header = btoa(JSON.stringify({ alg: "HS256", typ: "JWT" }));
-  const payload = btoa(
+  const header = base64urlEncode(JSON.stringify({ alg: "HS256", typ: "JWT" }));
+  const payload = base64urlEncode(
     JSON.stringify({
       id: adminId,
       iat: Math.floor(Date.now() / 1000),
-      exp: Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60, // 7 days
+      exp: Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60,
     }),
   );
   const signature = crypto
@@ -218,11 +309,17 @@ function verifyToken(token: string): any {
   try {
     const parts = token.split(".");
     if (parts.length !== 3) return null;
+    const [header, payload, signature] = parts;
 
-    const payload = JSON.parse(atob(parts[1]));
-    if (payload.exp < Math.floor(Date.now() / 1000)) return null;
+    const expectedSig = crypto
+      .createHmac("sha256", process.env.JWT_SECRET || "secret-key")
+      .update(`${header}.${payload}`)
+      .digest("base64url");
+    if (signature !== expectedSig) return null;
 
-    return payload;
+    const payloadJson = JSON.parse(base64urlDecode(payload));
+    if (payloadJson.exp < Math.floor(Date.now() / 1000)) return null;
+    return payloadJson;
   } catch {
     return null;
   }
@@ -1015,6 +1112,187 @@ export function createServer() {
           submittedAt: new Date().toISOString(),
         },
       });
+    }
+  });
+
+  // Chat endpoints (visitor-facing)
+  app.post("/api/chat/message", async (req, res) => {
+    const { sessionId, name, message } = req.body;
+    if (!sessionId || !message) {
+      return res.status(400).json({ error: "sessionId and message required" });
+    }
+
+    try {
+      // Save user message
+      await apiCall("POST", "chats", {
+        sessionId,
+        sender: "user",
+        message,
+        createdAt: new Date().toISOString(),
+      });
+
+      // Fetch bot responses and attempt to match
+      const responses = await apiCall("GET", "bot_responses");
+      let botReply = null;
+      if (Array.isArray(responses)) {
+        const text = message.toLowerCase();
+        // simple keyword match
+        for (const r of responses) {
+          const keyword = (r.keyword || "").toLowerCase();
+          if (!keyword) continue;
+          if (text.includes(keyword)) {
+            botReply = r.answer;
+            break;
+          }
+        }
+      }
+
+      // Fallback reply
+      if (!botReply) {
+        botReply =
+          "Thanks for your message! Our team will get back to you shortly. You can also visit the Contact page for more ways to reach us.";
+      }
+
+      // Save bot reply
+      const botResult = await apiCall("POST", "chats", {
+        sessionId,
+        sender: "bot",
+        message: botReply,
+        createdAt: new Date().toISOString(),
+      });
+
+      res.json({ success: true, reply: botReply, botId: botResult.id });
+    } catch (error) {
+      console.error("Chat message error:", error);
+      res.status(500).json({ error: "Failed to process message" });
+    }
+  });
+
+  app.get("/api/chat/history", async (req, res) => {
+    const sessionId = req.query.sessionId as string;
+    if (!sessionId)
+      return res.status(400).json({ error: "sessionId required" });
+
+    try {
+      const all = await apiCall("GET", "chats");
+      const messages = Array.isArray(all)
+        ? all.filter((m: any) => m.sessionId === sessionId)
+        : [];
+      res.json(messages);
+    } catch (error) {
+      console.error("Error fetching chat history:", error);
+      res.json([]);
+    }
+  });
+
+  // Admin endpoints to manage bot responses and view chats
+  app.get("/api/admin/bot-responses", async (req, res) => {
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token || !verifyToken(token))
+      return res.status(401).json({ error: "Unauthorized" });
+    try {
+      const responses = await apiCall("GET", "bot_responses");
+      res.json(Array.isArray(responses) ? responses : []);
+    } catch (error) {
+      console.error("Error fetching bot responses:", error);
+      res.json([]);
+    }
+  });
+
+  app.post("/api/admin/bot-responses", async (req, res) => {
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token || !verifyToken(token))
+      return res.status(401).json({ error: "Unauthorized" });
+    const { keyword, answer } = req.body;
+    if (!keyword || !answer)
+      return res.status(400).json({ error: "keyword and answer required" });
+    try {
+      const result = await apiCall("POST", "bot_responses", {
+        keyword,
+        answer,
+        createdAt: new Date().toISOString(),
+      });
+      res.json({ success: true, id: result.id });
+    } catch (error) {
+      console.error("Error creating bot response:", error);
+      res.status(500).json({ error: "Failed to create" });
+    }
+  });
+
+  app.put("/api/admin/bot-responses/:id", async (req, res) => {
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token || !verifyToken(token))
+      return res.status(401).json({ error: "Unauthorized" });
+    const { id } = req.params;
+    const { keyword, answer } = req.body;
+    const updates: any = {};
+    if (keyword !== undefined) updates.keyword = keyword;
+    if (answer !== undefined) updates.answer = answer;
+    if (Object.keys(updates).length === 0)
+      return res.status(400).json({ error: "No fields to update" });
+    try {
+      await apiCall("PUT", "bot_responses", updates, parseInt(id));
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error updating bot response:", error);
+      res.status(500).json({ error: "Failed to update" });
+    }
+  });
+
+  app.delete("/api/admin/bot-responses/:id", async (req, res) => {
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token || !verifyToken(token))
+      return res.status(401).json({ error: "Unauthorized" });
+    const { id } = req.params;
+    try {
+      await apiCall("DELETE", "bot_responses", null, parseInt(id));
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting bot response:", error);
+      res.status(500).json({ error: "Failed to delete" });
+    }
+  });
+
+  app.get("/api/admin/chat-sessions", async (req, res) => {
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token || !verifyToken(token))
+      return res.status(401).json({ error: "Unauthorized" });
+    try {
+      const all = await apiCall("GET", "chats");
+      const sessions: Record<string, any[]> = {};
+      if (Array.isArray(all)) {
+        for (const m of all) {
+          sessions[m.sessionId] = sessions[m.sessionId] || [];
+          sessions[m.sessionId].push(m);
+        }
+      }
+      const sessionList = Object.keys(sessions).map((sid) => ({
+        sessionId: sid,
+        lastMessageAt:
+          sessions[sid][sessions[sid].length - 1]?.createdAt || null,
+        messages: sessions[sid],
+      }));
+      res.json(sessionList);
+    } catch (error) {
+      console.error("Error fetching chat sessions:", error);
+      res.json([]);
+    }
+  });
+
+  app.get("/api/admin/chat/:sessionId", async (req, res) => {
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token || !verifyToken(token))
+      return res.status(401).json({ error: "Unauthorized" });
+    const { sessionId } = req.params;
+    try {
+      const all = await apiCall("GET", "chats");
+      const messages = Array.isArray(all)
+        ? all.filter((m: any) => m.sessionId === sessionId)
+        : [];
+      res.json(messages);
+    } catch (error) {
+      console.error("Error fetching chat messages:", error);
+      res.json([]);
     }
   });
 
