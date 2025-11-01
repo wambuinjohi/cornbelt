@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { ArrowLeft, Upload, Trash2, Eye } from "lucide-react";
+import { ArrowLeft, Upload, Trash2, Eye, FileUp } from "lucide-react";
 
 interface HeroImage {
   id: number;
