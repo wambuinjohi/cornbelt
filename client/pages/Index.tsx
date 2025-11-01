@@ -23,10 +23,10 @@ export default function Index() {
 
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="relative overflow-hidden bg-gradient-to-br from-primary/5 via-background to-secondary/5 pt-16 pb-20 md:pt-20 md:pb-32">
-          <div className="absolute inset-0 overflow-hidden">
-            <div className="absolute w-96 h-96 bg-primary/10 rounded-full -top-48 -right-48 blur-3xl" />
-            <div className="absolute w-96 h-96 bg-secondary/10 rounded-full -bottom-48 -left-48 blur-3xl" />
+        <section className="relative overflow-hidden h-screen max-h-screen flex items-center justify-center">
+          {/* Background Slider */}
+          <div className="absolute inset-0">
+            <HeroSlider />
           </div>
 
           <div className="container mx-auto px-4 md:px-6 relative z-10">
