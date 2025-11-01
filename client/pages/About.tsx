@@ -110,6 +110,17 @@ export default function About() {
                 </div>
               </div>
 
+              {/* Facility Showcase */}
+              <div className="mt-12 space-y-6">
+                <h3 className="text-2xl font-bold text-primary">Our Modern Facility</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <img src="https://cdn.builder.io/api/v1/image/assets%2F1ffce8bff4d5493bafecc479d3963466%2F4a2cc68749f24d2b8f3d41537c67e99d?format=webp&width=800" alt="Cornbelt facility building" className="rounded-lg shadow-lg object-cover h-64 w-full" />
+                  <img src="https://cdn.builder.io/api/v1/image/assets%2F1ffce8bff4d5493bafecc479d3963466%2Fc0b896d25ac84b8e9382dd61577b5a45?format=webp&width=800" alt="Milling equipment and machinery" className="rounded-lg shadow-lg object-cover h-64 w-full" />
+                  <img src="https://cdn.builder.io/api/v1/image/assets%2F1ffce8bff4d5493bafecc479d3963466%2F55c0c6e3f31e42738894312205f182a7?format=webp&width=800" alt="Storage warehouse facility" className="rounded-lg shadow-lg object-cover h-64 w-full" />
+                  <img src="https://cdn.builder.io/api/v1/image/assets%2F1ffce8bff4d5493bafecc479d3963466%2Fb22c9c0270ed47d8bb4da53c14df93e1?format=webp&width=800" alt="Raw maize storage" className="rounded-lg shadow-lg object-cover h-64 w-full" />
+                </div>
+              </div>
+
               {/* Timeline */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 py-8">
                 <div className="text-center p-6 bg-primary/5 rounded-lg border border-primary/10">
