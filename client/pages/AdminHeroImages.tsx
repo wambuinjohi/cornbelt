@@ -107,24 +107,44 @@ export default function AdminHeroImages() {
   };
 
   const uploadFile = async (file: File): Promise<string> => {
-    const formData = new FormData();
-    formData.append("file", file);
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
 
-    const token = localStorage.getItem("adminToken");
-    const response = await fetch("/api/admin/upload", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      body: formData,
+      reader.onload = async () => {
+        try {
+          // Extract base64 data
+          const base64Data = (reader.result as string).split(",")[1];
+
+          const token = localStorage.getItem("adminToken");
+          const response = await fetch("/api/admin/upload", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              fileData: base64Data,
+              fileName: file.name,
+            }),
+          });
+
+          if (!response.ok) {
+            throw new Error("Failed to upload file");
+          }
+
+          const result = await response.json();
+          resolve(result.imageUrl);
+        } catch (error) {
+          reject(error);
+        }
+      };
+
+      reader.onerror = () => {
+        reject(new Error("Failed to read file"));
+      };
+
+      reader.readAsDataURL(file);
     });
-
-    if (!response.ok) {
-      throw new Error("Failed to upload file");
-    }
-
-    const result = await response.json();
-    return result.imageUrl;
   };
 
   const onSubmit = async (data: FormData) => {
