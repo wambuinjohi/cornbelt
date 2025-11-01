@@ -283,6 +283,7 @@ export default function About() {
       </main>
 
       <Footer />
+      <ChatWidget />
     </div>
   );
 }
