@@ -273,6 +273,145 @@ export function createServer() {
     }
   });
 
+  // Hero Slider Images Management
+  app.get("/api/admin/hero-images", async (req, res) => {
+    const token = req.headers.authorization?.split(" ")[1];
+
+    if (!token || !verifyToken(token)) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    try {
+      const images = await apiCall("GET", "hero_slider_images");
+      const sortedImages = Array.isArray(images)
+        ? images.sort((a: any, b: any) => a.displayOrder - b.displayOrder)
+        : [];
+      res.json(sortedImages);
+    } catch (error) {
+      console.error("Error fetching hero images:", error);
+      res.json([]);
+    }
+  });
+
+  app.post("/api/admin/hero-images", async (req, res) => {
+    const token = req.headers.authorization?.split(" ")[1];
+
+    if (!token || !verifyToken(token)) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const { imageUrl, altText, displayOrder } = req.body;
+
+    if (!imageUrl) {
+      return res.status(400).json({ error: "Image URL is required" });
+    }
+
+    try {
+      const filename = `hero-${Date.now()}-${Math.random().toString(36).substr(2, 9)}.jpg`;
+
+      const result = await apiCall("POST", "hero_slider_images", {
+        filename,
+        imageUrl,
+        altText: altText || "Hero slider image",
+        displayOrder: displayOrder || 0,
+      });
+
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      res.json({
+        success: true,
+        message: "Image added successfully",
+        id: result.id,
+      });
+    } catch (error) {
+      console.error("Error adding hero image:", error);
+      res.status(500).json({
+        error: error instanceof Error ? error.message : "Failed to add image",
+      });
+    }
+  });
+
+  app.put("/api/admin/hero-images/:id", async (req, res) => {
+    const token = req.headers.authorization?.split(" ")[1];
+
+    if (!token || !verifyToken(token)) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const { id } = req.params;
+    const { altText, displayOrder } = req.body;
+
+    try {
+      const updates: any = {};
+      if (altText !== undefined) updates.altText = altText;
+      if (displayOrder !== undefined) updates.displayOrder = displayOrder;
+
+      if (Object.keys(updates).length === 0) {
+        return res.status(400).json({ error: "No fields to update" });
+      }
+
+      const result = await apiCall("PUT", "hero_slider_images", updates, parseInt(id));
+
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      res.json({
+        success: true,
+        message: "Image updated successfully",
+      });
+    } catch (error) {
+      console.error("Error updating hero image:", error);
+      res.status(500).json({
+        error: error instanceof Error ? error.message : "Failed to update image",
+      });
+    }
+  });
+
+  app.delete("/api/admin/hero-images/:id", async (req, res) => {
+    const token = req.headers.authorization?.split(" ")[1];
+
+    if (!token || !verifyToken(token)) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const { id } = req.params;
+
+    try {
+      const result = await apiCall("DELETE", "hero_slider_images", null, parseInt(id));
+
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      res.json({
+        success: true,
+        message: "Image deleted successfully",
+      });
+    } catch (error) {
+      console.error("Error deleting hero image:", error);
+      res.status(500).json({
+        error: error instanceof Error ? error.message : "Failed to delete image",
+      });
+    }
+  });
+
+  // Public endpoint to get hero images
+  app.get("/api/hero-images", async (_req, res) => {
+    try {
+      const images = await apiCall("GET", "hero_slider_images");
+      const sortedImages = Array.isArray(images)
+        ? images.sort((a: any, b: any) => a.displayOrder - b.displayOrder)
+        : [];
+      res.json(sortedImages);
+    } catch (error) {
+      console.error("Error fetching hero images:", error);
+      res.json([]);
+    }
+  });
+
   // Contact form endpoint
   app.post("/api/contact", async (req, res) => {
     const { fullName, email, phone, subject, message } = req.body;
