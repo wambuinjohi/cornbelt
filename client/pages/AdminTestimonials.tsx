@@ -478,6 +478,22 @@ export default function AdminTestimonials() {
             )}
 
             {/* Testimonials List */}
+
+            <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete testimonial?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Are you sure you want to delete this testimonial? This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={confirmDelete}>Delete</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+
             {isLoading ? (
               <div className="text-center py-12">
                 <p className="text-muted-foreground">Loading testimonials...</p>
