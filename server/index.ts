@@ -750,6 +750,168 @@ export function createServer() {
     }
   });
 
+  // Admin testimonials management
+  app.get("/api/admin/testimonials", async (req, res) => {
+    const token = req.headers.authorization?.split(" ")[1];
+
+    if (!token || !verifyToken(token)) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    try {
+      const testimonials = await apiCall("GET", "testimonials");
+      const sortedTestimonials = Array.isArray(testimonials)
+        ? testimonials.sort((a: any, b: any) => a.displayOrder - b.displayOrder)
+        : [];
+      res.json(sortedTestimonials);
+    } catch (error) {
+      console.error("Error fetching testimonials:", error);
+      res.json([]);
+    }
+  });
+
+  app.post("/api/admin/testimonials", async (req, res) => {
+    const token = req.headers.authorization?.split(" ")[1];
+
+    if (!token || !verifyToken(token)) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const { fullName, location, testimonialText, imageUrl, rating, displayOrder, isPublished } =
+      req.body;
+
+    if (!fullName || !testimonialText) {
+      return res.status(400).json({
+        error: "Full name and testimonial text are required",
+      });
+    }
+
+    try {
+      const filename = imageUrl
+        ? `testimonial-${Date.now()}-${Math.random().toString(36).substr(2, 9)}.jpg`
+        : null;
+      const storagePath = filename
+        ? `https://cornbelt.co.ke/testimonials/${filename}`
+        : null;
+
+      const result = await apiCall("POST", "testimonials", {
+        fullName,
+        location: location || null,
+        testimonialText,
+        imageUrl: storagePath,
+        rating: rating || 5,
+        displayOrder: displayOrder || 0,
+        isPublished: isPublished !== false,
+      });
+
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      res.json({
+        success: true,
+        message: "Testimonial added successfully",
+        id: result.id,
+        imageUrl: storagePath,
+      });
+    } catch (error) {
+      console.error("Error adding testimonial:", error);
+      res.status(500).json({
+        error: error instanceof Error ? error.message : "Failed to add testimonial",
+      });
+    }
+  });
+
+  app.put("/api/admin/testimonials/:id", async (req, res) => {
+    const token = req.headers.authorization?.split(" ")[1];
+
+    if (!token || !verifyToken(token)) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const { id } = req.params;
+    const { fullName, location, testimonialText, rating, displayOrder, isPublished } =
+      req.body;
+
+    try {
+      const updates: any = {};
+      if (fullName !== undefined) updates.fullName = fullName;
+      if (location !== undefined) updates.location = location;
+      if (testimonialText !== undefined) updates.testimonialText = testimonialText;
+      if (rating !== undefined) updates.rating = rating;
+      if (displayOrder !== undefined) updates.displayOrder = displayOrder;
+      if (isPublished !== undefined) updates.isPublished = isPublished;
+
+      if (Object.keys(updates).length === 0) {
+        return res.status(400).json({ error: "No fields to update" });
+      }
+
+      const result = await apiCall("PUT", "testimonials", updates, parseInt(id));
+
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      res.json({
+        success: true,
+        message: "Testimonial updated successfully",
+      });
+    } catch (error) {
+      console.error("Error updating testimonial:", error);
+      res.status(500).json({
+        error: error instanceof Error ? error.message : "Failed to update testimonial",
+      });
+    }
+  });
+
+  app.delete("/api/admin/testimonials/:id", async (req, res) => {
+    const token = req.headers.authorization?.split(" ")[1];
+
+    if (!token || !verifyToken(token)) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const { id } = req.params;
+
+    try {
+      const result = await apiCall("DELETE", "testimonials", null, parseInt(id));
+
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      res.json({
+        success: true,
+        message: "Testimonial deleted successfully",
+      });
+    } catch (error) {
+      console.error("Error deleting testimonial:", error);
+      res.status(500).json({
+        error: error instanceof Error ? error.message : "Failed to delete testimonial",
+      });
+    }
+  });
+
+  // Public endpoint to get testimonials
+  app.get("/api/testimonials", async (_req, res) => {
+    try {
+      const testimonials = await apiCall("GET", "testimonials");
+
+      let publishedTestimonials = Array.isArray(testimonials)
+        ? testimonials.filter((t: any) => t.isPublished !== false)
+        : [];
+
+      const sortedTestimonials = publishedTestimonials.sort(
+        (a: any, b: any) => a.displayOrder - b.displayOrder,
+      );
+
+      res.json(sortedTestimonials);
+    } catch (error) {
+      console.error("Error fetching testimonials:", error);
+      res.json([]);
+    }
+  });
+
   // Contact form endpoint
   app.post("/api/contact", async (req, res) => {
     const { fullName, email, phone, subject, message } = req.body;
