@@ -90,7 +90,7 @@ export default function AdminTestimonials() {
       setSuccess(
         editingId
           ? "Testimonial updated successfully"
-          : "Testimonial added successfully"
+          : "Testimonial added successfully",
       );
       setShowForm(false);
       setEditingId(null);

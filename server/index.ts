@@ -127,7 +127,10 @@ async function initializeAdminTable() {
 
     // Seed sample testimonials if table is empty
     const existingTestimonials = await apiCall("GET", "testimonials");
-    if (!Array.isArray(existingTestimonials) || existingTestimonials.length === 0) {
+    if (
+      !Array.isArray(existingTestimonials) ||
+      existingTestimonials.length === 0
+    ) {
       const sampleTestimonials = [
         {
           fullName: "Margaret Kipchoge",
@@ -777,8 +780,15 @@ export function createServer() {
       return res.status(401).json({ error: "Unauthorized" });
     }
 
-    const { fullName, location, testimonialText, imageUrl, rating, displayOrder, isPublished } =
-      req.body;
+    const {
+      fullName,
+      location,
+      testimonialText,
+      imageUrl,
+      rating,
+      displayOrder,
+      isPublished,
+    } = req.body;
 
     if (!fullName || !testimonialText) {
       return res.status(400).json({
@@ -817,7 +827,8 @@ export function createServer() {
     } catch (error) {
       console.error("Error adding testimonial:", error);
       res.status(500).json({
-        error: error instanceof Error ? error.message : "Failed to add testimonial",
+        error:
+          error instanceof Error ? error.message : "Failed to add testimonial",
       });
     }
   });
@@ -830,14 +841,21 @@ export function createServer() {
     }
 
     const { id } = req.params;
-    const { fullName, location, testimonialText, rating, displayOrder, isPublished } =
-      req.body;
+    const {
+      fullName,
+      location,
+      testimonialText,
+      rating,
+      displayOrder,
+      isPublished,
+    } = req.body;
 
     try {
       const updates: any = {};
       if (fullName !== undefined) updates.fullName = fullName;
       if (location !== undefined) updates.location = location;
-      if (testimonialText !== undefined) updates.testimonialText = testimonialText;
+      if (testimonialText !== undefined)
+        updates.testimonialText = testimonialText;
       if (rating !== undefined) updates.rating = rating;
       if (displayOrder !== undefined) updates.displayOrder = displayOrder;
       if (isPublished !== undefined) updates.isPublished = isPublished;
@@ -846,7 +864,12 @@ export function createServer() {
         return res.status(400).json({ error: "No fields to update" });
       }
 
-      const result = await apiCall("PUT", "testimonials", updates, parseInt(id));
+      const result = await apiCall(
+        "PUT",
+        "testimonials",
+        updates,
+        parseInt(id),
+      );
 
       if (result.error) {
         throw new Error(result.error);
@@ -859,7 +882,10 @@ export function createServer() {
     } catch (error) {
       console.error("Error updating testimonial:", error);
       res.status(500).json({
-        error: error instanceof Error ? error.message : "Failed to update testimonial",
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to update testimonial",
       });
     }
   });
@@ -874,7 +900,12 @@ export function createServer() {
     const { id } = req.params;
 
     try {
-      const result = await apiCall("DELETE", "testimonials", null, parseInt(id));
+      const result = await apiCall(
+        "DELETE",
+        "testimonials",
+        null,
+        parseInt(id),
+      );
 
       if (result.error) {
         throw new Error(result.error);
@@ -887,7 +918,10 @@ export function createServer() {
     } catch (error) {
       console.error("Error deleting testimonial:", error);
       res.status(500).json({
-        error: error instanceof Error ? error.message : "Failed to delete testimonial",
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to delete testimonial",
       });
     }
   });

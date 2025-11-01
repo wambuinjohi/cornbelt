@@ -28,7 +28,9 @@ export default function ProductGallery({
   useEffect(() => {
     const fetchProductImages = async () => {
       try {
-        const response = await fetch(`/api/product-images?productId=${productId}`);
+        const response = await fetch(
+          `/api/product-images?productId=${productId}`,
+        );
         const data = await response.json();
 
         if (Array.isArray(data) && data.length > 0) {

@@ -539,37 +539,69 @@ export default function Index() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               <div className="rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
-                <img src="https://cdn.builder.io/api/v1/image/assets%2F1ffce8bff4d5493bafecc479d3963466%2F5ff5547835bc43a1b1765ac4be6ec727?format=webp&width=800" alt="Cornbelt teardrop flag at events" className="w-full h-64 object-cover" />
+                <img
+                  src="https://cdn.builder.io/api/v1/image/assets%2F1ffce8bff4d5493bafecc479d3963466%2F5ff5547835bc43a1b1765ac4be6ec727?format=webp&width=800"
+                  alt="Cornbelt teardrop flag at events"
+                  className="w-full h-64 object-cover"
+                />
                 <div className="p-4 bg-white">
-                  <h3 className="font-semibold text-foreground">Event Marketing</h3>
-                  <p className="text-sm text-muted-foreground">Cornbelt at community events</p>
+                  <h3 className="font-semibold text-foreground">
+                    Event Marketing
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    Cornbelt at community events
+                  </p>
                 </div>
               </div>
 
               <div className="rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
-                <img src="https://cdn.builder.io/api/v1/image/assets%2F1ffce8bff4d5493bafecc479d3963466%2F16328bab2c0943c487599e9b3169b599?format=webp&width=800" alt="Cornbelt rollup banner display" className="w-full h-64 object-cover" />
+                <img
+                  src="https://cdn.builder.io/api/v1/image/assets%2F1ffce8bff4d5493bafecc479d3963466%2F16328bab2c0943c487599e9b3169b599?format=webp&width=800"
+                  alt="Cornbelt rollup banner display"
+                  className="w-full h-64 object-cover"
+                />
                 <div className="p-4 bg-white">
-                  <h3 className="font-semibold text-foreground">Brand Displays</h3>
-                  <p className="text-sm text-muted-foreground">Visible in stores nationwide</p>
+                  <h3 className="font-semibold text-foreground">
+                    Brand Displays
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    Visible in stores nationwide
+                  </p>
                 </div>
               </div>
 
               <div className="rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
-                <img src="https://cdn.builder.io/api/v1/image/assets%2F1ffce8bff4d5493bafecc479d3963466%2F64d7a753a7854a4bab6cb64fcedc87d9?format=webp&width=800" alt="Jirani with families in communities" className="w-full h-64 object-cover" />
+                <img
+                  src="https://cdn.builder.io/api/v1/image/assets%2F1ffce8bff4d5493bafecc479d3963466%2F64d7a753a7854a4bab6cb64fcedc87d9?format=webp&width=800"
+                  alt="Jirani with families in communities"
+                  className="w-full h-64 object-cover"
+                />
                 <div className="p-4 bg-white">
-                  <h3 className="font-semibold text-foreground">Community Trust</h3>
-                  <p className="text-sm text-muted-foreground">Trusted by Kenyan families</p>
+                  <h3 className="font-semibold text-foreground">
+                    Community Trust
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    Trusted by Kenyan families
+                  </p>
                 </div>
               </div>
             </div>
 
             <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="rounded-2xl overflow-hidden shadow-lg">
-                <img src="https://cdn.builder.io/api/v1/image/assets%2F1ffce8bff4d5493bafecc479d3963466%2Ff82178ff7d644c3a9cabfabe9e223a8f?format=webp&width=800" alt="Jirani maize meal packaging showcase" className="w-full h-64 object-cover" />
+                <img
+                  src="https://cdn.builder.io/api/v1/image/assets%2F1ffce8bff4d5493bafecc479d3963466%2Ff82178ff7d644c3a9cabfabe9e223a8f?format=webp&width=800"
+                  alt="Jirani maize meal packaging showcase"
+                  className="w-full h-64 object-cover"
+                />
               </div>
 
               <div className="rounded-2xl overflow-hidden shadow-lg">
-                <img src="https://cdn.builder.io/api/v1/image/assets%2F1ffce8bff4d5493bafecc479d3963466%2Ff174d02acd5d44648136ae62db46a06a?format=webp&width=800" alt="Jirani products in retail environment" className="w-full h-64 object-cover" />
+                <img
+                  src="https://cdn.builder.io/api/v1/image/assets%2F1ffce8bff4d5493bafecc479d3963466%2Ff174d02acd5d44648136ae62db46a06a?format=webp&width=800"
+                  alt="Jirani products in retail environment"
+                  className="w-full h-64 object-cover"
+                />
               </div>
             </div>
           </div>
@@ -603,7 +635,11 @@ export default function Index() {
                     trusted farmers
                   </p>
                 </div>
-                <img src="https://cdn.builder.io/api/v1/image/assets%2F1ffce8bff4d5493bafecc479d3963466%2F55c0c6e3f31e42738894312205f182a7?format=webp&width=800" alt="Raw maize selection and storage" className="rounded-lg shadow-lg w-full object-cover h-48" />
+                <img
+                  src="https://cdn.builder.io/api/v1/image/assets%2F1ffce8bff4d5493bafecc479d3963466%2F55c0c6e3f31e42738894312205f182a7?format=webp&width=800"
+                  alt="Raw maize selection and storage"
+                  className="rounded-lg shadow-lg w-full object-cover h-48"
+                />
               </div>
 
               <div className="space-y-4">
@@ -621,7 +657,11 @@ export default function Index() {
                     debris using advanced technology
                   </p>
                 </div>
-                <img src="https://cdn.builder.io/api/v1/image/assets%2F1ffce8bff4d5493bafecc479d3963466%2Fc0b896d25ac84b8e9382dd61577b5a45?format=webp&width=800" alt="Milling and processing equipment" className="rounded-lg shadow-lg w-full object-cover h-48" />
+                <img
+                  src="https://cdn.builder.io/api/v1/image/assets%2F1ffce8bff4d5493bafecc479d3963466%2Fc0b896d25ac84b8e9382dd61577b5a45?format=webp&width=800"
+                  alt="Milling and processing equipment"
+                  className="rounded-lg shadow-lg w-full object-cover h-48"
+                />
               </div>
 
               <div className="space-y-4">
@@ -639,7 +679,11 @@ export default function Index() {
                     essential vitamins and minerals
                   </p>
                 </div>
-                <img src="https://cdn.builder.io/api/v1/image/assets%2F1ffce8bff4d5493bafecc479d3963466%2Fb22c9c0270ed47d8bb4da53c14df93e1?format=webp&width=800" alt="Industrial maize processing facility" className="rounded-lg shadow-lg w-full object-cover h-48" />
+                <img
+                  src="https://cdn.builder.io/api/v1/image/assets%2F1ffce8bff4d5493bafecc479d3963466%2Fb22c9c0270ed47d8bb4da53c14df93e1?format=webp&width=800"
+                  alt="Industrial maize processing facility"
+                  className="rounded-lg shadow-lg w-full object-cover h-48"
+                />
               </div>
 
               <div className="space-y-4">
@@ -657,7 +701,11 @@ export default function Index() {
                     reach customers fresh and on time
                   </p>
                 </div>
-                <img src="https://cdn.builder.io/api/v1/image/assets%2F1ffce8bff4d5493bafecc479d3963466%2F899164802be54df0a1d17b956615ba47?format=webp&width=800" alt="Final product packaging and quality control" className="rounded-lg shadow-lg w-full object-cover h-48" />
+                <img
+                  src="https://cdn.builder.io/api/v1/image/assets%2F1ffce8bff4d5493bafecc479d3963466%2F899164802be54df0a1d17b956615ba47?format=webp&width=800"
+                  alt="Final product packaging and quality control"
+                  className="rounded-lg shadow-lg w-full object-cover h-48"
+                />
               </div>
             </div>
           </div>
