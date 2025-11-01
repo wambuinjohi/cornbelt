@@ -113,13 +113,12 @@ export default function Index() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
               {/* Jirani Product */}
               <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow border border-border">
-                <div className="h-72 bg-gradient-to-br from-primary to-primary/50 flex items-center justify-center">
-                  <div className="text-center space-y-3">
-                    <div className="inline-flex items-center justify-center w-32 h-32 bg-white/20 rounded-2xl">
-                      <span className="text-6xl">🌾</span>
-                    </div>
-                  </div>
-                </div>
+                <ProductGallery
+                  productId="jirani"
+                  productName="Jirani Fortified Maize Meal"
+                  fallbackImage="https://cdn.builder.io/api/v1/image/assets%2F1ffce8bff4d5493bafecc479d3963466%2F70ce74f71c7443cc97f0aac39bf3a2e2?format=webp&width=800"
+                  fallbackAlt="Jirani Fortified Maize Meal packaging"
+                />
                 <div className="p-8 space-y-6">
                   <div>
                     <h3 className="text-2xl font-bold text-foreground mb-2">
@@ -159,7 +158,7 @@ export default function Index() {
                 <div className="h-72 bg-gradient-to-br from-secondary to-secondary/50 flex items-center justify-center">
                   <div className="text-center space-y-3">
                     <div className="inline-flex items-center justify-center w-32 h-32 bg-white/20 rounded-2xl">
-                      <span className="text-6xl">���</span>
+                      <span className="text-6xl">😊</span>
                     </div>
                   </div>
                 </div>
