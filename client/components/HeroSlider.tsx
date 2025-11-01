@@ -8,27 +8,27 @@ interface Slide {
 export default function HeroSlider() {
   const [currentSlide, setCurrentSlide] = useState(0);
 
-  // Unsplash images related to maize, agriculture, Kenya, food production
+  // Unsplash images specifically of corn and maize
   const slides: Slide[] = [
     {
       url: "https://images.unsplash.com/photo-1574943320219-553eb213f72d?w=1600&h=900&fit=crop",
-      alt: "Golden maize field at sunset",
+      alt: "Golden corn field at sunset",
     },
     {
-      url: "https://images.unsplash.com/photo-1625246333195-78d9c38ad576?w=1600&h=900&fit=crop",
-      alt: "Agriculture and farming landscape",
+      url: "https://images.unsplash.com/photo-1585518419759-66eace0b5df3?w=1600&h=900&fit=crop",
+      alt: "Fresh corn stalks in field",
     },
     {
-      url: "https://images.unsplash.com/photo-1625873566370-cb67f1f0f879?w=1600&h=900&fit=crop",
-      alt: "Fresh farm produce harvest",
+      url: "https://images.unsplash.com/photo-1574943320219-2f6fedc6e99e?w=1600&h=900&fit=crop",
+      alt: "Ripe corn on the cob",
     },
     {
-      url: "https://images.unsplash.com/photo-1595433707802-6b2626ef1c91?w=1600&h=900&fit=crop",
-      alt: "Organic farming and crops",
+      url: "https://images.unsplash.com/photo-1537910050408-fdf2d3e4efefc?w=1600&h=900&fit=crop",
+      alt: "Corn harvest in field",
     },
     {
-      url: "https://images.unsplash.com/photo-1500637537615-5f2428ff6951?w=1600&h=900&fit=crop",
-      alt: "Vast farmland landscape",
+      url: "https://images.unsplash.com/photo-1599599810694-b5ac4dd4b4a9?w=1600&h=900&fit=crop&q=80&crop=entropy&cs=tinysrgb",
+      alt: "Beautiful corn field landscape",
     },
   ];
 
