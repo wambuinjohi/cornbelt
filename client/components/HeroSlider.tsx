@@ -8,27 +8,27 @@ interface Slide {
 export default function HeroSlider() {
   const [currentSlide, setCurrentSlide] = useState(0);
 
-  // Unsplash images specifically of corn and maize crops
+  // High-quality corn and maize crop images from Unsplash
   const slides: Slide[] = [
     {
-      url: "https://images.unsplash.com/photo-1625246333195-78d9c38ad576?w=1600&h=900&fit=crop",
-      alt: "Vibrant corn field landscape",
+      url: "https://images.unsplash.com/photo-1625246333195-78d9c38ad576?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&h=900&q=80",
+      alt: "Golden corn field at harvest",
     },
     {
-      url: "https://images.unsplash.com/photo-1574943320219-553eb213f72d?w=1600&h=900&fit=crop",
-      alt: "Golden corn at harvest time",
+      url: "https://images.unsplash.com/photo-1574943320219-553eb213f72d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&h=900&q=80",
+      alt: "Ripe corn ready for harvest",
     },
     {
-      url: "https://images.unsplash.com/photo-1585768694789-ef30e02c5fe1?w=1600&h=900&fit=crop",
-      alt: "Lush green corn stalks",
+      url: "https://images.unsplash.com/photo-1597848212624-29fa86590c7b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&h=900&q=80",
+      alt: "Lush green corn plants",
     },
     {
-      url: "https://images.unsplash.com/photo-1560493676-04071c5f467b?w=1600&h=900&fit=crop",
-      alt: "Fresh corn cobs and kernels",
+      url: "https://images.unsplash.com/photo-1625873566370-cb67f1f0f879?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&h=900&q=80",
+      alt: "Fresh corn stalks in field",
     },
     {
-      url: "https://images.unsplash.com/photo-1625873566370-cb67f1f0f879?w=1600&h=900&fit=crop",
-      alt: "Corn field ready for harvest",
+      url: "https://images.unsplash.com/photo-1560493676-04071c5f467b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&h=900&q=80",
+      alt: "Corn kernels and harvest",
     },
   ];
 
