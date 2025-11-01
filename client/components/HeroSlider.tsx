@@ -7,9 +7,10 @@ interface Slide {
 
 export default function HeroSlider() {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [slides, setSlides] = useState<Slide[]>([]);
 
-  // High-quality corn and maize crop images from Unsplash
-  const slides: Slide[] = [
+  // Default fallback images
+  const defaultSlides: Slide[] = [
     {
       url: "https://images.unsplash.com/photo-1625246333195-78d9c38ad576?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&h=900&q=80",
       alt: "Golden corn field at harvest",
@@ -32,8 +33,35 @@ export default function HeroSlider() {
     },
   ];
 
+  // Fetch images from API
+  useEffect(() => {
+    const fetchSliderImages = async () => {
+      try {
+        const response = await fetch("/api/hero-images");
+        const data = await response.json();
+
+        if (Array.isArray(data) && data.length > 0) {
+          const mappedSlides = data.map((image: any) => ({
+            url: image.imageUrl,
+            alt: image.altText || "Hero slider image",
+          }));
+          setSlides(mappedSlides);
+        } else {
+          setSlides(defaultSlides);
+        }
+      } catch (error) {
+        console.error("Error fetching slider images:", error);
+        setSlides(defaultSlides);
+      }
+    };
+
+    fetchSliderImages();
+  }, []);
+
   // Auto-rotate slides every 5 seconds
   useEffect(() => {
+    if (slides.length === 0) return;
+
     const interval = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slides.length);
     }, 5000);

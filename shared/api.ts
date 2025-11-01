@@ -10,3 +10,26 @@
 export interface DemoResponse {
   message: string;
 }
+
+/**
+ * Contact form request data
+ */
+export interface ContactFormData {
+  fullName: string;
+  email: string;
+  phone: string;
+  subject: string;
+  message: string;
+}
+
+/**
+ * Contact form response type for /api/contact
+ */
+export interface ContactResponse {
+  success: boolean;
+  message: string;
+  data?: {
+    submittedAt: string;
+  };
+  error?: string;
+}
