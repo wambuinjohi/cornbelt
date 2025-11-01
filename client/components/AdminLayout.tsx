@@ -3,6 +3,17 @@ import { useNavigate, useLocation, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
   LayoutDashboard,
   Images,
   Mail,
@@ -41,12 +52,10 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   ];
 
   const handleLogout = () => {
-    if (confirm("Are you sure you want to logout?")) {
-      localStorage.removeItem("adminToken");
-      localStorage.removeItem("adminUser");
-      toast.success("Logged out successfully");
-      navigate("/admin/login");
-    }
+    localStorage.removeItem("adminToken");
+    localStorage.removeItem("adminUser");
+    toast.success("Logged out successfully");
+    navigate("/admin/login");
   };
 
   const isActive = (href: string) => location.pathname === href;
@@ -106,14 +115,26 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
         {/* Sidebar Footer */}
         <div className="border-t border-primary/10 p-4 space-y-2">
-          <Button
-            onClick={handleLogout}
-            variant="destructive"
-            className="w-full justify-start gap-3"
-          >
-            <LogOut className="w-5 h-5" />
-            Logout
-          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive" className="w-full justify-start gap-3">
+                <LogOut className="w-5 h-5" />
+                Logout
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Log out?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  You will be signed out of the admin dashboard.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleLogout}>Log out</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </aside>
 
