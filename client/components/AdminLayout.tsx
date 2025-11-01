@@ -51,6 +51,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       href: "/admin/submissions",
     },
     {
+      icon: MessageCircle,
+      label: "Chat & Bot",
+      href: "/admin/chat",
+    },
+    {
       icon: Settings,
       label: "Testimonials",
       href: "/admin/testimonials",
