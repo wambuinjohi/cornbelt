@@ -398,6 +398,65 @@ export function createServer() {
     }
   });
 
+  // File upload endpoint
+  app.post("/api/admin/upload", async (req, res) => {
+    const token = req.headers.authorization?.split(" ")[1];
+
+    if (!token || !verifyToken(token)) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const { fileData, fileName } = req.body;
+
+    if (!fileData || !fileName) {
+      return res.status(400).json({ error: "File data and name are required" });
+    }
+
+    try {
+      // Generate unique filename
+      const timestamp = Date.now();
+      const random = Math.random().toString(36).substr(2, 9);
+      const ext = fileName.split(".").pop() || "jpg";
+      const uniqueFileName = `hero-${timestamp}-${random}.${ext}`;
+
+      // Convert base64 to buffer
+      const buffer = Buffer.from(fileData, "base64");
+
+      // Create FormData for upload
+      const uploadFormData = new FormData();
+      uploadFormData.append("file", buffer, uniqueFileName);
+
+      // Upload to external server
+      const uploadResponse = await fetch(
+        "https://cornbelt.co.ke/uploads/upload.php",
+        {
+          method: "POST",
+          body: uploadFormData,
+        }
+      );
+
+      if (!uploadResponse.ok) {
+        throw new Error("Failed to upload to external server");
+      }
+
+      const uploadResult = await uploadResponse.json();
+
+      // Construct the image URL
+      const imageUrl = `https://cornbelt.co.ke/uploads/${uniqueFileName}`;
+
+      res.json({
+        success: true,
+        imageUrl,
+        filename: uniqueFileName,
+      });
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      res.status(500).json({
+        error: error instanceof Error ? error.message : "Failed to upload file",
+      });
+    }
+  });
+
   // Public endpoint to get hero images
   app.get("/api/hero-images", async (_req, res) => {
     try {
