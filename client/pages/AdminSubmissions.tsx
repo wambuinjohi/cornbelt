@@ -77,26 +77,46 @@ export default function AdminSubmissions() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-primary/10">
-                  <th className="text-left py-3 px-4 font-semibold text-foreground">Name</th>
-                  <th className="text-left py-3 px-4 font-semibold text-foreground">Email</th>
-                  <th className="text-left py-3 px-4 font-semibold text-foreground">Phone</th>
-                  <th className="text-left py-3 px-4 font-semibold text-foreground">Subject</th>
-                  <th className="text-left py-3 px-4 font-semibold text-foreground">Message</th>
-                  <th className="text-left py-3 px-4 font-semibold text-foreground">Date</th>
+                  <th className="text-left py-3 px-4 font-semibold text-foreground">
+                    Name
+                  </th>
+                  <th className="text-left py-3 px-4 font-semibold text-foreground">
+                    Email
+                  </th>
+                  <th className="text-left py-3 px-4 font-semibold text-foreground">
+                    Phone
+                  </th>
+                  <th className="text-left py-3 px-4 font-semibold text-foreground">
+                    Subject
+                  </th>
+                  <th className="text-left py-3 px-4 font-semibold text-foreground">
+                    Message
+                  </th>
+                  <th className="text-left py-3 px-4 font-semibold text-foreground">
+                    Date
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {submissions.map((s) => (
-                  <tr key={s.id} className="border-b border-primary/5 hover:bg-background transition-colors align-top">
+                  <tr
+                    key={s.id}
+                    className="border-b border-primary/5 hover:bg-background transition-colors align-top"
+                  >
                     <td className="py-3 px-4">{s.fullName}</td>
                     <td className="py-3 px-4">
-                      <a href={`mailto:${s.email}`} className="text-primary hover:underline">
+                      <a
+                        href={`mailto:${s.email}`}
+                        className="text-primary hover:underline"
+                      >
                         {s.email}
                       </a>
                     </td>
                     <td className="py-3 px-4">{s.phone || "-"}</td>
                     <td className="py-3 px-4">{s.subject || "-"}</td>
-                    <td className="py-3 px-4 max-w-[320px] whitespace-pre-wrap">{s.message || "-"}</td>
+                    <td className="py-3 px-4 max-w-[320px] whitespace-pre-wrap">
+                      {s.message || "-"}
+                    </td>
                     <td className="py-3 px-4 text-muted-foreground text-xs">
                       {new Date(s.createdAt).toLocaleString()}
                     </td>

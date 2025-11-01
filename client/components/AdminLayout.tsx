@@ -117,7 +117,10 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         <div className="border-t border-primary/10 p-4 space-y-2">
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button variant="destructive" className="w-full justify-start gap-3">
+              <Button
+                variant="destructive"
+                className="w-full justify-start gap-3"
+              >
                 <LogOut className="w-5 h-5" />
                 Logout
               </Button>
@@ -131,7 +134,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={handleLogout}>Log out</AlertDialogAction>
+                <AlertDialogAction onClick={handleLogout}>
+                  Log out
+                </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
