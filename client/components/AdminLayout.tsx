@@ -21,6 +21,7 @@ import {
   Menu,
   X,
   Settings,
+  MessageCircle,
 } from "lucide-react";
 
 interface AdminLayoutProps {
@@ -48,6 +49,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       icon: Mail,
       label: "Contact Submissions",
       href: "/admin/submissions",
+    },
+    {
+      icon: MessageCircle,
+      label: "Chat & Bot",
+      href: "/admin/chat",
     },
     {
       icon: Settings,
