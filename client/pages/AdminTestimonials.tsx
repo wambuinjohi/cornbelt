@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
+import { useNavigate } from "react-router-dom";
+import AdminLayout from "@/components/AdminLayout";
 import { X, Plus, Edit2, Trash2 } from "lucide-react";
 
 interface Testimonial {
@@ -15,6 +15,7 @@ interface Testimonial {
 }
 
 export default function AdminTestimonials() {
+  const navigate = useNavigate();
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -30,19 +31,19 @@ export default function AdminTestimonials() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  const token = localStorage.getItem("authToken");
-
   useEffect(() => {
+    const token = localStorage.getItem("adminToken");
     if (!token) {
-      window.location.href = "/admin-login";
+      navigate("/admin/login");
       return;
     }
     fetchTestimonials();
-  }, [token]);
+  }, [navigate]);
 
   const fetchTestimonials = async () => {
     try {
       setIsLoading(true);
+      const token = localStorage.getItem("adminToken");
       const response = await fetch("/api/admin/testimonials", {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -76,7 +77,7 @@ export default function AdminTestimonials() {
         method,
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
         },
         body: JSON.stringify(formData),
       });
@@ -124,7 +125,7 @@ export default function AdminTestimonials() {
     try {
       const response = await fetch(`/api/admin/testimonials/${id}`, {
         method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${localStorage.getItem("adminToken")}` },
       });
 
       if (!response.ok) {
@@ -153,12 +154,8 @@ export default function AdminTestimonials() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <Header />
-
-      <main className="flex-1">
-        <section className="py-12 bg-background">
-          <div className="container mx-auto px-4 md:px-6">
+    <AdminLayout>
+      <div className="container mx-auto px-4 md:px-6 py-12">
             <div className="mb-8 flex justify-between items-center">
               <div>
                 <h1 className="text-4xl font-bold text-foreground mb-2">
@@ -435,11 +432,7 @@ export default function AdminTestimonials() {
                 ))}
               </div>
             )}
-          </div>
-        </section>
-      </main>
-
-      <Footer />
-    </div>
+      </div>
+    </AdminLayout>
   );
 }
