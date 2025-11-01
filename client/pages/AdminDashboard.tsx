@@ -86,9 +86,7 @@ export default function AdminDashboard() {
         <div className="container mx-auto px-4 md:px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <LayoutDashboard className="w-6 h-6 text-primary" />
-            <h1 className="text-2xl font-bold text-primary">
-              Admin Dashboard
-            </h1>
+            <h1 className="text-2xl font-bold text-primary">Admin Dashboard</h1>
           </div>
           <div className="flex items-center gap-4">
             <div className="text-right">

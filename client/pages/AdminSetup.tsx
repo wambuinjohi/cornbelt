@@ -88,7 +88,9 @@ export default function AdminSetup() {
     } catch (error) {
       console.error("Setup error:", error);
       toast.error(
-        error instanceof Error ? error.message : "Failed to create admin account"
+        error instanceof Error
+          ? error.message
+          : "Failed to create admin account",
       );
     } finally {
       setIsLoading(false);
@@ -100,7 +102,9 @@ export default function AdminSetup() {
       <div className="min-h-screen bg-gradient-to-b from-primary/10 to-background flex items-center justify-center px-4">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-muted-foreground">Checking system status...</p>
+          <p className="mt-4 text-muted-foreground">
+            Checking system status...
+          </p>
         </div>
       </div>
     );
@@ -131,10 +135,7 @@ export default function AdminSetup() {
           </div>
 
           <Form {...form}>
-            <form
-              onSubmit={form.handleSubmit(onSubmit)}
-              className="space-y-6"
-            >
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               {/* Full Name */}
               <FormField
                 control={form.control}
@@ -238,11 +239,7 @@ export default function AdminSetup() {
                 )}
               />
 
-              <Button
-                type="submit"
-                disabled={isLoading}
-                className="w-full"
-              >
+              <Button type="submit" disabled={isLoading} className="w-full">
                 {isLoading ? "Creating Account..." : "Create Admin Account"}
               </Button>
             </form>

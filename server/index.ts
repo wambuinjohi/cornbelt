@@ -68,7 +68,7 @@ function generateToken(adminId: number): string {
       id: adminId,
       iat: Math.floor(Date.now() / 1000),
       exp: Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60, // 7 days
-    })
+    }),
   );
   const signature = crypto
     .createHmac("sha256", process.env.JWT_SECRET || "secret-key")
@@ -98,7 +98,7 @@ async function apiCall(
   method: string,
   table: string,
   data?: any,
-  id?: number
+  id?: number,
 ): Promise<any> {
   const baseUrl = "https://cornbelt.co.ke";
   let url = `${baseUrl}/api.php?table=${table}`;
@@ -188,12 +188,10 @@ export function createServer() {
       });
     } catch (error) {
       console.error("Setup error:", error);
-      res
-        .status(500)
-        .json({
-          error:
-            error instanceof Error ? error.message : "Failed to create admin",
-        });
+      res.status(500).json({
+        error:
+          error instanceof Error ? error.message : "Failed to create admin",
+      });
     }
   });
 
@@ -201,9 +199,7 @@ export function createServer() {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      return res
-        .status(400)
-        .json({ error: "Email and password are required" });
+      return res.status(400).json({ error: "Email and password are required" });
     }
 
     try {
@@ -214,7 +210,7 @@ export function createServer() {
       }
 
       const user = users.find(
-        (u: any) => u.email === email && u.password === hashPassword(password)
+        (u: any) => u.email === email && u.password === hashPassword(password),
       );
 
       if (!user) {
@@ -277,8 +273,7 @@ export function createServer() {
     }
 
     // Phone validation
-    const phoneRegex =
-      /^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$/;
+    const phoneRegex = /^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$/;
     if (!phoneRegex.test(phone)) {
       return res.status(400).json({
         success: false,
@@ -307,7 +302,8 @@ export function createServer() {
       // Send success response
       res.json({
         success: true,
-        message: "Your message has been received. We will get back to you soon.",
+        message:
+          "Your message has been received. We will get back to you soon.",
         data: {
           submittedAt: new Date().toISOString(),
           id: result.id,
@@ -318,7 +314,8 @@ export function createServer() {
       // Still return success to user but log the error
       res.json({
         success: true,
-        message: "Your message has been received. We will get back to you soon.",
+        message:
+          "Your message has been received. We will get back to you soon.",
         data: {
           submittedAt: new Date().toISOString(),
         },

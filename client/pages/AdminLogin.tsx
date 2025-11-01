@@ -55,9 +55,7 @@ export default function AdminLogin() {
       navigate("/admin/dashboard");
     } catch (error) {
       console.error("Login error:", error);
-      toast.error(
-        error instanceof Error ? error.message : "Failed to login"
-      );
+      toast.error(error instanceof Error ? error.message : "Failed to login");
     } finally {
       setIsLoading(false);
     }
@@ -80,10 +78,7 @@ export default function AdminLogin() {
           </div>
 
           <Form {...form}>
-            <form
-              onSubmit={form.handleSubmit(onSubmit)}
-              className="space-y-6"
-            >
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               {/* Email */}
               <FormField
                 control={form.control}
@@ -134,11 +129,7 @@ export default function AdminLogin() {
                 )}
               />
 
-              <Button
-                type="submit"
-                disabled={isLoading}
-                className="w-full"
-              >
+              <Button type="submit" disabled={isLoading} className="w-full">
                 {isLoading ? "Signing in..." : "Sign In"}
               </Button>
             </form>
