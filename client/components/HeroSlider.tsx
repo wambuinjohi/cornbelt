@@ -12,24 +12,24 @@ export default function HeroSlider() {
   // Default fallback images
   const defaultSlides: Slide[] = [
     {
-      url: "https://images.unsplash.com/photo-1625246333195-78d9c38ad576?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&h=900&q=80",
-      alt: "Golden corn field at harvest",
+      url: "https://cdn.builder.io/api/v1/image/assets%2F1ffce8bff4d5493bafecc479d3963466%2F5faa80f695624fab98c4b8cdbca4e0d7?format=webp&width=800",
+      alt: "Cornbelt flour mill billboard advertisement",
     },
     {
-      url: "https://images.unsplash.com/photo-1574943320219-553eb213f72d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&h=900&q=80",
-      alt: "Ripe corn ready for harvest",
+      url: "https://cdn.builder.io/api/v1/image/assets%2F1ffce8bff4d5493bafecc479d3963466%2F0d117e54429f404bb6e71a4b18a98876?format=webp&width=800",
+      alt: "Cornbelt products display",
     },
     {
-      url: "https://images.unsplash.com/photo-1597848212624-29fa86590c7b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&h=900&q=80",
-      alt: "Lush green corn plants",
+      url: "https://cdn.builder.io/api/v1/image/assets%2F1ffce8bff4d5493bafecc479d3963466%2F9e37a8d9c5764cbe9c1a6a45fb44d6b8?format=webp&width=800",
+      alt: "Cornbelt facility and signage",
     },
     {
-      url: "https://images.unsplash.com/photo-1625873566370-cb67f1f0f879?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&h=900&q=80",
-      alt: "Fresh corn stalks in field",
+      url: "https://cdn.builder.io/api/v1/image/assets%2F1ffce8bff4d5493bafecc479d3963466%2F85026c8a3cf94c89a4204f2ddfec1703?format=webp&width=800",
+      alt: "Cornbelt marketing campaign",
     },
     {
-      url: "https://images.unsplash.com/photo-1560493676-04071c5f467b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&h=900&q=80",
-      alt: "Corn kernels and harvest",
+      url: "https://cdn.builder.io/api/v1/image/assets%2F1ffce8bff4d5493bafecc479d3963466%2Fa2d86d9f4ad945de88fded66d899beed?format=webp&width=800",
+      alt: "Jirani maize meal promotion",
     },
   ];
 
