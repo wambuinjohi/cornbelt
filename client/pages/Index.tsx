@@ -37,10 +37,10 @@ export default function Index() {
                 className="w-24 h-24 mx-auto object-contain"
               />
               <div className="space-y-4">
-                <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground leading-tight">
-                  From The Farm, With <span className="text-primary">Love</span>
+                <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight drop-shadow-lg">
+                  From The Farm, With <span className="text-secondary">Love</span>
                 </h1>
-                <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+                <p className="text-xl text-white/90 max-w-2xl mx-auto drop-shadow">
                   Kenya's finest fortified maize flour – nourishing families with
                   quality, tradition, and excellence since our founding.
                 </p>
