@@ -74,6 +74,30 @@ async function initializeAdminTable() {
     });
 
     console.log("Hero slider images table initialized");
+
+    // Create product_images table
+    const productTableData = {
+      create_table: true,
+      columns: {
+        id: "INT AUTO_INCREMENT PRIMARY KEY",
+        productId: "VARCHAR(255) NOT NULL",
+        filename: "VARCHAR(255) NOT NULL",
+        imageUrl: "VARCHAR(500) NOT NULL",
+        altText: "VARCHAR(255)",
+        displayOrder: "INT DEFAULT 0",
+        createdAt: "DATETIME DEFAULT CURRENT_TIMESTAMP",
+        updatedAt:
+          "DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
+      },
+    };
+
+    await fetch(`${baseUrl}/api.php?table=product_images`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(productTableData),
+    });
+
+    console.log("Product images table initialized");
   } catch (error) {
     console.error("Error initializing tables:", error);
   }
