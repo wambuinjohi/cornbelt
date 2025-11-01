@@ -87,8 +87,125 @@ export function createServer() {
 
   app.get("/api/demo", handleDemo);
 
+  // Admin endpoints
+  app.get("/api/admin/check-initialized", async (_req, res) => {
+    try {
+      const result = await apiCall("GET", "admin_users");
+      const initialized = Array.isArray(result) && result.length > 0;
+      res.json({ initialized });
+    } catch (error) {
+      res.json({ initialized: false });
+    }
+  });
+
+  app.post("/api/admin/setup", async (req, res) => {
+    const { email, password, fullName } = req.body;
+
+    // Validate input
+    if (!email || !password || !fullName) {
+      return res
+        .status(400)
+        .json({ error: "Missing required fields (email, password, fullName)" });
+    }
+
+    try {
+      // Check if admin already exists
+      const existing = await apiCall("GET", "admin_users");
+      if (Array.isArray(existing) && existing.length > 0) {
+        return res.status(400).json({ error: "Admin already initialized" });
+      }
+
+      // Hash password
+      const hashedPassword = hashPassword(password);
+
+      // Create admin user
+      const result = await apiCall("POST", "admin_users", {
+        email,
+        password: hashedPassword,
+        fullName,
+        createdAt: new Date().toISOString(),
+      });
+
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      res.json({
+        success: true,
+        message: "Admin account created successfully",
+        id: result.id,
+      });
+    } catch (error) {
+      console.error("Setup error:", error);
+      res
+        .status(500)
+        .json({
+          error:
+            error instanceof Error ? error.message : "Failed to create admin",
+        });
+    }
+  });
+
+  app.post("/api/admin/login", async (req, res) => {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res
+        .status(400)
+        .json({ error: "Email and password are required" });
+    }
+
+    try {
+      // Fetch all admin users and find by email
+      const users = await apiCall("GET", "admin_users");
+      if (!Array.isArray(users)) {
+        return res.status(401).json({ error: "Invalid credentials" });
+      }
+
+      const user = users.find(
+        (u: any) => u.email === email && u.password === hashPassword(password)
+      );
+
+      if (!user) {
+        return res.status(401).json({ error: "Invalid credentials" });
+      }
+
+      const token = generateToken(user.id);
+
+      res.json({
+        success: true,
+        token,
+        user: {
+          id: user.id,
+          email: user.email,
+          fullName: user.fullName,
+          createdAt: user.createdAt,
+        },
+      });
+    } catch (error) {
+      console.error("Login error:", error);
+      res.status(500).json({ error: "Login failed" });
+    }
+  });
+
+  app.get("/api/admin/contact-submissions", async (req, res) => {
+    const token = req.headers.authorization?.split(" ")[1];
+
+    if (!token || !verifyToken(token)) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    try {
+      const submissions = await apiCall("GET", "contact_submissions");
+      res.json(Array.isArray(submissions) ? submissions : []);
+    } catch (error) {
+      console.error("Error fetching submissions:", error);
+      res.json([]);
+    }
+  });
+
   // Contact form endpoint
-  app.post("/api/contact", (req, res) => {
+  app.post("/api/contact", async (req, res) => {
     const { fullName, email, phone, subject, message } = req.body;
 
     // Basic validation
