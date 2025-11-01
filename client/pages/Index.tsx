@@ -4,6 +4,7 @@ import Footer from "@/components/Footer";
 import HeroSlider from "@/components/HeroSlider";
 import ProductGallery from "@/components/ProductGallery";
 import TestimonialsSection from "@/components/TestimonialsSection";
+import ChatWidget from "@/components/ChatWidget";
 import {
   Leaf,
   Award,
