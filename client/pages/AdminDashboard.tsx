@@ -120,16 +120,19 @@ export default function AdminDashboard() {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+          <Link to="/admin/hero-images">
+            <div className="bg-primary/5 p-6 rounded-lg border border-primary/10 hover:border-primary/30 transition-colors cursor-pointer h-full">
+              <Images className="w-8 h-8 text-primary mb-4" />
+              <h3 className="text-2xl font-bold text-foreground">Hero Images</h3>
+              <p className="text-muted-foreground">Manage slider images</p>
+            </div>
+          </Link>
           <div className="bg-primary/5 p-6 rounded-lg border border-primary/10">
             <Mail className="w-8 h-8 text-primary mb-4" />
             <h3 className="text-2xl font-bold text-foreground">
               {contactSubmissions.length}
             </h3>
             <p className="text-muted-foreground">Contact Submissions</p>
-          </div>
-          <div className="bg-primary/5 p-6 rounded-lg border border-primary/10">
-            <h3 className="text-2xl font-bold text-foreground">Admin Panel</h3>
-            <p className="text-muted-foreground">All systems operational</p>
           </div>
           <div className="bg-primary/5 p-6 rounded-lg border border-primary/10">
             <h3 className="text-2xl font-bold text-foreground">Active</h3>
