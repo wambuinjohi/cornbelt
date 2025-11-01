@@ -1253,6 +1253,55 @@ export function createServer() {
     }
   });
 
+  app.post("/api/admin/reseed-bot-responses", async (req, res) => {
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token || !verifyToken(token))
+      return res.status(401).json({ error: "Unauthorized" });
+
+    try {
+      const defaultResponses = [
+        {
+          keyword: "hours",
+          answer:
+            "Our business hours are Monday - Friday: 8:00 AM - 5:00 PM, Saturday: 9:00 AM - 2:00 PM, Sunday: Closed.",
+        },
+        {
+          keyword: "location",
+          answer:
+            "We are located at Cornbelt Flour Mill Limited, National Cereals & Produce Board Land, Kenya.",
+        },
+        {
+          keyword: "contact",
+          answer:
+            "You can reach us via email at info@cornbeltmill.com or support@cornbeltmill.com, or use the contact form on our website.",
+        },
+        {
+          keyword: "products",
+          answer:
+            "We offer a range of fortified maize meal and other products. Visit our Products page for more details.",
+        },
+        {
+          keyword: "shipping",
+          answer:
+            "For shipping inquiries, please contact our support team via email and provide your location so we can advise on availability and rates.",
+        },
+      ];
+
+      for (const r of defaultResponses) {
+        await apiCall("POST", "bot_responses", r);
+      }
+
+      res.json({
+        success: true,
+        message: "Bot responses reseeded successfully",
+        count: defaultResponses.length,
+      });
+    } catch (error) {
+      console.error("Error reseeding bot responses:", error);
+      res.status(500).json({ error: "Failed to reseed responses" });
+    }
+  });
+
   app.get("/api/admin/chat-sessions", async (req, res) => {
     const token = req.headers.authorization?.split(" ")[1];
     if (!token || !verifyToken(token))
