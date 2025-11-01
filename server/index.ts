@@ -1115,5 +1115,166 @@ export function createServer() {
     }
   });
 
+  // Chat endpoints (visitor-facing)
+  app.post("/api/chat/message", async (req, res) => {
+    const { sessionId, name, message } = req.body;
+    if (!sessionId || !message) {
+      return res.status(400).json({ error: "sessionId and message required" });
+    }
+
+    try {
+      // Save user message
+      await apiCall("POST", "chats", {
+        sessionId,
+        sender: "user",
+        message,
+        createdAt: new Date().toISOString(),
+      });
+
+      // Fetch bot responses and attempt to match
+      const responses = await apiCall("GET", "bot_responses");
+      let botReply = null;
+      if (Array.isArray(responses)) {
+        const text = message.toLowerCase();
+        // simple keyword match
+        for (const r of responses) {
+          const keyword = (r.keyword || "").toLowerCase();
+          if (!keyword) continue;
+          if (text.includes(keyword)) {
+            botReply = r.answer;
+            break;
+          }
+        }
+      }
+
+      // Fallback reply
+      if (!botReply) {
+        botReply =
+          "Thanks for your message! Our team will get back to you shortly. You can also visit the Contact page for more ways to reach us.";
+      }
+
+      // Save bot reply
+      const botResult = await apiCall("POST", "chats", {
+        sessionId,
+        sender: "bot",
+        message: botReply,
+        createdAt: new Date().toISOString(),
+      });
+
+      res.json({ success: true, reply: botReply, botId: botResult.id });
+    } catch (error) {
+      console.error("Chat message error:", error);
+      res.status(500).json({ error: "Failed to process message" });
+    }
+  });
+
+  app.get("/api/chat/history", async (req, res) => {
+    const sessionId = req.query.sessionId as string;
+    if (!sessionId) return res.status(400).json({ error: "sessionId required" });
+
+    try {
+      const all = await apiCall("GET", "chats");
+      const messages = Array.isArray(all)
+        ? all.filter((m: any) => m.sessionId === sessionId)
+        : [];
+      res.json(messages);
+    } catch (error) {
+      console.error("Error fetching chat history:", error);
+      res.json([]);
+    }
+  });
+
+  // Admin endpoints to manage bot responses and view chats
+  app.get("/api/admin/bot-responses", async (req, res) => {
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token || !verifyToken(token)) return res.status(401).json({ error: "Unauthorized" });
+    try {
+      const responses = await apiCall("GET", "bot_responses");
+      res.json(Array.isArray(responses) ? responses : []);
+    } catch (error) {
+      console.error("Error fetching bot responses:", error);
+      res.json([]);
+    }
+  });
+
+  app.post("/api/admin/bot-responses", async (req, res) => {
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token || !verifyToken(token)) return res.status(401).json({ error: "Unauthorized" });
+    const { keyword, answer } = req.body;
+    if (!keyword || !answer) return res.status(400).json({ error: "keyword and answer required" });
+    try {
+      const result = await apiCall("POST", "bot_responses", { keyword, answer, createdAt: new Date().toISOString() });
+      res.json({ success: true, id: result.id });
+    } catch (error) {
+      console.error("Error creating bot response:", error);
+      res.status(500).json({ error: "Failed to create" });
+    }
+  });
+
+  app.put("/api/admin/bot-responses/:id", async (req, res) => {
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token || !verifyToken(token)) return res.status(401).json({ error: "Unauthorized" });
+    const { id } = req.params;
+    const { keyword, answer } = req.body;
+    const updates: any = {};
+    if (keyword !== undefined) updates.keyword = keyword;
+    if (answer !== undefined) updates.answer = answer;
+    if (Object.keys(updates).length === 0) return res.status(400).json({ error: "No fields to update" });
+    try {
+      await apiCall("PUT", "bot_responses", updates, parseInt(id));
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error updating bot response:", error);
+      res.status(500).json({ error: "Failed to update" });
+    }
+  });
+
+  app.delete("/api/admin/bot-responses/:id", async (req, res) => {
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token || !verifyToken(token)) return res.status(401).json({ error: "Unauthorized" });
+    const { id } = req.params;
+    try {
+      await apiCall("DELETE", "bot_responses", null, parseInt(id));
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting bot response:", error);
+      res.status(500).json({ error: "Failed to delete" });
+    }
+  });
+
+  app.get("/api/admin/chat-sessions", async (req, res) => {
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token || !verifyToken(token)) return res.status(401).json({ error: "Unauthorized" });
+    try {
+      const all = await apiCall("GET", "chats");
+      const sessions: Record<string, any[]> = {};
+      if (Array.isArray(all)) {
+        for (const m of all) {
+          sessions[m.sessionId] = sessions[m.sessionId] || [];
+          sessions[m.sessionId].push(m);
+        }
+      }
+      const sessionList = Object.keys(sessions).map((sid) => ({ sessionId: sid, lastMessageAt: sessions[sid][sessions[sid].length - 1]?.createdAt || null, messages: sessions[sid] }));
+      res.json(sessionList);
+    } catch (error) {
+      console.error("Error fetching chat sessions:", error);
+      res.json([]);
+    }
+  });
+
+  app.get("/api/admin/chat/:sessionId", async (req, res) => {
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token || !verifyToken(token)) return res.status(401).json({ error: "Unauthorized" });
+    const { sessionId } = req.params;
+    try {
+      const all = await apiCall("GET", "chats");
+      const messages = (Array.isArray(all) ? all.filter((m: any) => m.sessionId === sessionId) : []);
+      res.json(messages);
+    } catch (error) {
+      console.error("Error fetching chat messages:", error);
+      res.json([]);
+    }
+  });
+
   return app;
 }
