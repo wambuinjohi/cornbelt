@@ -33,14 +33,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Edit2,
-  Trash2,
-  Plus,
-  MessageSquare,
-  Clock,
-  User,
-} from "lucide-react";
+import { Edit2, Trash2, Plus, MessageSquare, Clock, User } from "lucide-react";
 
 interface BotResponse {
   id: number;
@@ -243,9 +236,7 @@ export default function AdminChat() {
       if (!res.ok) throw new Error("Failed to reseed responses");
 
       const data = await res.json();
-      toast.success(
-        `Default responses loaded (${data.count} responses)`,
-      );
+      toast.success(`Default responses loaded (${data.count} responses)`);
       await fetchResponses();
     } catch (e) {
       console.error(e);
@@ -310,7 +301,10 @@ export default function AdminChat() {
                 >
                   Load Default Responses
                 </Button>
-                <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+                <Dialog
+                  open={createDialogOpen}
+                  onOpenChange={setCreateDialogOpen}
+                >
                   <DialogTrigger asChild>
                     <Button
                       onClick={() => {
@@ -380,7 +374,10 @@ export default function AdminChat() {
                     <p className="text-muted-foreground mb-4">
                       No bot responses yet. Create your first one!
                     </p>
-                    <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+                    <Dialog
+                      open={createDialogOpen}
+                      onOpenChange={setCreateDialogOpen}
+                    >
                       <DialogTrigger asChild>
                         <Button
                           onClick={() => {
@@ -440,7 +437,10 @@ export default function AdminChat() {
                 </Card>
               ) : (
                 responses.map((response) => (
-                  <Card key={response.id} className="hover:shadow-md transition-shadow">
+                  <Card
+                    key={response.id}
+                    className="hover:shadow-md transition-shadow"
+                  >
                     <CardHeader>
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
@@ -453,7 +453,9 @@ export default function AdminChat() {
                           {response.createdAt && (
                             <div className="flex items-center gap-1 mt-3 text-xs text-muted-foreground">
                               <Clock className="w-3 h-3" />
-                              {new Date(response.createdAt).toLocaleDateString()}
+                              {new Date(
+                                response.createdAt,
+                              ).toLocaleDateString()}
                             </div>
                           )}
                         </div>
@@ -480,7 +482,9 @@ export default function AdminChat() {
                             </AlertDialogTrigger>
                             <AlertDialogContent>
                               <AlertDialogHeader>
-                                <AlertDialogTitle>Delete Response?</AlertDialogTitle>
+                                <AlertDialogTitle>
+                                  Delete Response?
+                                </AlertDialogTitle>
                                 <AlertDialogDescription>
                                   Are you sure you want to delete this bot
                                   response? This action cannot be undone.
@@ -521,7 +525,8 @@ export default function AdminChat() {
                 <CardHeader>
                   <CardTitle className="text-lg">Sessions</CardTitle>
                   <CardDescription>
-                    {sessions.length} active session{sessions.length !== 1 ? "s" : ""}
+                    {sessions.length} active session
+                    {sessions.length !== 1 ? "s" : ""}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -537,7 +542,9 @@ export default function AdminChat() {
                       {sessions.map((session) => (
                         <button
                           key={session.sessionId}
-                          onClick={() => fetchSessionMessages(session.sessionId)}
+                          onClick={() =>
+                            fetchSessionMessages(session.sessionId)
+                          }
                           className={`w-full text-left p-3 rounded-lg border transition-colors ${
                             selectedSession === session.sessionId
                               ? "border-primary bg-primary/5"
