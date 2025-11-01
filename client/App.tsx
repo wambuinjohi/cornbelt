@@ -14,6 +14,7 @@ import Contact from "./pages/Contact";
 import AdminSetup from "./pages/AdminSetup";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
+import AdminHeroImages from "./pages/AdminHeroImages";
 
 const queryClient = new QueryClient();
 
