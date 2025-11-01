@@ -769,6 +769,7 @@ export default function Index() {
       </main>
 
       <Footer />
+      <ChatWidget />
     </div>
   );
 }
