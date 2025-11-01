@@ -302,7 +302,7 @@ export default function AdminHeroImages() {
               >
                 {/* File Upload */}
                 <FormItem>
-                  <FormLabel>Upload Image</FormLabel>
+                  <FormLabel>Upload Image (Max 5MB)</FormLabel>
                   <FormControl>
                     <div className="space-y-3">
                       <input
@@ -332,6 +332,9 @@ export default function AdminHeroImages() {
                           ></div>
                         </div>
                       )}
+                      <p className="text-xs text-muted-foreground">
+                        Supported formats: JPG, PNG, WebP, SVG. Max size: 5MB
+                      </p>
                     </div>
                   </FormControl>
                 </FormItem>
