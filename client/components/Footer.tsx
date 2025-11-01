@@ -69,6 +69,14 @@ export default function Footer() {
                   Contact
                 </Link>
               </li>
+              <li>
+                <Link
+                  to="/admin/login"
+                  className="opacity-80 hover:opacity-100 transition-opacity"
+                >
+                  Admin Login
+                </Link>
+              </li>
             </ul>
           </div>
 
