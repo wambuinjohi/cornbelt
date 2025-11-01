@@ -11,9 +11,11 @@ export default function Footer() {
           {/* Company Info */}
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 bg-secondary rounded-full flex items-center justify-center">
-                <span className="text-foreground font-bold text-xs">CB</span>
-              </div>
+              <img
+                src="https://cdn.builder.io/api/v1/image/assets%2Fbf7a511dd4454ae88c7c49627a9a0f54%2F80b3bed3a8e14bf3ae5cc941d2cfab50?format=webp&width=100"
+                alt="Cornbelt Logo"
+                className="w-8 h-8 object-contain"
+              />
               <div>
                 <div className="font-bold text-sm">CORNBELT</div>
                 <div className="text-xs opacity-75">FLOUR MILL</div>
