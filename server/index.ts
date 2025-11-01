@@ -62,7 +62,8 @@ async function initializeAdminTable() {
         altText: "VARCHAR(255)",
         displayOrder: "INT DEFAULT 0",
         createdAt: "DATETIME DEFAULT CURRENT_TIMESTAMP",
-        updatedAt: "DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
+        updatedAt:
+          "DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
       },
     };
 
@@ -353,7 +354,12 @@ export function createServer() {
         return res.status(400).json({ error: "No fields to update" });
       }
 
-      const result = await apiCall("PUT", "hero_slider_images", updates, parseInt(id));
+      const result = await apiCall(
+        "PUT",
+        "hero_slider_images",
+        updates,
+        parseInt(id),
+      );
 
       if (result.error) {
         throw new Error(result.error);
@@ -366,7 +372,8 @@ export function createServer() {
     } catch (error) {
       console.error("Error updating hero image:", error);
       res.status(500).json({
-        error: error instanceof Error ? error.message : "Failed to update image",
+        error:
+          error instanceof Error ? error.message : "Failed to update image",
       });
     }
   });
@@ -381,7 +388,12 @@ export function createServer() {
     const { id } = req.params;
 
     try {
-      const result = await apiCall("DELETE", "hero_slider_images", null, parseInt(id));
+      const result = await apiCall(
+        "DELETE",
+        "hero_slider_images",
+        null,
+        parseInt(id),
+      );
 
       if (result.error) {
         throw new Error(result.error);
@@ -394,7 +406,8 @@ export function createServer() {
     } catch (error) {
       console.error("Error deleting hero image:", error);
       res.status(500).json({
-        error: error instanceof Error ? error.message : "Failed to delete image",
+        error:
+          error instanceof Error ? error.message : "Failed to delete image",
       });
     }
   });
@@ -426,7 +439,8 @@ export function createServer() {
     } catch (error) {
       console.error("Error processing file:", error);
       res.status(500).json({
-        error: error instanceof Error ? error.message : "Failed to process file",
+        error:
+          error instanceof Error ? error.message : "Failed to process file",
       });
     }
   });

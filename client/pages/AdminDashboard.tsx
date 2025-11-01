@@ -122,7 +122,9 @@ export default function AdminDashboard() {
           <Link to="/admin/hero-images">
             <div className="bg-primary/5 p-6 rounded-lg border border-primary/10 hover:border-primary/30 transition-colors cursor-pointer h-full">
               <Images className="w-8 h-8 text-primary mb-4" />
-              <h3 className="text-2xl font-bold text-foreground">Hero Images</h3>
+              <h3 className="text-2xl font-bold text-foreground">
+                Hero Images
+              </h3>
               <p className="text-muted-foreground">Manage slider images</p>
             </div>
           </Link>

@@ -41,9 +41,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   ];
 
   const handleLogout = () => {
-    if (
-      confirm("Are you sure you want to logout?")
-    ) {
+    if (confirm("Are you sure you want to logout?")) {
       localStorage.removeItem("adminToken");
       localStorage.removeItem("adminUser");
       toast.success("Logged out successfully");
@@ -136,9 +134,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           </Button>
           <div className="flex-1" />
           <div className="flex items-center gap-4">
-            <span className="text-sm text-muted-foreground">
-              Welcome back!
-            </span>
+            <span className="text-sm text-muted-foreground">Welcome back!</span>
           </div>
         </header>
 

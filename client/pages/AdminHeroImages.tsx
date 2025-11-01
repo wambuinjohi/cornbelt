@@ -193,7 +193,7 @@ export default function AdminHeroImages() {
     } catch (error) {
       console.error("Error adding image:", error);
       toast.error(
-        error instanceof Error ? error.message : "Failed to add image"
+        error instanceof Error ? error.message : "Failed to add image",
       );
     } finally {
       setIsSaving(false);
@@ -321,7 +321,8 @@ export default function AdminHeroImages() {
                       />
                       {selectedFile && (
                         <p className="text-sm text-muted-foreground">
-                          Selected: {selectedFile.name} ({(selectedFile.size / 1024).toFixed(2)} KB)
+                          Selected: {selectedFile.name} (
+                          {(selectedFile.size / 1024).toFixed(2)} KB)
                         </p>
                       )}
                       {uploadProgress > 0 && uploadProgress < 100 && (
@@ -358,7 +359,8 @@ export default function AdminHeroImages() {
                   rules={{
                     pattern: {
                       value: /^https?:\/\/.+/,
-                      message: "Must be a valid URL starting with http:// or https://",
+                      message:
+                        "Must be a valid URL starting with http:// or https://",
                     },
                   }}
                   render={({ field }) => (
@@ -439,7 +441,9 @@ export default function AdminHeroImages() {
 
                 <Button
                   type="submit"
-                  disabled={isSaving || (!selectedFile && !form.getValues("imageUrl"))}
+                  disabled={
+                    isSaving || (!selectedFile && !form.getValues("imageUrl"))
+                  }
                   className="w-full gap-2"
                 >
                   <FileUp className="w-4 h-4" />
@@ -489,7 +493,9 @@ export default function AdminHeroImages() {
                     {/* Image Info */}
                     <div className="space-y-2 mb-4 text-sm">
                       <div>
-                        <p className="text-xs text-muted-foreground">Alt Text:</p>
+                        <p className="text-xs text-muted-foreground">
+                          Alt Text:
+                        </p>
                         <p className="text-foreground font-medium">
                           {image.altText}
                         </p>
@@ -503,7 +509,10 @@ export default function AdminHeroImages() {
                             type="number"
                             value={image.displayOrder}
                             onChange={(e) =>
-                              handleUpdateOrder(image.id, parseInt(e.target.value) || 0)
+                              handleUpdateOrder(
+                                image.id,
+                                parseInt(e.target.value) || 0,
+                              )
                             }
                             className="w-16 px-2 py-1 border border-primary/10 rounded text-sm"
                           />
