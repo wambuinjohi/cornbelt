@@ -601,88 +601,77 @@ export default function Index() {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <div className="text-center">
-                <div className="w-16 h-16 bg-primary text-primary-foreground rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold">
-                  1
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+              <div className="space-y-4">
+                <div>
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="w-12 h-12 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-lg font-bold">
+                      1
+                    </div>
+                    <h3 className="text-xl font-bold text-foreground">
+                      Selection
+                    </h3>
+                  </div>
+                  <p className="text-muted-foreground">
+                    We carefully select the finest locally-grown maize from
+                    trusted farmers
+                  </p>
                 </div>
-                <h3 className="text-xl font-bold text-foreground mb-2">
-                  Selection
-                </h3>
-                <p className="text-muted-foreground text-sm">
-                  We carefully select the finest locally-grown maize from
-                  trusted farmers
-                </p>
+                <img src="https://cdn.builder.io/api/v1/image/assets%2F1ffce8bff4d5493bafecc479d3963466%2F55c0c6e3f31e42738894312205f182a7?format=webp&width=800" alt="Raw maize selection and storage" className="rounded-lg shadow-lg w-full object-cover h-48" />
               </div>
 
-              <div className="text-center">
-                <div className="w-16 h-16 bg-primary text-primary-foreground rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold">
-                  2
+              <div className="space-y-4">
+                <div>
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="w-12 h-12 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-lg font-bold">
+                      2
+                    </div>
+                    <h3 className="text-xl font-bold text-foreground">
+                      Cleaning & Processing
+                    </h3>
+                  </div>
+                  <p className="text-muted-foreground">
+                    Thorough cleaning and inspection to remove impurities and
+                    debris using advanced technology
+                  </p>
                 </div>
-                <h3 className="text-xl font-bold text-foreground mb-2">
-                  Cleaning
-                </h3>
-                <p className="text-muted-foreground text-sm">
-                  Thorough cleaning and inspection to remove impurities and
-                  debris
-                </p>
+                <img src="https://cdn.builder.io/api/v1/image/assets%2F1ffce8bff4d5493bafecc479d3963466%2Fc0b896d25ac84b8e9382dd61577b5a45?format=webp&width=800" alt="Milling and processing equipment" className="rounded-lg shadow-lg w-full object-cover h-48" />
               </div>
 
-              <div className="text-center">
-                <div className="w-16 h-16 bg-primary text-primary-foreground rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold">
-                  3
+              <div className="space-y-4">
+                <div>
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="w-12 h-12 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-lg font-bold">
+                      3
+                    </div>
+                    <h3 className="text-xl font-bold text-foreground">
+                      Milling & Fortification
+                    </h3>
+                  </div>
+                  <p className="text-muted-foreground">
+                    Advanced milling technology to achieve perfect texture with
+                    essential vitamins and minerals
+                  </p>
                 </div>
-                <h3 className="text-xl font-bold text-foreground mb-2">
-                  Milling
-                </h3>
-                <p className="text-muted-foreground text-sm">
-                  Advanced milling technology to achieve perfect texture and
-                  consistency
-                </p>
+                <img src="https://cdn.builder.io/api/v1/image/assets%2F1ffce8bff4d5493bafecc479d3963466%2Fb22c9c0270ed47d8bb4da53c14df93e1?format=webp&width=800" alt="Industrial maize processing facility" className="rounded-lg shadow-lg w-full object-cover h-48" />
               </div>
 
-              <div className="text-center">
-                <div className="w-16 h-16 bg-primary text-primary-foreground rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold">
-                  4
+              <div className="space-y-4">
+                <div>
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="w-12 h-12 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-lg font-bold">
+                      4
+                    </div>
+                    <h3 className="text-xl font-bold text-foreground">
+                      Quality & Distribution
+                    </h3>
+                  </div>
+                  <p className="text-muted-foreground">
+                    Rigorous testing and hygienic packaging ensures products
+                    reach customers fresh and on time
+                  </p>
                 </div>
-                <h3 className="text-xl font-bold text-foreground mb-2">
-                  Fortification
-                </h3>
-                <p className="text-muted-foreground text-sm">
-                  Adding essential vitamins and minerals for enhanced nutrition
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-white rounded-2xl p-8 border border-border">
-                <h3 className="text-xl font-bold text-foreground mb-3">
-                  Quality Control
-                </h3>
-                <p className="text-muted-foreground">
-                  Every batch undergoes rigorous testing to ensure it meets our
-                  high quality standards and safety requirements.
-                </p>
-              </div>
-
-              <div className="bg-white rounded-2xl p-8 border border-border">
-                <h3 className="text-xl font-bold text-foreground mb-3">
-                  Hygienic Packaging
-                </h3>
-                <p className="text-muted-foreground">
-                  Products are packaged in food-grade materials in our clean,
-                  sanitary facility to ensure freshness and safety.
-                </p>
-              </div>
-
-              <div className="bg-white rounded-2xl p-8 border border-border">
-                <h3 className="text-xl font-bold text-foreground mb-3">
-                  Distribution
-                </h3>
-                <p className="text-muted-foreground">
-                  Our reliable network ensures products reach retailers and
-                  customers fresh and on time, across Kenya.
-                </p>
+                <img src="https://cdn.builder.io/api/v1/image/assets%2F1ffce8bff4d5493bafecc479d3963466%2F899164802be54df0a1d17b956615ba47?format=webp&width=800" alt="Final product packaging and quality control" className="rounded-lg shadow-lg w-full object-cover h-48" />
               </div>
             </div>
           </div>
