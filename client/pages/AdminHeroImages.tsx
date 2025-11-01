@@ -280,12 +280,59 @@ export default function AdminHeroImages() {
                 onSubmit={form.handleSubmit(onSubmit)}
                 className="space-y-6"
               >
+                {/* File Upload */}
+                <FormItem>
+                  <FormLabel>Upload Image</FormLabel>
+                  <FormControl>
+                    <div className="space-y-3">
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileSelect}
+                        disabled={isSaving}
+                        className="block w-full text-sm text-muted-foreground
+                          file:mr-4 file:py-2 file:px-4
+                          file:rounded-lg file:border-0
+                          file:text-sm file:font-semibold
+                          file:bg-primary file:text-primary-foreground
+                          hover:file:bg-primary/90
+                          cursor-pointer"
+                      />
+                      {selectedFile && (
+                        <p className="text-sm text-muted-foreground">
+                          Selected: {selectedFile.name} ({(selectedFile.size / 1024).toFixed(2)} KB)
+                        </p>
+                      )}
+                      {uploadProgress > 0 && uploadProgress < 100 && (
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div
+                            className="bg-primary h-2 rounded-full transition-all"
+                            style={{ width: `${uploadProgress}%` }}
+                          ></div>
+                        </div>
+                      )}
+                    </div>
+                  </FormControl>
+                </FormItem>
+
+                {/* Divider */}
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-primary/10"></div>
+                  </div>
+                  <div className="relative flex justify-center text-sm">
+                    <span className="px-2 bg-primary/5 text-muted-foreground">
+                      OR
+                    </span>
+                  </div>
+                </div>
+
                 {/* Image URL */}
                 <FormField
                   control={form.control}
                   name="imageUrl"
                   rules={{
-                    required: "Image URL is required",
                     pattern: {
                       value: /^https?:\/\/.+/,
                       message: "Must be a valid URL starting with http:// or https://",
@@ -293,16 +340,16 @@ export default function AdminHeroImages() {
                   }}
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Image URL</FormLabel>
+                      <FormLabel>Or paste Image URL</FormLabel>
                       <FormControl>
                         <Input
                           placeholder="https://example.com/image.jpg"
-                          disabled={isSaving}
+                          disabled={isSaving || !!selectedFile}
                           onChange={(e) => {
                             field.onChange(e);
-                            setPreviewUrl(e.target.value);
+                            if (!selectedFile) setPreviewUrl(e.target.value);
                           }}
-                          value={field.value}
+                          value={field.value || ""}
                         />
                       </FormControl>
                       <FormMessage />
