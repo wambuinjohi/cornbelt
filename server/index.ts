@@ -98,6 +98,90 @@ async function initializeAdminTable() {
     });
 
     console.log("Product images table initialized");
+
+    // Create testimonials table
+    const testimonialTableData = {
+      create_table: true,
+      columns: {
+        id: "INT AUTO_INCREMENT PRIMARY KEY",
+        fullName: "VARCHAR(255) NOT NULL",
+        location: "VARCHAR(255)",
+        testimonialText: "TEXT NOT NULL",
+        imageUrl: "VARCHAR(500)",
+        rating: "INT DEFAULT 5",
+        isPublished: "BOOLEAN DEFAULT true",
+        displayOrder: "INT DEFAULT 0",
+        createdAt: "DATETIME DEFAULT CURRENT_TIMESTAMP",
+        updatedAt:
+          "DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
+      },
+    };
+
+    await fetch(`${baseUrl}/api.php?table=testimonials`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(testimonialTableData),
+    });
+
+    console.log("Testimonials table initialized");
+
+    // Seed sample testimonials if table is empty
+    const existingTestimonials = await apiCall("GET", "testimonials");
+    if (!Array.isArray(existingTestimonials) || existingTestimonials.length === 0) {
+      const sampleTestimonials = [
+        {
+          fullName: "Margaret Kipchoge",
+          location: "Nairobi, Kenya",
+          testimonialText:
+            "Cornbelt products have become a staple in our home. The quality is unmatched and my family loves the taste!",
+          rating: 5,
+          isPublished: true,
+          displayOrder: 1,
+        },
+        {
+          fullName: "James Mwangi",
+          location: "Kisumu, Kenya",
+          testimonialText:
+            "I trust Cornbelt for my kids' nutrition. The fortification gives me peace of mind knowing they're getting quality nutrition.",
+          rating: 5,
+          isPublished: true,
+          displayOrder: 2,
+        },
+        {
+          fullName: "Grace Omondi",
+          location: "Mombasa, Kenya",
+          testimonialText:
+            "The best maize meal I've used. Consistent quality, great taste, and I can always find it at my local shop!",
+          rating: 5,
+          isPublished: true,
+          displayOrder: 3,
+        },
+        {
+          fullName: "David Kariuki",
+          location: "Nakuru, Kenya",
+          testimonialText:
+            "Cornbelt's commitment to quality is evident in every package. I recommend it to all my friends and family.",
+          rating: 5,
+          isPublished: true,
+          displayOrder: 4,
+        },
+        {
+          fullName: "Ruth Kipkorir",
+          location: "Eldoret, Kenya",
+          testimonialText:
+            "The fortified maize meal has made a difference in my family's health. We've noticed improved energy levels.",
+          rating: 5,
+          isPublished: true,
+          displayOrder: 5,
+        },
+      ];
+
+      for (const testimonial of sampleTestimonials) {
+        await apiCall("POST", "testimonials", testimonial);
+      }
+
+      console.log("Sample testimonials seeded");
+    }
   } catch (error) {
     console.error("Error initializing tables:", error);
   }
