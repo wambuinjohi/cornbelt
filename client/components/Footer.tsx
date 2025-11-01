@@ -1,5 +1,12 @@
 import { Link } from "react-router-dom";
-import { Mail, Phone, MapPin, Facebook, Instagram, Twitter } from "lucide-react";
+import {
+  Mail,
+  Phone,
+  MapPin,
+  Facebook,
+  Instagram,
+  Twitter,
+} from "lucide-react";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -121,7 +128,10 @@ export default function Footer() {
 
         {/* Bottom Bar */}
         <div className="border-t border-background/20 pt-8 flex flex-col md:flex-row items-center justify-between text-sm opacity-75">
-          <p>&copy; {currentYear} Cornbelt Flour Mill Limited. All rights reserved.</p>
+          <p>
+            &copy; {currentYear} Cornbelt Flour Mill Limited. All rights
+            reserved.
+          </p>
           <div className="flex gap-6 mt-4 md:mt-0">
             <a href="#" className="hover:opacity-100 transition-opacity">
               Privacy Policy

@@ -38,11 +38,12 @@ export default function Index() {
               />
               <div className="space-y-4">
                 <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight drop-shadow-lg">
-                  From The Farm, With <span className="text-secondary">Love</span>
+                  From The Farm, With{" "}
+                  <span className="text-secondary">Love</span>
                 </h1>
                 <p className="text-xl text-white/90 max-w-2xl mx-auto drop-shadow">
-                  Kenya's finest fortified maize flour – nourishing families with
-                  quality, tradition, and excellence since our founding.
+                  Kenya's finest fortified maize flour – nourishing families
+                  with quality, tradition, and excellence since our founding.
                 </p>
               </div>
 
@@ -124,8 +125,8 @@ export default function Index() {
                       Jirani Fortified Maize Meal
                     </h3>
                     <p className="text-muted-foreground">
-                      Our flagship premium product featuring Grade 1 sifted maize
-                      enriched with essential vitamins and minerals.
+                      Our flagship premium product featuring Grade 1 sifted
+                      maize enriched with essential vitamins and minerals.
                     </p>
                   </div>
                   <ul className="space-y-3">
@@ -231,8 +232,8 @@ export default function Index() {
                   100% Natural
                 </h3>
                 <p className="text-muted-foreground">
-                  Made from locally-sourced maize, processed with care to maintain
-                  nutritional value and authentic taste.
+                  Made from locally-sourced maize, processed with care to
+                  maintain nutritional value and authentic taste.
                 </p>
               </div>
 
@@ -259,8 +260,8 @@ export default function Index() {
                   Fast Delivery
                 </h3>
                 <p className="text-muted-foreground">
-                  Reliable distribution network ensuring fresh products reach your
-                  home on time, every time.
+                  Reliable distribution network ensuring fresh products reach
+                  your home on time, every time.
                 </p>
               </div>
 
@@ -544,10 +545,12 @@ export default function Index() {
                   ))}
                 </div>
                 <p className="text-foreground mb-4">
-                  "Cornbelt products have become a staple in our home. The quality
-                  is unmatched and my family loves the taste!"
+                  "Cornbelt products have become a staple in our home. The
+                  quality is unmatched and my family loves the taste!"
                 </p>
-                <p className="font-semibold text-foreground">Margaret Kipchoge</p>
+                <p className="font-semibold text-foreground">
+                  Margaret Kipchoge
+                </p>
                 <p className="text-sm text-muted-foreground">Nairobi, Kenya</p>
               </div>
 
@@ -560,8 +563,9 @@ export default function Index() {
                   ))}
                 </div>
                 <p className="text-foreground mb-4">
-                  "I trust Cornbelt for my kids' nutrition. The fortification gives
-                  me peace of mind knowing they're getting quality nutrition."
+                  "I trust Cornbelt for my kids' nutrition. The fortification
+                  gives me peace of mind knowing they're getting quality
+                  nutrition."
                 </p>
                 <p className="font-semibold text-foreground">James Mwangi</p>
                 <p className="text-sm text-muted-foreground">Kisumu, Kenya</p>
@@ -576,8 +580,8 @@ export default function Index() {
                   ))}
                 </div>
                 <p className="text-foreground mb-4">
-                  "The best maize meal I've used. Consistent quality, great taste,
-                  and I can always find it at my local shop!"
+                  "The best maize meal I've used. Consistent quality, great
+                  taste, and I can always find it at my local shop!"
                 </p>
                 <p className="font-semibold text-foreground">Grace Omondi</p>
                 <p className="text-sm text-muted-foreground">Mombasa, Kenya</p>
@@ -607,8 +611,8 @@ export default function Index() {
                   Selection
                 </h3>
                 <p className="text-muted-foreground text-sm">
-                  We carefully select the finest locally-grown maize from trusted
-                  farmers
+                  We carefully select the finest locally-grown maize from
+                  trusted farmers
                 </p>
               </div>
 
@@ -620,7 +624,8 @@ export default function Index() {
                   Cleaning
                 </h3>
                 <p className="text-muted-foreground text-sm">
-                  Thorough cleaning and inspection to remove impurities and debris
+                  Thorough cleaning and inspection to remove impurities and
+                  debris
                 </p>
               </div>
 
