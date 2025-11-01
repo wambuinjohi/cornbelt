@@ -2,6 +2,8 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import crypto from "crypto";
+import path from "path";
+import fs from "fs/promises";
 import { handleDemo } from "./routes/demo";
 
 // Initialize database tables
