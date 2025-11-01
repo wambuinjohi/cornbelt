@@ -423,24 +423,28 @@ export function createServer() {
       // Convert base64 to buffer
       const buffer = Buffer.from(fileData, "base64");
 
-      // Create FormData for upload
-      const uploadFormData = new FormData();
-      uploadFormData.append("file", buffer, uniqueFileName);
+      // Create FormData-like multipart body manually
+      const boundary = "----WebKitFormBoundary" + Math.random().toString(36).substr(2, 10);
+      const body = [
+        "--" + boundary,
+        'Content-Disposition: form-data; name="file"; filename="' + uniqueFileName + '"',
+        "Content-Type: image/jpeg",
+        "",
+        buffer.toString("binary"),
+        "--" + boundary + "--",
+      ].join("\r\n");
 
       // Upload to external server
       const uploadResponse = await fetch(
         "https://cornbelt.co.ke/uploads/upload.php",
         {
           method: "POST",
-          body: uploadFormData,
+          headers: {
+            "Content-Type": "multipart/form-data; boundary=" + boundary,
+          },
+          body: Buffer.from(body, "binary"),
         }
       );
-
-      if (!uploadResponse.ok) {
-        throw new Error("Failed to upload to external server");
-      }
-
-      const uploadResult = await uploadResponse.json();
 
       // Construct the image URL
       const imageUrl = `https://cornbelt.co.ke/uploads/${uniqueFileName}`;
