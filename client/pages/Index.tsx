@@ -155,13 +155,12 @@ export default function Index() {
 
               {/* Tabasamu Product */}
               <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow border border-border">
-                <div className="h-72 bg-gradient-to-br from-secondary to-secondary/50 flex items-center justify-center">
-                  <div className="text-center space-y-3">
-                    <div className="inline-flex items-center justify-center w-32 h-32 bg-white/20 rounded-2xl">
-                      <span className="text-6xl">😊</span>
-                    </div>
-                  </div>
-                </div>
+                <ProductGallery
+                  productId="tabasamu"
+                  productName="Tabasamu Grade 1 Maize Meal"
+                  fallbackImage="https://cdn.builder.io/api/v1/image/assets%2F1ffce8bff4d5493bafecc479d3963466%2F948057ebdd744e77a4a0eb1cca9a3e75?format=webp&width=800"
+                  fallbackAlt="Tabasamu Grade 1 Maize Meal packaging"
+                />
                 <div className="p-8 space-y-6">
                   <div>
                     <h3 className="text-2xl font-bold text-foreground mb-2">
