@@ -302,65 +302,74 @@ export default function AdminChat() {
                   Create and manage automated responses for common keywords
                 </p>
               </div>
-              <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button
-                    onClick={() => {
-                      setEditingId(null);
-                      setKeyword("");
-                      setAnswer("");
-                    }}
-                    className="gap-2"
-                  >
-                    <Plus className="w-4 h-4" />
-                    Add Response
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>
-                      {editingId ? "Edit Response" : "Create Response"}
-                    </DialogTitle>
-                    <DialogDescription>
-                      {editingId
-                        ? "Update the keyword and answer for this bot response"
-                        : "Create a new automated response for a keyword"}
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Keyword</label>
-                      <Input
-                        placeholder="e.g., hours, shipping, contact"
-                        value={keyword}
-                        onChange={(e) => setKeyword(e.target.value)}
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        The bot will match messages containing this keyword
-                      </p>
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">
-                        Response Answer
-                      </label>
-                      <Textarea
-                        placeholder="Enter the bot's response..."
-                        value={answer}
-                        onChange={(e) => setAnswer(e.target.value)}
-                        rows={5}
-                      />
-                    </div>
-                  </div>
-                  <DialogFooter>
-                    <Button variant="outline" onClick={handleCancel}>
-                      Cancel
+              <div className="flex gap-2">
+                <Button
+                  onClick={reseedDefaultResponses}
+                  variant="outline"
+                  className="gap-2"
+                >
+                  Load Default Responses
+                </Button>
+                <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button
+                      onClick={() => {
+                        setEditingId(null);
+                        setKeyword("");
+                        setAnswer("");
+                      }}
+                      className="gap-2"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Add Response
                     </Button>
-                    <Button onClick={handleSubmit}>
-                      {editingId ? "Update" : "Create"}
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>
+                        {editingId ? "Edit Response" : "Create Response"}
+                      </DialogTitle>
+                      <DialogDescription>
+                        {editingId
+                          ? "Update the keyword and answer for this bot response"
+                          : "Create a new automated response for a keyword"}
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Keyword</label>
+                        <Input
+                          placeholder="e.g., hours, shipping, contact"
+                          value={keyword}
+                          onChange={(e) => setKeyword(e.target.value)}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          The bot will match messages containing this keyword
+                        </p>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">
+                          Response Answer
+                        </label>
+                        <Textarea
+                          placeholder="Enter the bot's response..."
+                          value={answer}
+                          onChange={(e) => setAnswer(e.target.value)}
+                          rows={5}
+                        />
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={handleCancel}>
+                        Cancel
+                      </Button>
+                      <Button onClick={handleSubmit}>
+                        {editingId ? "Update" : "Create"}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </div>
             </div>
 
             <div className="grid gap-4">
