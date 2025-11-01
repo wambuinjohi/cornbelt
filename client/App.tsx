@@ -16,6 +16,7 @@ import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminHeroImages from "./pages/AdminHeroImages";
 import AdminSubmissions from "./pages/AdminSubmissions";
+import AdminTestimonials from "./pages/AdminTestimonials";
 
 const queryClient = new QueryClient();
 
