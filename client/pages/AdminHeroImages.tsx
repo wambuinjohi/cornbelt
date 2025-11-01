@@ -80,9 +80,71 @@ export default function AdminHeroImages() {
     }
   };
 
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select a valid image file");
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("File size must be less than 5MB");
+      return;
+    }
+
+    setSelectedFile(file);
+
+    // Create preview
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      setPreviewUrl(event.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const uploadFile = async (file: File): Promise<string> => {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const token = localStorage.getItem("adminToken");
+    const response = await fetch("/api/admin/upload", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to upload file");
+    }
+
+    const result = await response.json();
+    return result.imageUrl;
+  };
+
   const onSubmit = async (data: FormData) => {
+    if (!selectedFile && !data.imageUrl) {
+      toast.error("Please select a file or provide an image URL");
+      return;
+    }
+
     setIsSaving(true);
     try {
+      let imageUrl = data.imageUrl;
+
+      // Upload file if selected
+      if (selectedFile) {
+        setUploadProgress(50);
+        imageUrl = await uploadFile(selectedFile);
+        setUploadProgress(100);
+      }
+
+      // Save image metadata
       const token = localStorage.getItem("adminToken");
       const response = await fetch("/api/admin/hero-images", {
         method: "POST",
@@ -90,7 +152,11 @@ export default function AdminHeroImages() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify({
+          imageUrl,
+          altText: data.altText,
+          displayOrder: data.displayOrder,
+        }),
       });
 
       if (!response.ok) {
@@ -100,6 +166,9 @@ export default function AdminHeroImages() {
       toast.success("Image added successfully!");
       form.reset();
       setPreviewUrl(null);
+      setSelectedFile(null);
+      setUploadProgress(0);
+      if (fileInputRef.current) fileInputRef.current.value = "";
       fetchImages();
     } catch (error) {
       console.error("Error adding image:", error);
@@ -108,6 +177,7 @@ export default function AdminHeroImages() {
       );
     } finally {
       setIsSaving(false);
+      setUploadProgress(0);
     }
   };
 
