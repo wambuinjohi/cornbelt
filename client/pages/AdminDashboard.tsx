@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import AdminLayout from "@/components/AdminLayout";
 import { toast } from "sonner";
-import { Mail, Images, LayoutDashboard, LogOut } from "lucide-react";
+import { Mail, Images } from "lucide-react";
 
 interface AdminUser {
   id: number;
@@ -62,12 +62,6 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("adminToken");
-    localStorage.removeItem("adminUser");
-    toast.success("Logged out successfully");
-    navigate("/admin/login");
-  };
 
   if (isLoading) {
     return (
@@ -81,35 +75,8 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-primary/10 bg-primary/5">
-        <div className="container mx-auto px-4 md:px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <LayoutDashboard className="w-6 h-6 text-primary" />
-            <h1 className="text-2xl font-bold text-primary">Admin Dashboard</h1>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="text-right">
-              <p className="font-semibold text-foreground">{user?.fullName}</p>
-              <p className="text-sm text-muted-foreground">{user?.email}</p>
-            </div>
-            <Button
-              onClick={handleLogout}
-              variant="outline"
-              size="sm"
-              className="gap-2"
-            >
-              <LogOut className="w-4 h-4" />
-              Logout
-            </Button>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="container mx-auto px-4 md:px-6 py-12">
-        {/* Welcome Section */}
+    <AdminLayout>
+      <div className="container mx-auto px-4 md:px-6 py-12">
         <div className="mb-12">
           <h2 className="text-3xl font-bold text-foreground mb-4">
             Welcome, {user?.fullName}!
@@ -119,7 +86,6 @@ export default function AdminDashboard() {
           </p>
         </div>
 
-        {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
           <Link to="/admin/hero-images">
             <div className="bg-primary/5 p-6 rounded-lg border border-primary/10 hover:border-primary/30 transition-colors cursor-pointer h-full">
@@ -143,7 +109,6 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Contact Submissions */}
         <section className="bg-primary/5 rounded-lg border border-primary/10 p-8">
           <h3 className="text-2xl font-bold text-foreground mb-6 flex items-center gap-2">
             <Mail className="w-6 h-6 text-primary" />
@@ -199,7 +164,6 @@ export default function AdminDashboard() {
           )}
         </section>
 
-        {/* System Info */}
         <section className="mt-12 bg-blue-50 border border-blue-200 rounded-lg p-8">
           <h3 className="text-xl font-bold text-blue-900 mb-4">System Info</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm text-blue-800">
@@ -217,7 +181,7 @@ export default function AdminDashboard() {
             </div>
           </div>
         </section>
-      </main>
-    </div>
+      </div>
+    </AdminLayout>
   );
 }
