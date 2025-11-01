@@ -2,8 +2,6 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import crypto from "crypto";
-import fetch from "node-fetch";
-import FormData from "form-data";
 import { handleDemo } from "./routes/demo";
 
 // Initialize database tables
