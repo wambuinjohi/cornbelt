@@ -21,6 +21,7 @@ import {
   Menu,
   X,
   Settings,
+  MessageCircle,
 } from "lucide-react";
 
 interface AdminLayoutProps {
