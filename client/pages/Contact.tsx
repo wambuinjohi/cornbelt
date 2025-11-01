@@ -339,6 +339,7 @@ export default function Contact() {
       </main>
 
       <Footer />
+      <ChatWidget />
     </div>
   );
 }
