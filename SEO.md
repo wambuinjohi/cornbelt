@@ -205,8 +205,8 @@ export default function Page() {
 
 ### Tools to Use
 
-1. **Google Search Console**: Monitor search performance
-   - Submit sitemap
+1. **Google Search Console**: Monitor search performance (https://cornbelt.co.ke/)
+   - Submit sitemap: https://cornbelt.co.ke/sitemap.xml
    - Monitor indexing issues
    - Track search queries and impressions
    - Monitor Core Web Vitals
