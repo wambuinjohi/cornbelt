@@ -377,7 +377,7 @@ export function createServer() {
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
   <url>
-    <loc>https://cornbeltmill.com/</loc>
+    <loc>https://cornbelt.co.ke/</loc>
     <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
@@ -387,19 +387,19 @@ export function createServer() {
     </image:image>
   </url>
   <url>
-    <loc>https://cornbeltmill.com/products</loc>
+    <loc>https://cornbelt.co.ke/products</loc>
     <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://cornbeltmill.com/about</loc>
+    <loc>https://cornbelt.co.ke/about</loc>
     <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://cornbeltmill.com/contact</loc>
+    <loc>https://cornbelt.co.ke/contact</loc>
     <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
@@ -426,7 +426,7 @@ Allow: /
 User-agent: *
 Allow: /
 
-Sitemap: https://cornbeltmill.com/sitemap.xml
+Sitemap: https://cornbelt.co.ke/sitemap.xml
 Disallow: /admin/
 Disallow: /api/`;
     res.send(robots);
