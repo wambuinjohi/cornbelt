@@ -37,10 +37,10 @@ export default function Contact() {
       keywords: pageMetadata.contact.keywords,
       ogTitle: pageMetadata.contact.title,
       ogDescription: pageMetadata.contact.description,
-      ogUrl: "https://cornbeltmill.com/contact",
-      canonicalUrl: "https://cornbeltmill.com/contact",
+      ogUrl: "https://cornbelt.co.ke/contact",
+      canonicalUrl: "https://cornbelt.co.ke/contact",
       twitterCard: "summary_large_image",
-      structuredData: getStructuredDataOrganization("https://cornbeltmill.com/contact"),
+      structuredData: getStructuredDataOrganization("https://cornbelt.co.ke/contact"),
     });
   }, []);
 
