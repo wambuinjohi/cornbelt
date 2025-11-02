@@ -370,6 +370,68 @@ export function createServer() {
 
   app.get("/api/demo", handleDemo);
 
+  // Sitemap
+  app.get("/sitemap.xml", (_req, res) => {
+    res.header("Content-Type", "application/xml");
+    const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+  <url>
+    <loc>https://cornbeltmill.com/</loc>
+    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+    <image:image>
+      <image:loc>https://cdn.builder.io/api/v1/image/assets%2Fbf7a511dd4454ae88c7c49627a9a0f54%2F80b3bed3a8e14bf3ae5cc941d2cfab50?format=webp&width=1200</image:loc>
+      <image:title>Cornbelt Flour Mill</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://cornbeltmill.com/products</loc>
+    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://cornbeltmill.com/about</loc>
+    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://cornbeltmill.com/contact</loc>
+    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+</urlset>`;
+    res.send(sitemap);
+  });
+
+  // Robots.txt
+  app.get("/robots.txt", (_req, res) => {
+    res.header("Content-Type", "text/plain");
+    const robots = `User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Twitterbot
+Allow: /
+
+User-agent: facebookexternalhit
+Allow: /
+
+User-agent: *
+Allow: /
+
+Sitemap: https://cornbeltmill.com/sitemap.xml
+Disallow: /admin/
+Disallow: /api/`;
+    res.send(robots);
+  });
+
   // Admin endpoints
   app.get("/api/admin/check-initialized", async (_req, res) => {
     try {
