@@ -262,6 +262,94 @@ async function initializeAdminTable() {
 
       console.log("Sample testimonials seeded");
     }
+
+    // Create orders table
+    const ordersTableData = {
+      create_table: true,
+      columns: {
+        id: "INT AUTO_INCREMENT PRIMARY KEY",
+        fullName: "VARCHAR(255) NOT NULL",
+        email: "VARCHAR(255) NOT NULL",
+        phone: "VARCHAR(20) NOT NULL",
+        location: "VARCHAR(255)",
+        product: "VARCHAR(255) NOT NULL",
+        size: "VARCHAR(50) NOT NULL",
+        quantity: "INT NOT NULL DEFAULT 1",
+        deliveryDate: "DATE",
+        notes: "TEXT",
+        status: "VARCHAR(50) DEFAULT 'pending'",
+        totalPrice: "DECIMAL(10, 2)",
+        createdAt: "DATETIME DEFAULT CURRENT_TIMESTAMP",
+        updatedAt:
+          "DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
+      },
+    };
+
+    await fetch(`${baseUrl}/api.php?table=orders`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(ordersTableData),
+    });
+
+    console.log("Orders table initialized");
+
+    // Seed sample orders if table is empty
+    const existingOrders = await apiCall("GET", "orders");
+    if (!Array.isArray(existingOrders) || existingOrders.length === 0) {
+      const sampleOrders = [
+        {
+          fullName: "John Kipchoge",
+          email: "john@example.com",
+          phone: "+254712345678",
+          location: "Nairobi",
+          product: "Jirani Maize Meal",
+          size: "25kg",
+          quantity: 5,
+          deliveryDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+            .toISOString()
+            .split("T")[0],
+          notes: "Deliver to shop on Moi Avenue",
+          status: "pending",
+          totalPrice: 2500.0,
+        },
+        {
+          fullName: "Alice Njeri",
+          email: "alice@example.com",
+          phone: "+254701234567",
+          location: "Kisumu",
+          product: "Tabasamu Maize Meal",
+          size: "2kg",
+          quantity: 10,
+          deliveryDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000)
+            .toISOString()
+            .split("T")[0],
+          notes: "Standard delivery",
+          status: "confirmed",
+          totalPrice: 1200.0,
+        },
+        {
+          fullName: "David Mwangi",
+          email: "david@example.com",
+          phone: "+254722345678",
+          location: "Nakuru",
+          product: "Jirani Maize Meal",
+          size: "2kg",
+          quantity: 20,
+          deliveryDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000)
+            .toISOString()
+            .split("T")[0],
+          notes: "Wholesale order",
+          status: "confirmed",
+          totalPrice: 2400.0,
+        },
+      ];
+
+      for (const order of sampleOrders) {
+        await apiCall("POST", "orders", order);
+      }
+
+      console.log("Sample orders seeded");
+    }
   } catch (error) {
     console.error("Error initializing tables:", error);
   }
