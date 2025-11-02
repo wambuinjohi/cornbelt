@@ -22,6 +22,7 @@ import {
   X,
   Settings,
   MessageCircle,
+  ShoppingCart,
 } from "lucide-react";
 
 interface AdminLayoutProps {
@@ -39,6 +40,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       icon: LayoutDashboard,
       label: "Dashboard",
       href: "/admin/dashboard",
+    },
+    {
+      icon: ShoppingCart,
+      label: "Orders",
+      href: "/admin/orders",
     },
     {
       icon: Images,
