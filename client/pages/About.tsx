@@ -24,10 +24,10 @@ export default function About() {
       ogTitle: pageMetadata.about.title,
       ogDescription: pageMetadata.about.description,
       ogImage: "https://cdn.builder.io/api/v1/image/assets%2F1ffce8bff4d5493bafecc479d3963466%2F4a2cc68749f24d2b8f3d41537c67e99d?format=webp&width=1200",
-      ogUrl: "https://cornbeltmill.com/about",
-      canonicalUrl: "https://cornbeltmill.com/about",
+      ogUrl: "https://cornbelt.co.ke/about",
+      canonicalUrl: "https://cornbelt.co.ke/about",
       twitterCard: "summary_large_image",
-      structuredData: getStructuredDataOrganization("https://cornbeltmill.com/about"),
+      structuredData: getStructuredDataOrganization("https://cornbelt.co.ke/about"),
     });
   }, []);
   const coreValues = [
