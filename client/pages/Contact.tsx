@@ -29,6 +29,21 @@ interface ContactFormData {
 
 export default function Contact() {
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    useUpdateMetaTags({
+      title: pageMetadata.contact.title,
+      description: pageMetadata.contact.description,
+      keywords: pageMetadata.contact.keywords,
+      ogTitle: pageMetadata.contact.title,
+      ogDescription: pageMetadata.contact.description,
+      ogUrl: "https://cornbeltmill.com/contact",
+      canonicalUrl: "https://cornbeltmill.com/contact",
+      twitterCard: "summary_large_image",
+      structuredData: getStructuredDataOrganization("https://cornbeltmill.com/contact"),
+    });
+  }, []);
+
   const form = useForm<ContactFormData>({
     defaultValues: {
       fullName: "",
