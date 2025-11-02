@@ -1,12 +1,20 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ChatWidget from "@/components/ChatWidget";
+import OrderForm from "@/components/OrderForm";
 import { useUpdateMetaTags, pageMetadata, getStructuredDataProduct } from "@/lib/seo";
 import { Check, Leaf, Shield, Zap, Droplets, ArrowRight } from "lucide-react";
 
 export default function Products() {
+  const [isOrderFormOpen, setIsOrderFormOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<string>();
+
+  const openOrderForm = (productName: string) => {
+    setSelectedProduct(productName);
+    setIsOrderFormOpen(true);
+  };
   useEffect(() => {
     useUpdateMetaTags({
       title: pageMetadata.products.title,
