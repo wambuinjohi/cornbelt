@@ -1265,6 +1265,189 @@ Disallow: /api/`;
     }
   });
 
+  // Orders endpoints
+  app.post("/api/orders", async (req, res) => {
+    const {
+      fullName,
+      email,
+      phone,
+      location,
+      product,
+      size,
+      quantity,
+      deliveryDate,
+      notes,
+    } = req.body;
+
+    // Basic validation
+    if (!fullName || !email || !phone || !product || !size || !quantity) {
+      return res.status(400).json({
+        success: false,
+        error: "Missing required fields",
+      });
+    }
+
+    // Email validation
+    const emailRegex = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({
+        success: false,
+        error: "Invalid email address",
+      });
+    }
+
+    // Phone validation
+    const phoneRegex = /^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$/;
+    if (!phoneRegex.test(phone)) {
+      return res.status(400).json({
+        success: false,
+        error: "Invalid phone number format",
+      });
+    }
+
+    try {
+      // Calculate price based on product and size (simple pricing)
+      let pricePerUnit = 0;
+      if (product === "Jirani Maize Meal") {
+        pricePerUnit = size === "2kg" ? 120 : 500;
+      } else if (product === "Tabasamu Maize Meal") {
+        pricePerUnit = size === "2kg" ? 150 : 600;
+      }
+
+      const totalPrice = pricePerUnit * quantity;
+
+      // Save to database
+      const result = await apiCall("POST", "orders", {
+        fullName,
+        email,
+        phone,
+        location: location || null,
+        product,
+        size,
+        quantity,
+        deliveryDate: deliveryDate || null,
+        notes: notes || null,
+        status: "pending",
+        totalPrice,
+        createdAt: new Date().toISOString(),
+      });
+
+      console.log("New order saved:", {
+        id: result.id,
+        timestamp: new Date().toISOString(),
+        fullName,
+        product,
+        quantity,
+      });
+
+      // Send success response
+      res.json({
+        success: true,
+        message: "Order received! We will contact you shortly to confirm.",
+        data: {
+          orderId: result.id,
+          submittedAt: new Date().toISOString(),
+          estimatedPrice: totalPrice,
+        },
+      });
+    } catch (error) {
+      console.error("Error saving order:", error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to process order",
+      });
+    }
+  });
+
+  // Admin orders endpoints
+  app.get("/api/admin/orders", async (req, res) => {
+    const token = req.headers.authorization?.split(" ")[1];
+
+    if (!token || !verifyToken(token)) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    try {
+      const orders = await apiCall("GET", "orders");
+      const sortedOrders = Array.isArray(orders)
+        ? orders.sort(
+            (a: any, b: any) =>
+              new Date(b.createdAt).getTime() -
+              new Date(a.createdAt).getTime()
+          )
+        : [];
+      res.json(sortedOrders);
+    } catch (error) {
+      console.error("Error fetching orders:", error);
+      res.json([]);
+    }
+  });
+
+  app.put("/api/admin/orders/:id", async (req, res) => {
+    const token = req.headers.authorization?.split(" ")[1];
+
+    if (!token || !verifyToken(token)) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const { id } = req.params;
+    const { status, notes } = req.body;
+
+    try {
+      const updates: any = {};
+      if (status !== undefined) updates.status = status;
+      if (notes !== undefined) updates.notes = notes;
+
+      if (Object.keys(updates).length === 0) {
+        return res.status(400).json({ error: "No fields to update" });
+      }
+
+      const result = await apiCall("PUT", "orders", updates, parseInt(id));
+
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      res.json({
+        success: true,
+        message: "Order updated successfully",
+      });
+    } catch (error) {
+      console.error("Error updating order:", error);
+      res.status(500).json({
+        error: error instanceof Error ? error.message : "Failed to update order",
+      });
+    }
+  });
+
+  app.delete("/api/admin/orders/:id", async (req, res) => {
+    const token = req.headers.authorization?.split(" ")[1];
+
+    if (!token || !verifyToken(token)) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const { id } = req.params;
+
+    try {
+      const result = await apiCall("DELETE", "orders", null, parseInt(id));
+
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      res.json({
+        success: true,
+        message: "Order deleted successfully",
+      });
+    } catch (error) {
+      console.error("Error deleting order:", error);
+      res.status(500).json({
+        error: error instanceof Error ? error.message : "Failed to delete order",
+      });
+    }
+  });
+
   // Chat endpoints (visitor-facing)
   app.post("/api/chat/message", async (req, res) => {
     const { sessionId, name, message } = req.body;
