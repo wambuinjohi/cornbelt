@@ -60,7 +60,7 @@ export default function Index() {
               <img
                 src="https://cdn.builder.io/api/v1/image/assets%2Fbf7a511dd4454ae88c7c49627a9a0f54%2F80b3bed3a8e14bf3ae5cc941d2cfab50?format=webp&width=200"
                 alt="Cornbelt Logo"
-                className="w-24 h-24 mx-auto object-contain"
+                className="w-40 h-40 mx-auto object-contain"
               />
               <div className="space-y-4">
                 <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight drop-shadow-lg">
