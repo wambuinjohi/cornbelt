@@ -146,14 +146,14 @@ export const getStructuredDataOrganization = (url: string) => ({
     "Premium fortified maize flour and grain mill products from Kenya",
   url: url,
   telephone: "+254-700-000-000",
-  email: "info@cornbeltmill.com",
+  email: "info@cornbelt.co.ke",
   logo: "https://cdn.builder.io/api/v1/image/assets%2Fbf7a511dd4454ae88c7c49627a9a0f54%2F80b3bed3a8e14bf3ae5cc941d2cfab50?format=webp&width=200",
   image:
     "https://cdn.builder.io/api/v1/image/assets%2F1ffce8bff4d5493bafecc479d3963466%2F4a2cc68749f24d2b8f3d41537c67e99d?format=webp&width=800",
   sameAs: [
-    "https://www.facebook.com/cornbeltmill",
-    "https://www.twitter.com/cornbeltmill",
-    "https://www.instagram.com/cornbeltmill",
+    "https://www.facebook.com/cornbelt.co.ke",
+    "https://www.twitter.com/cornbelt_ke",
+    "https://www.instagram.com/cornbelt_ke",
   ],
   address: {
     "@type": "PostalAddress",
