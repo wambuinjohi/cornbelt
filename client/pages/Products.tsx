@@ -10,8 +10,8 @@ export default function Products() {
       keywords: pageMetadata.products.keywords,
       ogTitle: pageMetadata.products.title,
       ogDescription: pageMetadata.products.description,
-      ogUrl: "https://cornbeltmill.com/products",
-      canonicalUrl: "https://cornbeltmill.com/products",
+      ogUrl: "https://cornbelt.co.ke/products",
+      canonicalUrl: "https://cornbelt.co.ke/products",
       twitterCard: "summary_large_image",
       structuredData: getStructuredDataProduct(
         "Cornbelt Premium Fortified Maize Meal",
