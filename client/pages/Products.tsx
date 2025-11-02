@@ -189,15 +189,13 @@ export default function Products() {
 
                     {/* CTA Buttons */}
                     <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-primary/10">
-                      <a
-                        href="https://wa.me/254"
-                        target="_blank"
-                        rel="noopener noreferrer"
+                      <button
+                        onClick={() => openOrderForm(product.name)}
                         className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-semibold"
                       >
                         Order Now
                         <ArrowRight className="w-4 h-4" />
-                      </a>
+                      </button>
                       <Link
                         to="/contact"
                         className="flex-1 inline-flex items-center justify-center px-6 py-3 border-2 border-primary text-primary rounded-lg hover:bg-primary/5 transition-colors font-semibold"
