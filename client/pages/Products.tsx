@@ -345,6 +345,12 @@ export default function Products() {
         </section>
       </main>
 
+      <OrderForm
+        isOpen={isOrderFormOpen}
+        onClose={() => setIsOrderFormOpen(false)}
+        productName={selectedProduct}
+      />
+
       <Footer />
       <ChatWidget />
     </div>
