@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -5,6 +6,7 @@ import HeroSlider from "@/components/HeroSlider";
 import ProductGallery from "@/components/ProductGallery";
 import TestimonialsSection from "@/components/TestimonialsSection";
 import ChatWidget from "@/components/ChatWidget";
+import { useUpdateMetaTags, pageMetadata, getStructuredDataOrganization, getStructuredDataBreadcrumb } from "@/lib/seo";
 import {
   Leaf,
   Award,
@@ -20,6 +22,21 @@ import {
 } from "lucide-react";
 
 export default function Index() {
+  useEffect(() => {
+    useUpdateMetaTags({
+      title: pageMetadata.home.title,
+      description: pageMetadata.home.description,
+      keywords: pageMetadata.home.keywords,
+      ogTitle: pageMetadata.home.title,
+      ogDescription: pageMetadata.home.description,
+      ogImage: "https://cdn.builder.io/api/v1/image/assets%2Fbf7a511dd4454ae88c7c49627a9a0f54%2F80b3bed3a8e14bf3ae5cc941d2cfab50?format=webp&width=1200",
+      ogUrl: "https://cornbeltmill.com/",
+      canonicalUrl: "https://cornbeltmill.com/",
+      twitterCard: "summary_large_image",
+      structuredData: getStructuredDataOrganization("https://cornbeltmill.com/"),
+    });
+  }, []);
+
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
