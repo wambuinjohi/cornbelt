@@ -134,7 +134,14 @@ export default function AdminOrders() {
   };
 
   const handleCreateOrder = async () => {
-    if (!createFormData.fullName || !createFormData.email || !createFormData.phone || !createFormData.product || !createFormData.size || !createFormData.quantity) {
+    if (
+      !createFormData.fullName ||
+      !createFormData.email ||
+      !createFormData.phone ||
+      !createFormData.product ||
+      !createFormData.size ||
+      !createFormData.quantity
+    ) {
       toast.error("Please fill in all required fields");
       return;
     }
@@ -171,7 +178,9 @@ export default function AdminOrders() {
       fetchOrders();
     } catch (error) {
       console.error("Error creating order:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to create order");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to create order",
+      );
     } finally {
       setIsCreatingOrder(false);
     }
@@ -286,10 +295,7 @@ export default function AdminOrders() {
             </p>
           </div>
           <div className="flex gap-2">
-            <Button
-              onClick={() => setShowCreateModal(true)}
-              className="gap-2"
-            >
+            <Button onClick={() => setShowCreateModal(true)} className="gap-2">
               <Plus className="w-4 h-4" />
               Create Order
             </Button>
