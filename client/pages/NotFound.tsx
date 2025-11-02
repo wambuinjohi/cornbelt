@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { useUpdateMetaTags, pageMetadata } from "@/lib/seo";
 
 const NotFound = () => {
   const location = useLocation();
@@ -12,6 +13,13 @@ const NotFound = () => {
       "404 Error: User attempted to access non-existent route:",
       location.pathname,
     );
+
+    useUpdateMetaTags({
+      title: pageMetadata.notfound.title,
+      description: pageMetadata.notfound.description,
+      keywords: pageMetadata.notfound.keywords,
+      canonicalUrl: `https://cornbeltmill.com${location.pathname}`,
+    });
   }, [location.pathname]);
 
   return (

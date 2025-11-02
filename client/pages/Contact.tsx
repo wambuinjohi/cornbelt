@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { Link } from "react-router-dom";
 import Header from "@/components/Header";
@@ -15,6 +15,11 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import {
+  useUpdateMetaTags,
+  pageMetadata,
+  getStructuredDataOrganization,
+} from "@/lib/seo";
 import { Mail, Phone, MapPin, Clock } from "lucide-react";
 import { toast } from "sonner";
 
@@ -28,6 +33,23 @@ interface ContactFormData {
 
 export default function Contact() {
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    useUpdateMetaTags({
+      title: pageMetadata.contact.title,
+      description: pageMetadata.contact.description,
+      keywords: pageMetadata.contact.keywords,
+      ogTitle: pageMetadata.contact.title,
+      ogDescription: pageMetadata.contact.description,
+      ogUrl: "https://cornbelt.co.ke/contact",
+      canonicalUrl: "https://cornbelt.co.ke/contact",
+      twitterCard: "summary_large_image",
+      structuredData: getStructuredDataOrganization(
+        "https://cornbelt.co.ke/contact",
+      ),
+    });
+  }, []);
+
   const form = useForm<ContactFormData>({
     defaultValues: {
       fullName: "",

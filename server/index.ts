@@ -262,6 +262,94 @@ async function initializeAdminTable() {
 
       console.log("Sample testimonials seeded");
     }
+
+    // Create orders table
+    const ordersTableData = {
+      create_table: true,
+      columns: {
+        id: "INT AUTO_INCREMENT PRIMARY KEY",
+        fullName: "VARCHAR(255) NOT NULL",
+        email: "VARCHAR(255) NOT NULL",
+        phone: "VARCHAR(20) NOT NULL",
+        location: "VARCHAR(255)",
+        product: "VARCHAR(255) NOT NULL",
+        size: "VARCHAR(50) NOT NULL",
+        quantity: "INT NOT NULL DEFAULT 1",
+        deliveryDate: "DATE",
+        notes: "TEXT",
+        status: "VARCHAR(50) DEFAULT 'pending'",
+        totalPrice: "DECIMAL(10, 2)",
+        createdAt: "DATETIME DEFAULT CURRENT_TIMESTAMP",
+        updatedAt:
+          "DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
+      },
+    };
+
+    await fetch(`${baseUrl}/api.php?table=orders`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(ordersTableData),
+    });
+
+    console.log("Orders table initialized");
+
+    // Seed sample orders if table is empty
+    const existingOrders = await apiCall("GET", "orders");
+    if (!Array.isArray(existingOrders) || existingOrders.length === 0) {
+      const sampleOrders = [
+        {
+          fullName: "John Kipchoge",
+          email: "john@example.com",
+          phone: "+254712345678",
+          location: "Nairobi",
+          product: "Jirani Maize Meal",
+          size: "25kg",
+          quantity: 5,
+          deliveryDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+            .toISOString()
+            .split("T")[0],
+          notes: "Deliver to shop on Moi Avenue",
+          status: "pending",
+          totalPrice: 2500.0,
+        },
+        {
+          fullName: "Alice Njeri",
+          email: "alice@example.com",
+          phone: "+254701234567",
+          location: "Kisumu",
+          product: "Tabasamu Maize Meal",
+          size: "2kg",
+          quantity: 10,
+          deliveryDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000)
+            .toISOString()
+            .split("T")[0],
+          notes: "Standard delivery",
+          status: "confirmed",
+          totalPrice: 1200.0,
+        },
+        {
+          fullName: "David Mwangi",
+          email: "david@example.com",
+          phone: "+254722345678",
+          location: "Nakuru",
+          product: "Jirani Maize Meal",
+          size: "2kg",
+          quantity: 20,
+          deliveryDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000)
+            .toISOString()
+            .split("T")[0],
+          notes: "Wholesale order",
+          status: "confirmed",
+          totalPrice: 2400.0,
+        },
+      ];
+
+      for (const order of sampleOrders) {
+        await apiCall("POST", "orders", order);
+      }
+
+      console.log("Sample orders seeded");
+    }
   } catch (error) {
     console.error("Error initializing tables:", error);
   }
@@ -369,6 +457,68 @@ export function createServer() {
   });
 
   app.get("/api/demo", handleDemo);
+
+  // Sitemap
+  app.get("/sitemap.xml", (_req, res) => {
+    res.header("Content-Type", "application/xml");
+    const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+  <url>
+    <loc>https://cornbelt.co.ke/</loc>
+    <lastmod>${new Date().toISOString().split("T")[0]}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+    <image:image>
+      <image:loc>https://cdn.builder.io/api/v1/image/assets%2Fbf7a511dd4454ae88c7c49627a9a0f54%2F80b3bed3a8e14bf3ae5cc941d2cfab50?format=webp&width=1200</image:loc>
+      <image:title>Cornbelt Flour Mill</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://cornbelt.co.ke/products</loc>
+    <lastmod>${new Date().toISOString().split("T")[0]}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://cornbelt.co.ke/about</loc>
+    <lastmod>${new Date().toISOString().split("T")[0]}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://cornbelt.co.ke/contact</loc>
+    <lastmod>${new Date().toISOString().split("T")[0]}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+</urlset>`;
+    res.send(sitemap);
+  });
+
+  // Robots.txt
+  app.get("/robots.txt", (_req, res) => {
+    res.header("Content-Type", "text/plain");
+    const robots = `User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Twitterbot
+Allow: /
+
+User-agent: facebookexternalhit
+Allow: /
+
+User-agent: *
+Allow: /
+
+Sitemap: https://cornbelt.co.ke/sitemap.xml
+Disallow: /admin/
+Disallow: /api/`;
+    res.send(robots);
+  });
 
   // Admin endpoints
   app.get("/api/admin/check-initialized", async (_req, res) => {
@@ -1111,6 +1261,190 @@ export function createServer() {
         data: {
           submittedAt: new Date().toISOString(),
         },
+      });
+    }
+  });
+
+  // Orders endpoints
+  app.post("/api/orders", async (req, res) => {
+    const {
+      fullName,
+      email,
+      phone,
+      location,
+      product,
+      size,
+      quantity,
+      deliveryDate,
+      notes,
+    } = req.body;
+
+    // Basic validation
+    if (!fullName || !email || !phone || !product || !size || !quantity) {
+      return res.status(400).json({
+        success: false,
+        error: "Missing required fields",
+      });
+    }
+
+    // Email validation
+    const emailRegex = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({
+        success: false,
+        error: "Invalid email address",
+      });
+    }
+
+    // Phone validation
+    const phoneRegex = /^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$/;
+    if (!phoneRegex.test(phone)) {
+      return res.status(400).json({
+        success: false,
+        error: "Invalid phone number format",
+      });
+    }
+
+    try {
+      // Calculate price based on product and size (simple pricing)
+      let pricePerUnit = 0;
+      if (product === "Jirani Maize Meal") {
+        pricePerUnit = size === "2kg" ? 120 : 500;
+      } else if (product === "Tabasamu Maize Meal") {
+        pricePerUnit = size === "2kg" ? 150 : 600;
+      }
+
+      const totalPrice = pricePerUnit * quantity;
+
+      // Save to database
+      const result = await apiCall("POST", "orders", {
+        fullName,
+        email,
+        phone,
+        location: location || null,
+        product,
+        size,
+        quantity,
+        deliveryDate: deliveryDate || null,
+        notes: notes || null,
+        status: "pending",
+        totalPrice,
+        createdAt: new Date().toISOString(),
+      });
+
+      console.log("New order saved:", {
+        id: result.id,
+        timestamp: new Date().toISOString(),
+        fullName,
+        product,
+        quantity,
+      });
+
+      // Send success response
+      res.json({
+        success: true,
+        message: "Order received! We will contact you shortly to confirm.",
+        data: {
+          orderId: result.id,
+          submittedAt: new Date().toISOString(),
+          estimatedPrice: totalPrice,
+        },
+      });
+    } catch (error) {
+      console.error("Error saving order:", error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to process order",
+      });
+    }
+  });
+
+  // Admin orders endpoints
+  app.get("/api/admin/orders", async (req, res) => {
+    const token = req.headers.authorization?.split(" ")[1];
+
+    if (!token || !verifyToken(token)) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    try {
+      const orders = await apiCall("GET", "orders");
+      const sortedOrders = Array.isArray(orders)
+        ? orders.sort(
+            (a: any, b: any) =>
+              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+          )
+        : [];
+      res.json(sortedOrders);
+    } catch (error) {
+      console.error("Error fetching orders:", error);
+      res.json([]);
+    }
+  });
+
+  app.put("/api/admin/orders/:id", async (req, res) => {
+    const token = req.headers.authorization?.split(" ")[1];
+
+    if (!token || !verifyToken(token)) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const { id } = req.params;
+    const { status, notes } = req.body;
+
+    try {
+      const updates: any = {};
+      if (status !== undefined) updates.status = status;
+      if (notes !== undefined) updates.notes = notes;
+
+      if (Object.keys(updates).length === 0) {
+        return res.status(400).json({ error: "No fields to update" });
+      }
+
+      const result = await apiCall("PUT", "orders", updates, parseInt(id));
+
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      res.json({
+        success: true,
+        message: "Order updated successfully",
+      });
+    } catch (error) {
+      console.error("Error updating order:", error);
+      res.status(500).json({
+        error:
+          error instanceof Error ? error.message : "Failed to update order",
+      });
+    }
+  });
+
+  app.delete("/api/admin/orders/:id", async (req, res) => {
+    const token = req.headers.authorization?.split(" ")[1];
+
+    if (!token || !verifyToken(token)) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const { id } = req.params;
+
+    try {
+      const result = await apiCall("DELETE", "orders", null, parseInt(id));
+
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      res.json({
+        success: true,
+        message: "Order deleted successfully",
+      });
+    } catch (error) {
+      console.error("Error deleting order:", error);
+      res.status(500).json({
+        error:
+          error instanceof Error ? error.message : "Failed to delete order",
       });
     }
   });
