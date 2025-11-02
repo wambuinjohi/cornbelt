@@ -18,14 +18,7 @@ import {
   AlertDialogDescription,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  Trash2,
-  Edit2,
-  Eye,
-  Download,
-  ChevronDown,
-  X,
-} from "lucide-react";
+import { Trash2, Edit2, Eye, Download, ChevronDown, X } from "lucide-react";
 import { toast } from "sonner";
 
 interface Order {
@@ -266,7 +259,10 @@ export default function AdminOrders() {
           <div className="bg-white p-4 rounded-lg border border-primary/10">
             <p className="text-sm text-muted-foreground mb-1">Total Revenue</p>
             <p className="text-3xl font-bold text-green-600">
-              KES {orders.reduce((sum, o) => sum + (o.totalPrice || 0), 0).toLocaleString()}
+              KES{" "}
+              {orders
+                .reduce((sum, o) => sum + (o.totalPrice || 0), 0)
+                .toLocaleString()}
             </p>
           </div>
         </div>
@@ -333,7 +329,7 @@ export default function AdminOrders() {
                       <td className="px-4 py-3">
                         <span
                           className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(
-                            order.status
+                            order.status,
                           )}`}
                         >
                           {order.status.charAt(0).toUpperCase() +
@@ -369,7 +365,7 @@ export default function AdminOrders() {
                           <button
                             onClick={() => {
                               setExpandedOrderId(
-                                expandedOrderId === order.id ? null : order.id
+                                expandedOrderId === order.id ? null : order.id,
                               );
                             }}
                             title="View details"
@@ -403,7 +399,10 @@ export default function AdminOrders() {
                       <div>
                         <p className="text-muted-foreground">Location</p>
                         <p className="font-medium">
-                          {orders.find((o) => o.id === expandedOrderId)?.location}
+                          {
+                            orders.find((o) => o.id === expandedOrderId)
+                              ?.location
+                          }
                         </p>
                       </div>
                       <div>
@@ -418,8 +417,8 @@ export default function AdminOrders() {
                       <div>
                         <p className="text-muted-foreground">Notes</p>
                         <p className="font-medium">
-                          {orders.find((o) => o.id === expandedOrderId)?.notes ||
-                            "-"}
+                          {orders.find((o) => o.id === expandedOrderId)
+                            ?.notes || "-"}
                         </p>
                       </div>
                     </div>
@@ -457,7 +456,10 @@ export default function AdminOrders() {
                   <label className="block text-sm font-medium text-foreground mb-2">
                     Status
                   </label>
-                  <Select value={editingStatus} onValueChange={setEditingStatus}>
+                  <Select
+                    value={editingStatus}
+                    onValueChange={setEditingStatus}
+                  >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>

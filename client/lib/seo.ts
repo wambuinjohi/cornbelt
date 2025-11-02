@@ -35,7 +35,7 @@ export const useUpdateMetaTags = (metadata: SEOMetadata) => {
   updateMetaTag(
     "og:description",
     metadata.ogDescription || metadata.description,
-    "property"
+    "property",
   );
   if (metadata.ogImage) {
     updateMetaTag("og:image", metadata.ogImage, "property");
@@ -53,7 +53,9 @@ export const useUpdateMetaTags = (metadata: SEOMetadata) => {
 
   // Canonical URL
   if (metadata.canonicalUrl) {
-    let canonical = document.querySelector('link[rel="canonical"]') as HTMLLinkElement;
+    let canonical = document.querySelector(
+      'link[rel="canonical"]',
+    ) as HTMLLinkElement;
     if (!canonical) {
       canonical = document.createElement("link");
       canonical.rel = "canonical";
@@ -71,9 +73,11 @@ export const useUpdateMetaTags = (metadata: SEOMetadata) => {
 function updateMetaTag(
   name: string,
   content: string,
-  type: "name" | "property" = "name"
+  type: "name" | "property" = "name",
 ) {
-  let tag = document.querySelector(`meta[${type}="${name}"]`) as HTMLMetaElement;
+  let tag = document.querySelector(
+    `meta[${type}="${name}"]`,
+  ) as HTMLMetaElement;
   if (!tag) {
     tag = document.createElement("meta");
     tag.setAttribute(type, name);
@@ -83,7 +87,9 @@ function updateMetaTag(
 }
 
 function updateStructuredData(data: Record<string, any>) {
-  let script = document.querySelector('script[type="application/ld+json"]') as HTMLScriptElement;
+  let script = document.querySelector(
+    'script[type="application/ld+json"]',
+  ) as HTMLScriptElement;
   if (!script) {
     script = document.createElement("script");
     script.type = "application/ld+json";
@@ -98,7 +104,8 @@ export const siteMeta = {
     "Kenya's finest fortified maize flour. Nourishing families since 2003 with quality, tradition, and excellence. Farm-to-table grain products.",
   keywords:
     "maize flour, fortified flour, Kenya flour, grain mill, whole grain, maize meal, nutritious food, family nutrition",
-  ogImage: "https://cdn.builder.io/api/v1/image/assets%2Fbf7a511dd4454ae88c7c49627a9a0f54%2F80b3bed3a8e14bf3ae5cc941d2cfab50?format=webp&width=1200",
+  ogImage:
+    "https://cdn.builder.io/api/v1/image/assets%2Fbf7a511dd4454ae88c7c49627a9a0f54%2F80b3bed3a8e14bf3ae5cc941d2cfab50?format=webp&width=1200",
   twitterSite: "@cornbeltmill",
 };
 
@@ -174,7 +181,7 @@ export const getStructuredDataProduct = (
   name: string,
   description: string,
   url: string,
-  image?: string
+  image?: string,
 ) => ({
   "@context": "https://schema.org",
   "@type": "Product",
@@ -198,7 +205,9 @@ export const getStructuredDataProduct = (
   },
 });
 
-export const getStructuredDataBreadcrumb = (items: Array<{ name: string; url: string }>) => ({
+export const getStructuredDataBreadcrumb = (
+  items: Array<{ name: string; url: string }>,
+) => ({
   "@context": "https://schema.org",
   "@type": "BreadcrumbList",
   itemListElement: items.map((item, index) => ({
@@ -210,7 +219,7 @@ export const getStructuredDataBreadcrumb = (items: Array<{ name: string; url: st
 });
 
 export const getStructuredDataFAQ = (
-  faqs: Array<{ question: string; answer: string }>
+  faqs: Array<{ question: string; answer: string }>,
 ) => ({
   "@context": "https://schema.org",
   "@type": "FAQPage",

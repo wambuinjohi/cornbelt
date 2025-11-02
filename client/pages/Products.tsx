@@ -4,7 +4,11 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ChatWidget from "@/components/ChatWidget";
 import OrderForm from "@/components/OrderForm";
-import { useUpdateMetaTags, pageMetadata, getStructuredDataProduct } from "@/lib/seo";
+import {
+  useUpdateMetaTags,
+  pageMetadata,
+  getStructuredDataProduct,
+} from "@/lib/seo";
 import { Check, Leaf, Shield, Zap, Droplets, ArrowRight } from "lucide-react";
 
 export default function Products() {
@@ -29,7 +33,7 @@ export default function Products() {
         "Cornbelt Premium Fortified Maize Meal",
         "Premium fortified maize flour and grain mill products from Kenya",
         "https://cornbelt.co.ke/products",
-        "https://cdn.builder.io/api/v1/image/assets%2Fb24c336a909d4dff96aafe9d145908a3%2Fbf12b883b24f4b35a0150306aaba9e88?format=webp&width=1200"
+        "https://cdn.builder.io/api/v1/image/assets%2Fb24c336a909d4dff96aafe9d145908a3%2Fbf12b883b24f4b35a0150306aaba9e88?format=webp&width=1200",
       ),
     });
   }, []);
@@ -41,7 +45,8 @@ export default function Products() {
       tagline: "Premium Fortified Maize Meal",
       description:
         "Our flagship product - premium fortified maize meal that nourishes your family with essential vitamins and minerals. Perfect for daily cooking and family meals.",
-      image: "https://cdn.builder.io/api/v1/image/assets%2Fb24c336a909d4dff96aafe9d145908a3%2Fbf12b883b24f4b35a0150306aaba9e88?format=webp&width=800",
+      image:
+        "https://cdn.builder.io/api/v1/image/assets%2Fb24c336a909d4dff96aafe9d145908a3%2Fbf12b883b24f4b35a0150306aaba9e88?format=webp&width=800",
       features: [
         "Fortified with essential vitamins & minerals",
         "Fine, uniform texture",
@@ -63,7 +68,8 @@ export default function Products() {
       tagline: "Grade 1 Sifted & Fortified",
       description:
         "Our premium Grade 1 sifted maize meal - carefully processed to ensure the finest quality flour with superior whiteness and consistency. Ideal for families who demand excellence.",
-      image: "https://cdn.builder.io/api/v1/image/assets%2Fb24c336a909d4dff96aafe9d145908a3%2F56da549a08874f59b4805c00c67be84a?format=webp&width=800",
+      image:
+        "https://cdn.builder.io/api/v1/image/assets%2Fb24c336a909d4dff96aafe9d145908a3%2F56da549a08874f59b4805c00c67be84a?format=webp&width=800",
       features: [
         "Grade 1 premium quality",
         "Finely sifted texture",
@@ -94,8 +100,8 @@ export default function Products() {
                 Our Premium Products
               </h1>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                Discover our range of fortified maize meal products, crafted with
-                care and excellence for your family's nutrition.
+                Discover our range of fortified maize meal products, crafted
+                with care and excellence for your family's nutrition.
               </p>
             </div>
           </div>
@@ -319,8 +325,8 @@ export default function Products() {
               </h2>
               <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
                 Cornbelt products are available at leading retailers, shops, and
-                supermarkets across Kenya. For wholesale inquiries or bulk orders,
-                contact us directly.
+                supermarkets across Kenya. For wholesale inquiries or bulk
+                orders, contact us directly.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center">

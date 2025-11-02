@@ -81,14 +81,12 @@ export default function OrderForm({
       }
 
       form.reset();
-      toast.success(
-        "Order submitted successfully! We'll contact you shortly."
-      );
+      toast.success("Order submitted successfully! We'll contact you shortly.");
       onClose();
     } catch (error) {
       console.error("Order form error:", error);
       toast.error(
-        error instanceof Error ? error.message : "Failed to submit order"
+        error instanceof Error ? error.message : "Failed to submit order",
       );
     } finally {
       setIsSubmitting(false);
@@ -102,7 +100,9 @@ export default function OrderForm({
       <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full my-8">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-primary/10">
-          <h2 className="text-2xl font-bold text-foreground">Place Your Order</h2>
+          <h2 className="text-2xl font-bold text-foreground">
+            Place Your Order
+          </h2>
           <button
             onClick={onClose}
             className="text-muted-foreground hover:text-foreground transition-colors"
@@ -321,11 +321,7 @@ export default function OrderForm({
                 <FormItem>
                   <FormLabel>Preferred Delivery Date</FormLabel>
                   <FormControl>
-                    <Input
-                      type="date"
-                      disabled={isSubmitting}
-                      {...field}
-                    />
+                    <Input type="date" disabled={isSubmitting} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

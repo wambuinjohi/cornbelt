@@ -23,6 +23,7 @@ The website now includes comprehensive SEO features to improve search engine vis
 Implemented multiple structured data schemas:
 
 #### Organization Schema
+
 - Company information (name, URL, email, phone)
 - Logo and images
 - Social media links
@@ -30,22 +31,26 @@ Implemented multiple structured data schemas:
 - Founding date and founder information
 
 #### LocalBusiness Schema
+
 - Enhanced organization data with local business specifics
 - Geo-targeting information
 - Business hours (can be added to Contact page)
 - Service radius
 
 #### Product Schema
+
 - Product information on Products page
 - Brand and manufacturer details
 - Category classification
 - Aggregate ratings and review counts
 
 #### Breadcrumb List Schema
+
 - Navigation hierarchy for better crawling
 - Available through `getStructuredDataBreadcrumb()` utility
 
 #### FAQ Schema
+
 - Question and answer pairs
 - Available through `getStructuredDataFAQ()` utility
 
@@ -70,32 +75,38 @@ Implemented multiple structured data schemas:
 Each main page now includes page-specific SEO metadata:
 
 #### Home Page (Index.tsx)
+
 - Optimized for brand and home keywords
 - Includes organizational schema
 - Target: Homepage rankings
 
 #### Products Page (Products.tsx)
+
 - Product-focused keywords
 - Product schema markup
 - Target: Product discovery
 
 #### About Page (About.tsx)
+
 - Company history and values keywords
 - Organization schema
 - Target: Brand and company information searches
 
 #### Contact Page (Contact.tsx)
+
 - Local and contact keywords
 - Local business schema
 - Target: Contact and location searches
 
 #### 404 Page (NotFound.tsx)
+
 - Proper canonical and metadata for error pages
 - Helps search engines understand the issue
 
 ### 6. Performance Headers (netlify.toml)
 
 Security and performance headers:
+
 - X-Frame-Options: SAMEORIGIN (clickjacking protection)
 - X-Content-Type-Options: nosniff (MIME sniffing prevention)
 - X-XSS-Protection: 1; mode=block (XSS attack prevention)
@@ -103,6 +114,7 @@ Security and performance headers:
 - Permissions-Policy: Restricts feature access
 
 Caching strategies:
+
 - HTML files: 1 hour cache
 - Assets (JS/CSS): 1 year immutable cache
 - Images: 1 year immutable cache
@@ -116,7 +128,11 @@ Location: `client/lib/seo.ts`
 Used for dynamically updating meta tags and structured data:
 
 ```typescript
-import { useUpdateMetaTags, pageMetadata, getStructuredDataOrganization } from "@/lib/seo";
+import {
+  useUpdateMetaTags,
+  pageMetadata,
+  getStructuredDataOrganization,
+} from "@/lib/seo";
 
 useEffect(() => {
   useUpdateMetaTags({
@@ -287,6 +303,7 @@ export default function Page() {
 ## Contact & Support
 
 For SEO-related questions or optimizations:
+
 - Review Google Search Console regularly
 - Monitor search performance and rankings
 - Update content based on search query data

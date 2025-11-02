@@ -466,7 +466,7 @@ export function createServer() {
         xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
   <url>
     <loc>https://cornbelt.co.ke/</loc>
-    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+    <lastmod>${new Date().toISOString().split("T")[0]}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
     <image:image>
@@ -476,19 +476,19 @@ export function createServer() {
   </url>
   <url>
     <loc>https://cornbelt.co.ke/products</loc>
-    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+    <lastmod>${new Date().toISOString().split("T")[0]}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://cornbelt.co.ke/about</loc>
-    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+    <lastmod>${new Date().toISOString().split("T")[0]}</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://cornbelt.co.ke/contact</loc>
-    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+    <lastmod>${new Date().toISOString().split("T")[0]}</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -1372,8 +1372,7 @@ Disallow: /api/`;
       const sortedOrders = Array.isArray(orders)
         ? orders.sort(
             (a: any, b: any) =>
-              new Date(b.createdAt).getTime() -
-              new Date(a.createdAt).getTime()
+              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
           )
         : [];
       res.json(sortedOrders);
@@ -1415,7 +1414,8 @@ Disallow: /api/`;
     } catch (error) {
       console.error("Error updating order:", error);
       res.status(500).json({
-        error: error instanceof Error ? error.message : "Failed to update order",
+        error:
+          error instanceof Error ? error.message : "Failed to update order",
       });
     }
   });
@@ -1443,7 +1443,8 @@ Disallow: /api/`;
     } catch (error) {
       console.error("Error deleting order:", error);
       res.status(500).json({
-        error: error instanceof Error ? error.message : "Failed to delete order",
+        error:
+          error instanceof Error ? error.message : "Failed to delete order",
       });
     }
   });

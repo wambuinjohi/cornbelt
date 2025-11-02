@@ -3,7 +3,11 @@ import { Link } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ChatWidget from "@/components/ChatWidget";
-import { useUpdateMetaTags, pageMetadata, getStructuredDataOrganization } from "@/lib/seo";
+import {
+  useUpdateMetaTags,
+  pageMetadata,
+  getStructuredDataOrganization,
+} from "@/lib/seo";
 import {
   Leaf,
   Award,
@@ -23,11 +27,14 @@ export default function About() {
       keywords: pageMetadata.about.keywords,
       ogTitle: pageMetadata.about.title,
       ogDescription: pageMetadata.about.description,
-      ogImage: "https://cdn.builder.io/api/v1/image/assets%2F1ffce8bff4d5493bafecc479d3963466%2F4a2cc68749f24d2b8f3d41537c67e99d?format=webp&width=1200",
+      ogImage:
+        "https://cdn.builder.io/api/v1/image/assets%2F1ffce8bff4d5493bafecc479d3963466%2F4a2cc68749f24d2b8f3d41537c67e99d?format=webp&width=1200",
       ogUrl: "https://cornbelt.co.ke/about",
       canonicalUrl: "https://cornbelt.co.ke/about",
       twitterCard: "summary_large_image",
-      structuredData: getStructuredDataOrganization("https://cornbelt.co.ke/about"),
+      structuredData: getStructuredDataOrganization(
+        "https://cornbelt.co.ke/about",
+      ),
     });
   }, []);
   const coreValues = [

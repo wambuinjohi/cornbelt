@@ -15,7 +15,11 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { useUpdateMetaTags, pageMetadata, getStructuredDataOrganization } from "@/lib/seo";
+import {
+  useUpdateMetaTags,
+  pageMetadata,
+  getStructuredDataOrganization,
+} from "@/lib/seo";
 import { Mail, Phone, MapPin, Clock } from "lucide-react";
 import { toast } from "sonner";
 
@@ -40,7 +44,9 @@ export default function Contact() {
       ogUrl: "https://cornbelt.co.ke/contact",
       canonicalUrl: "https://cornbelt.co.ke/contact",
       twitterCard: "summary_large_image",
-      structuredData: getStructuredDataOrganization("https://cornbelt.co.ke/contact"),
+      structuredData: getStructuredDataOrganization(
+        "https://cornbelt.co.ke/contact",
+      ),
     });
   }, []);
 
