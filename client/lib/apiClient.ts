@@ -53,8 +53,14 @@ async function checkAvailability(): Promise<boolean> {
 }
 
 export async function fetchJsonIfApi<T = any>(path: string): Promise<T | null> {
-  const ok = await checkAvailability();
-  if (!ok) return null;
+  try {
+    const ok = await checkAvailability();
+    if (!ok) return null;
+  } catch {
+    // Unexpected error while checking availability
+    return null;
+  }
+
   try {
     const res = await fetch(path, { headers: { Accept: "application/json" } });
     const ct = res.headers.get("content-type") || "";
