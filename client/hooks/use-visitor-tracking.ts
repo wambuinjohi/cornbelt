@@ -200,14 +200,26 @@ const sendVisitorData = async (data: VisitorData) => {
       body: JSON.stringify(data),
     });
 
-    const responseData = await response.json();
+    let responseData = null;
+
+    // Only try to parse JSON if there's a content-type header indicating JSON
+    const contentType = response.headers.get("content-type");
+    if (contentType?.includes("application/json")) {
+      try {
+        responseData = await response.json();
+      } catch {
+        // Empty or invalid JSON response
+        responseData = null;
+      }
+    }
 
     if (!response.ok) {
-      console.error("Failed to track visitor. Status:", response.status, "Error:", responseData?.error || "Unknown error");
+      const errorMsg = responseData?.error || "Unknown error";
+      console.error("Failed to track visitor. Status:", response.status, "Error:", errorMsg);
       return;
     }
 
-    if (responseData.error) {
+    if (responseData?.error) {
       console.error("API Error:", responseData.error);
     }
   } catch (error) {
