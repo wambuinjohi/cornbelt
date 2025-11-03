@@ -66,14 +66,11 @@ export default function AdminVisitorTracking() {
   const fetchVisitorData = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch("https://cornbelt.co.ke/api.php", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          action: "get_visitor_data",
-        }),
+      const url = new URL("https://cornbelt.co.ke/api.php");
+      url.searchParams.append("table", "visitor_tracking");
+
+      const response = await fetch(url.toString(), {
+        method: "GET",
       });
 
       if (!response.ok) {
@@ -81,7 +78,7 @@ export default function AdminVisitorTracking() {
       }
 
       const data = await response.json();
-      setVisitors(Array.isArray(data) ? data : data.visitors || []);
+      setVisitors(Array.isArray(data) ? data : []);
       toast.success("Visitor data loaded successfully");
     } catch (error) {
       console.error("Error fetching visitor data:", error);
