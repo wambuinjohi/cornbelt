@@ -5,10 +5,12 @@ import crypto from "crypto";
 import { Readable } from "stream";
 import { handleDemo } from "./routes/demo";
 
+const API_BASE_URL = process.env.API_BASE_URL ?? "";
+
 // Initialize database tables
 async function initializeAdminTable() {
   try {
-    const baseUrl = "https://cornbelt.co.ke";
+    const baseUrl = API_BASE_URL;
 
     // Create admin_users table
     const adminTableData = {
@@ -420,7 +422,7 @@ async function apiCall(
   data?: any,
   id?: number,
 ): Promise<any> {
-  const baseUrl = "https://cornbelt.co.ke";
+  const baseUrl = API_BASE_URL;
   let url = `${baseUrl}/api.php?table=${table}`;
   if (id) url += `&id=${id}`;
 
