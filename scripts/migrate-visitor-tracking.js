@@ -47,9 +47,15 @@ const tableConfig = {
 
 async function migrate() {
   console.log(`🔄 Starting migration for table: ${TABLE_NAME}...`);
+  console.log(`📍 API URL: ${API_URL}\n`);
 
   try {
-    const response = await fetch(API_URL, {
+    const url = new URL(API_URL);
+    url.searchParams.append("table", TABLE_NAME);
+
+    console.log(`📤 Sending request to: ${url.toString()}\n`);
+
+    const response = await fetch(url.toString(), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -57,31 +63,53 @@ async function migrate() {
       body: JSON.stringify(tableConfig),
     });
 
-    const result = await response.json();
+    const responseText = await response.text();
+    let result;
+    
+    try {
+      result = JSON.parse(responseText);
+    } catch {
+      console.error(`❌ Invalid JSON response from API:`);
+      console.error(`   Status: ${response.status}`);
+      console.error(`   Response: ${responseText || "(empty)"}`);
+      console.error(`\n💡 Troubleshooting:`);
+      console.error(`   1. Check if the API is running correctly`);
+      console.error(`   2. Verify the database credentials in api.php`);
+      console.error(`   3. Check PHP error logs for backend errors`);
+      process.exit(1);
+    }
 
-    if (response.ok && result.success) {
+    if (response.ok && (result.success || result.message)) {
       console.log(`✅ Successfully created table '${TABLE_NAME}'`);
       console.log(`📊 Total columns created: ${Object.keys(tableConfig.columns).length}`);
-      console.log("\n📋 Table Structure:");
+      console.log(`📝 Response: ${result.success || result.message}\n`);
+      console.log("📋 Table Structure:");
       Object.entries(tableConfig.columns).forEach(([name, type]) => {
         console.log(`   - ${name}: ${type}`);
       });
       console.log("\n✨ Migration completed successfully!");
       process.exit(0);
-    } else if (result.success) {
-      console.log(`✅ ${result.success}`);
-      console.log("\n📋 Table Structure:");
-      Object.entries(tableConfig.columns).forEach(([name, type]) => {
-        console.log(`   - ${name}: ${type}`);
-      });
-      console.log("\n✨ Migration completed successfully!");
-      process.exit(0);
+    } else if (result.error) {
+      console.error(`❌ Migration failed:`);
+      console.error(`   Error: ${result.error}`);
+      console.error(`\n💡 Possible causes:`);
+      console.error(`   1. Table already exists (safe to continue)`);
+      console.error(`   2. Database permissions issue`);
+      console.error(`   3. Invalid SQL syntax`);
+      console.error(`\n   Try running again or check your database manually.`);
+      process.exit(1);
     } else {
-      console.error(`❌ Migration failed: ${result.error}`);
+      console.error(`❌ Unexpected response:`);
+      console.error(`   Status: ${response.status}`);
+      console.error(`   Response:`, result);
       process.exit(1);
     }
   } catch (error) {
-    console.error("❌ Error during migration:", error.message);
+    console.error("❌ Network error during migration:", error instanceof Error ? error.message : String(error));
+    console.error(`\n💡 Troubleshooting:`);
+    console.error(`   1. Check if https://cornbelt.co.ke/api.php is accessible`);
+    console.error(`   2. Verify your internet connection`);
+    console.error(`   3. Check for CORS or firewall issues`);
     process.exit(1);
   }
 }
