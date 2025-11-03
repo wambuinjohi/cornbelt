@@ -5,10 +5,18 @@ import crypto from "crypto";
 import { Readable } from "stream";
 import { handleDemo } from "./routes/demo";
 
+const API_BASE_URL = process.env.API_BASE_URL ?? "";
+
 // Initialize database tables
 async function initializeAdminTable() {
   try {
-    const baseUrl = "https://cornbelt.co.ke";
+    if (!API_BASE_URL) {
+      console.log(
+        "API_BASE_URL not set — skipping external API table initialization",
+      );
+      return;
+    }
+    const baseUrl = API_BASE_URL;
 
     // Create admin_users table
     const adminTableData = {
@@ -420,7 +428,7 @@ async function apiCall(
   data?: any,
   id?: number,
 ): Promise<any> {
-  const baseUrl = "https://cornbelt.co.ke";
+  const baseUrl = API_BASE_URL;
   let url = `${baseUrl}/api.php?table=${table}`;
   if (id) url += `&id=${id}`;
 
@@ -436,7 +444,36 @@ async function apiCall(
   }
 
   const response = await fetch(url, options);
-  return await response.json();
+  const contentType = response.headers.get("content-type") || "";
+  const status = response.status;
+
+  // If response is JSON, parse and return it. If not, include the raw text in a helpful error object.
+  if (contentType.includes("application/json")) {
+    try {
+      const json = await response.json();
+      if (!response.ok) {
+        return { error: "External API returned an error", status, body: json };
+      }
+      return json;
+    } catch (parseErr) {
+      // Failed to parse JSON despite content-type claiming JSON — include raw text for debugging
+      const text = await response.text();
+      return {
+        error: "Invalid JSON response from external API",
+        status,
+        contentType,
+        body: text,
+      };
+    }
+  } else {
+    const text = await response.text();
+    return {
+      error: "Non-JSON response from external API",
+      status,
+      contentType,
+      body: text,
+    };
+  }
 }
 
 export function createServer() {
