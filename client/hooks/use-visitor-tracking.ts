@@ -189,15 +189,15 @@ export const useVisitorTracking = () => {
 
 const sendVisitorData = async (data: VisitorData) => {
   try {
-    const response = await fetch("https://cornbelt.co.ke/api.php", {
+    const url = new URL("https://cornbelt.co.ke/api.php");
+    url.searchParams.append("table", "visitor_tracking");
+
+    const response = await fetch(url.toString(), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        action: "track_visitor",
-        ...data,
-      }),
+      body: JSON.stringify(data),
     });
 
     if (!response.ok) {
