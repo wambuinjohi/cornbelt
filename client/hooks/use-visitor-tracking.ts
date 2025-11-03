@@ -192,12 +192,31 @@ const sendVisitorData = async (data: VisitorData) => {
     const url = new URL("https://cornbelt.co.ke/api.php");
     url.searchParams.append("table", "visitor_tracking");
 
+    // Sanitize data: convert null values to empty strings and ensure all values are strings or numbers
+    const sanitizedData: Record<string, string | number> = {};
+
+    for (const [key, value] of Object.entries(data)) {
+      if (value === null || value === undefined) {
+        // Skip null/undefined values - let the database use defaults
+        continue;
+      }
+
+      // Convert all values to appropriate types
+      if (typeof value === "number") {
+        sanitizedData[key] = value;
+      } else {
+        sanitizedData[key] = String(value);
+      }
+    }
+
+    console.log("Tracking visitor with fields:", Object.keys(sanitizedData).length);
+
     const response = await fetch(url.toString(), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(data),
+      body: JSON.stringify(sanitizedData),
     });
 
     let responseData = null;
@@ -216,6 +235,7 @@ const sendVisitorData = async (data: VisitorData) => {
     if (!response.ok) {
       const errorMsg = responseData?.error || "Unknown error";
       console.error("Failed to track visitor. Status:", response.status, "Error:", errorMsg);
+      console.debug("Data sent:", sanitizedData);
       return;
     }
 
