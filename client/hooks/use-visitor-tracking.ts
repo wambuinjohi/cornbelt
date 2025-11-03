@@ -18,7 +18,8 @@ interface VisitorData {
   memory: string;
   processor_cores: number;
   platform: string;
-  session_id: string;
+  // Do not send session_id to the API to avoid server unique-constraint errors
+  session_id?: string | null;
   geolocation_latitude: number | null;
   geolocation_longitude: number | null;
   geolocation_accuracy: number | null;
