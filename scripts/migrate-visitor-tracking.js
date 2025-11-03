@@ -11,7 +11,6 @@ const TABLE_NAME = "visitor_tracking";
 
 const tableConfig = {
   create_table: true,
-  table: TABLE_NAME,
   columns: {
     id: "INT AUTO_INCREMENT PRIMARY KEY",
     page_url: "VARCHAR(500)",
