@@ -26,13 +26,11 @@ import AdminVisitorTracking from "./pages/AdminVisitorTracking";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
+const AppContent = () => {
+  useVisitorTracking();
+
+  return (
+    <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/products" element={<Products />} />
           <Route path="/products/:productId" element={<ProductDetail />} />
@@ -46,9 +44,21 @@ const App = () => (
           <Route path="/admin/testimonials" element={<AdminTestimonials />} />
           <Route path="/admin/chat" element={<AdminChat />} />
           <Route path="/admin/orders" element={<AdminOrders />} />
+          <Route path="/admin/visitor-tracking" element={<AdminVisitorTracking />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
-        </Routes>
+    </Routes>
+  );
+};
+
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <TooltipProvider>
+      <Toaster />
+      <Sonner />
+      <BrowserRouter>
+        <PageLoadingBar />
+        <AppContent />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
