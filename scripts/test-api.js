@@ -21,7 +21,7 @@ async function testAPI() {
     console.log(`   ✅ API is reachable (Status: ${response.status})\n`);
   } catch (error) {
     console.log(
-      `   ❌ Cannot reach API: ${error instanceof Error ? error.message : String(error)}\n`
+      `   ❌ Cannot reach API: ${error instanceof Error ? error.message : String(error)}\n`,
     );
     process.exit(1);
   }
@@ -37,7 +37,9 @@ async function testAPI() {
 
     if (response.ok) {
       console.log(`   ✅ Table exists and is accessible`);
-      console.log(`   📊 Records found: ${Array.isArray(data) ? data.length : 0}\n`);
+      console.log(
+        `   📊 Records found: ${Array.isArray(data) ? data.length : 0}\n`,
+      );
     } else {
       console.log(`   ⚠️  Table might not exist. Error: ${data.error}\n`);
       console.log("   💡 Run the migration script first:");
@@ -45,7 +47,7 @@ async function testAPI() {
     }
   } catch (error) {
     console.log(
-      `   ❌ Error: ${error instanceof Error ? error.message : String(error)}\n`
+      `   ❌ Error: ${error instanceof Error ? error.message : String(error)}\n`,
     );
   }
 
@@ -87,13 +89,15 @@ async function testAPI() {
     const result = await response.json();
 
     if (response.ok && result.success) {
-      console.log(`   ✅ Successfully inserted test record (ID: ${result.id})\n`);
+      console.log(
+        `   ✅ Successfully inserted test record (ID: ${result.id})\n`,
+      );
     } else {
       console.log(`   ❌ Insert failed: ${result.error}\n`);
     }
   } catch (error) {
     console.log(
-      `   ❌ Error: ${error instanceof Error ? error.message : String(error)}\n`
+      `   ❌ Error: ${error instanceof Error ? error.message : String(error)}\n`,
     );
   }
 

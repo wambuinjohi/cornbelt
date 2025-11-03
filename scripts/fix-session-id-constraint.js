@@ -14,18 +14,20 @@ const alterConfig = {
   actions: [
     {
       type: "DROP",
-      name: "session_id"
+      name: "session_id",
     },
     {
       type: "ADD",
       name: "session_id",
-      definition: "VARCHAR(255)"
-    }
-  ]
+      definition: "VARCHAR(255)",
+    },
+  ],
 };
 
 async function fixConstraint() {
-  console.log(`🔄 Fixing session_id UNIQUE constraint on table: ${TABLE_NAME}...`);
+  console.log(
+    `🔄 Fixing session_id UNIQUE constraint on table: ${TABLE_NAME}...`,
+  );
   console.log(`📍 API URL: ${API_URL}\n`);
 
   try {
@@ -44,7 +46,7 @@ async function fixConstraint() {
 
     const responseText = await response.text();
     let result;
-    
+
     try {
       result = JSON.parse(responseText);
     } catch {
@@ -58,8 +60,12 @@ async function fixConstraint() {
       console.log(`✅ Successfully fixed session_id constraint`);
       console.log(`📝 Response: ${result.success || result.message}`);
       console.log(`\n✨ Constraint fix completed successfully!`);
-      console.log(`\n💡 Now visitors can have multiple records with the same session_id,`);
-      console.log(`   allowing proper tracking of multiple page visits per session.`);
+      console.log(
+        `\n💡 Now visitors can have multiple records with the same session_id,`,
+      );
+      console.log(
+        `   allowing proper tracking of multiple page visits per session.`,
+      );
       process.exit(0);
     } else if (result.error) {
       console.error(`❌ Failed to fix constraint:`);
@@ -72,7 +78,10 @@ async function fixConstraint() {
       process.exit(1);
     }
   } catch (error) {
-    console.error("❌ Network error:", error instanceof Error ? error.message : String(error));
+    console.error(
+      "❌ Network error:",
+      error instanceof Error ? error.message : String(error),
+    );
     process.exit(1);
   }
 }

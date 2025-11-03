@@ -41,7 +41,8 @@ const tableConfig = {
     local_time: "VARCHAR(100)",
     ip_address: "VARCHAR(45) NULL",
     created_at: "TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
-    updated_at: "TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
+    updated_at:
+      "TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
   },
 };
 
@@ -65,7 +66,7 @@ async function migrate() {
 
     const responseText = await response.text();
     let result;
-    
+
     try {
       result = JSON.parse(responseText);
     } catch {
@@ -81,7 +82,9 @@ async function migrate() {
 
     if (response.ok && (result.success || result.message)) {
       console.log(`✅ Successfully created table '${TABLE_NAME}'`);
-      console.log(`📊 Total columns created: ${Object.keys(tableConfig.columns).length}`);
+      console.log(
+        `📊 Total columns created: ${Object.keys(tableConfig.columns).length}`,
+      );
       console.log(`📝 Response: ${result.success || result.message}\n`);
       console.log("📋 Table Structure:");
       Object.entries(tableConfig.columns).forEach(([name, type]) => {
@@ -105,9 +108,14 @@ async function migrate() {
       process.exit(1);
     }
   } catch (error) {
-    console.error("❌ Network error during migration:", error instanceof Error ? error.message : String(error));
+    console.error(
+      "❌ Network error during migration:",
+      error instanceof Error ? error.message : String(error),
+    );
     console.error(`\n💡 Troubleshooting:`);
-    console.error(`   1. Check if https://cornbelt.co.ke/api.php is accessible`);
+    console.error(
+      `   1. Check if https://cornbelt.co.ke/api.php is accessible`,
+    );
     console.error(`   2. Verify your internet connection`);
     console.error(`   3. Check for CORS or firewall issues`);
     process.exit(1);

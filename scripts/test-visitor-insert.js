@@ -75,7 +75,7 @@ async function testInsert(dataLevel = 1) {
       do_not_track: null,
       local_time: new Date().toLocaleString(),
       ip_address: "127.0.0.1",
-    }
+    },
   };
 
   const data = testData[dataLevel];
@@ -101,18 +101,24 @@ async function testInsert(dataLevel = 1) {
         const result = JSON.parse(responseText);
         if (result.success) {
           console.log(`✅ SUCCESS! Record inserted with ID: ${result.id}`);
-          console.log(`\n💡 This level of data works. Try the full tracking now.`);
+          console.log(
+            `\n💡 This level of data works. Try the full tracking now.`,
+          );
           return true;
         } else if (result.error) {
           console.log(`❌ Insert failed with error: ${result.error}`);
-          
+
           if (dataLevel < 3) {
             console.log(`\n🔄 Trying with more fields...\n`);
             await testInsert(dataLevel + 1);
           } else {
-            console.log(`\n💡 The error seems to be with the data format or MySQL configuration.`);
+            console.log(
+              `\n💡 The error seems to be with the data format or MySQL configuration.`,
+            );
             console.log(`\n🛠️  Check your API logs at the server and verify:`);
-            console.log(`   1. session_id column doesn't have UNIQUE constraint`);
+            console.log(
+              `   1. session_id column doesn't have UNIQUE constraint`,
+            );
             console.log(`   2. All column definitions match the INSERT data`);
             console.log(`   3. No other constraints are blocking the insert`);
           }
@@ -124,7 +130,9 @@ async function testInsert(dataLevel = 1) {
       }
     }
   } catch (error) {
-    console.error(`❌ Network error: ${error instanceof Error ? error.message : String(error)}`);
+    console.error(
+      `❌ Network error: ${error instanceof Error ? error.message : String(error)}`,
+    );
     return false;
   }
 }

@@ -18,7 +18,7 @@ async function removeConstraint() {
 
     // First, try to drop the index if it exists
     const dropIndexSQL = `DROP INDEX IF EXISTS session_id ON ${TABLE_NAME}`;
-    
+
     console.log(`📤 Attempting to drop UNIQUE index...\n`);
 
     const response = await fetch(url.toString(), {
@@ -30,9 +30,9 @@ async function removeConstraint() {
           {
             type: "MODIFY",
             name: "session_id",
-            definition: "VARCHAR(255)"
-          }
-        ]
+            definition: "VARCHAR(255)",
+          },
+        ],
       }),
     });
 
@@ -46,7 +46,9 @@ async function removeConstraint() {
       console.error(`   Status: ${response.status}`);
       console.error(`   Response: ${responseText}\n`);
       console.error(`💡 Try running this SQL directly on your database:\n`);
-      console.error(`   ALTER TABLE visitor_tracking MODIFY COLUMN session_id VARCHAR(255);\n`);
+      console.error(
+        `   ALTER TABLE visitor_tracking MODIFY COLUMN session_id VARCHAR(255);\n`,
+      );
       process.exit(1);
     }
 
@@ -58,14 +60,24 @@ async function removeConstraint() {
       process.exit(0);
     } else if (result.error) {
       console.error(`❌ Error: ${result.error}\n`);
-      console.error(`💡 The UNIQUE index might need manual removal. Run this SQL:\n`);
-      console.error(`   ALTER TABLE visitor_tracking MODIFY COLUMN session_id VARCHAR(255);\n`);
+      console.error(
+        `💡 The UNIQUE index might need manual removal. Run this SQL:\n`,
+      );
+      console.error(
+        `   ALTER TABLE visitor_tracking MODIFY COLUMN session_id VARCHAR(255);\n`,
+      );
       process.exit(1);
     }
   } catch (error) {
-    console.error(`❌ Network error: ${error instanceof Error ? error.message : String(error)}\n`);
-    console.error(`💡 If this fails, run this SQL directly on your database:\n`);
-    console.error(`   ALTER TABLE visitor_tracking MODIFY COLUMN session_id VARCHAR(255);\n`);
+    console.error(
+      `❌ Network error: ${error instanceof Error ? error.message : String(error)}\n`,
+    );
+    console.error(
+      `💡 If this fails, run this SQL directly on your database:\n`,
+    );
+    console.error(
+      `   ALTER TABLE visitor_tracking MODIFY COLUMN session_id VARCHAR(255);\n`,
+    );
     process.exit(1);
   }
 }

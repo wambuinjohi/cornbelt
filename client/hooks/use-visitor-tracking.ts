@@ -119,7 +119,7 @@ const getGeolocation = (): Promise<{
       () => {
         resolve({ latitude: null, longitude: null, accuracy: null });
       },
-      { timeout: 5000, enableHighAccuracy: false }
+      { timeout: 5000, enableHighAccuracy: false },
     );
   });
 };
@@ -209,7 +209,10 @@ const sendVisitorData = async (data: VisitorData) => {
       }
     }
 
-    console.log("Tracking visitor with fields:", Object.keys(sanitizedData).length);
+    console.log(
+      "Tracking visitor with fields:",
+      Object.keys(sanitizedData).length,
+    );
 
     const response = await fetch(url.toString(), {
       method: "POST",
@@ -234,7 +237,12 @@ const sendVisitorData = async (data: VisitorData) => {
 
     if (!response.ok) {
       const errorMsg = responseData?.error || "Unknown error";
-      console.error("Failed to track visitor. Status:", response.status, "Error:", errorMsg);
+      console.error(
+        "Failed to track visitor. Status:",
+        response.status,
+        "Error:",
+        errorMsg,
+      );
       console.debug("Data sent:", sanitizedData);
       return;
     }
@@ -243,6 +251,9 @@ const sendVisitorData = async (data: VisitorData) => {
       console.error("API Error:", responseData.error);
     }
   } catch (error) {
-    console.error("Error tracking visitor:", error instanceof Error ? error.message : String(error));
+    console.error(
+      "Error tracking visitor:",
+      error instanceof Error ? error.message : String(error),
+    );
   }
 };

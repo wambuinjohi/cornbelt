@@ -38,7 +38,8 @@ export default function PageLoadingBar() {
   }
 
   return (
-    <div className="fixed top-0 left-0 z-[9999] h-1 bg-gradient-to-r from-primary via-secondary to-primary transition-all duration-300 ease-out"
+    <div
+      className="fixed top-0 left-0 z-[9999] h-1 bg-gradient-to-r from-primary via-secondary to-primary transition-all duration-300 ease-out"
       style={{
         width: `${progress}%`,
         opacity: isLoading ? 1 : 0,

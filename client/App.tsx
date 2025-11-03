@@ -31,22 +31,25 @@ const AppContent = () => {
 
   return (
     <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/products" element={<Products />} />
-          <Route path="/products/:productId" element={<ProductDetail />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/admin/setup" element={<AdminSetup />} />
-          <Route path="/admin/login" element={<AdminLogin />} />
-          <Route path="/admin/dashboard" element={<AdminDashboard />} />
-          <Route path="/admin/hero-images" element={<AdminHeroImages />} />
-          <Route path="/admin/submissions" element={<AdminSubmissions />} />
-          <Route path="/admin/testimonials" element={<AdminTestimonials />} />
-          <Route path="/admin/chat" element={<AdminChat />} />
-          <Route path="/admin/orders" element={<AdminOrders />} />
-          <Route path="/admin/visitor-tracking" element={<AdminVisitorTracking />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
+      <Route path="/" element={<Index />} />
+      <Route path="/products" element={<Products />} />
+      <Route path="/products/:productId" element={<ProductDetail />} />
+      <Route path="/about" element={<About />} />
+      <Route path="/contact" element={<Contact />} />
+      <Route path="/admin/setup" element={<AdminSetup />} />
+      <Route path="/admin/login" element={<AdminLogin />} />
+      <Route path="/admin/dashboard" element={<AdminDashboard />} />
+      <Route path="/admin/hero-images" element={<AdminHeroImages />} />
+      <Route path="/admin/submissions" element={<AdminSubmissions />} />
+      <Route path="/admin/testimonials" element={<AdminTestimonials />} />
+      <Route path="/admin/chat" element={<AdminChat />} />
+      <Route path="/admin/orders" element={<AdminOrders />} />
+      <Route
+        path="/admin/visitor-tracking"
+        element={<AdminVisitorTracking />}
+      />
+      {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 };

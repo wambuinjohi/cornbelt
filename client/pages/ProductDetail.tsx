@@ -3,10 +3,7 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ChatWidget from "@/components/ChatWidget";
-import {
-  useUpdateMetaTags,
-  getStructuredDataProduct,
-} from "@/lib/seo";
+import { useUpdateMetaTags, getStructuredDataProduct } from "@/lib/seo";
 import { Check, ArrowLeft, ArrowRight, Star, Shield, Leaf } from "lucide-react";
 
 const PRODUCTS = {
@@ -102,7 +99,10 @@ export default function ProductDetail() {
   const { productId } = useParams<{ productId: string }>();
   const navigate = useNavigate();
 
-  const product = productId && productId in PRODUCTS ? PRODUCTS[productId as ProductKey] : null;
+  const product =
+    productId && productId in PRODUCTS
+      ? PRODUCTS[productId as ProductKey]
+      : null;
 
   useEffect(() => {
     if (!product) {
@@ -150,7 +150,9 @@ export default function ProductDetail() {
                 Products
               </Link>
               <span className="text-muted-foreground">/</span>
-              <span className="text-foreground font-medium">{product.name}</span>
+              <span className="text-foreground font-medium">
+                {product.name}
+              </span>
             </div>
           </div>
         </div>
@@ -297,13 +299,20 @@ export default function ProductDetail() {
                 Nutritional Excellence
               </h2>
               <p className="text-muted-foreground text-lg mb-8">
-                All our products are fortified with essential vitamins and minerals to support the health and development of every family member.
+                All our products are fortified with essential vitamins and
+                minerals to support the health and development of every family
+                member.
               </p>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                 {product.keyNutrients.map((nutrient) => (
-                  <div key={nutrient} className="flex items-center gap-3 p-4 bg-primary/5 rounded-lg">
+                  <div
+                    key={nutrient}
+                    className="flex items-center gap-3 p-4 bg-primary/5 rounded-lg"
+                  >
                     <Check className="w-5 h-5 text-primary flex-shrink-0" />
-                    <span className="font-medium text-foreground">{nutrient}</span>
+                    <span className="font-medium text-foreground">
+                      {nutrient}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -317,7 +326,8 @@ export default function ProductDetail() {
                   Quality Assured
                 </h3>
                 <p className="text-muted-foreground">
-                  Rigorous quality control at every step ensures consistent excellence and food safety standards.
+                  Rigorous quality control at every step ensures consistent
+                  excellence and food safety standards.
                 </p>
               </div>
 
@@ -327,7 +337,8 @@ export default function ProductDetail() {
                   Naturally Nutritious
                 </h3>
                 <p className="text-muted-foreground">
-                  Fortified with essential nutrients to support optimal health and family wellness.
+                  Fortified with essential nutrients to support optimal health
+                  and family wellness.
                 </p>
               </div>
 
@@ -337,7 +348,8 @@ export default function ProductDetail() {
                   Family Approved
                 </h3>
                 <p className="text-muted-foreground">
-                  Trusted by over 100,000 Kenyan families for quality, taste, and nutrition.
+                  Trusted by over 100,000 Kenyan families for quality, taste,
+                  and nutrition.
                 </p>
               </div>
             </div>
@@ -351,7 +363,8 @@ export default function ProductDetail() {
               Ready to Experience {product.name}?
             </h2>
             <p className="text-lg opacity-90 max-w-2xl mx-auto">
-              Available at supermarkets and retailers across Kenya. Order now and enjoy quality nutrition with every meal.
+              Available at supermarkets and retailers across Kenya. Order now
+              and enjoy quality nutrition with every meal.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
               <a

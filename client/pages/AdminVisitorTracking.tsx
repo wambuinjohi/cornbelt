@@ -78,12 +78,19 @@ export default function AdminVisitorTracking() {
         data = await response.json();
       } catch {
         console.error("Failed to parse API response. Status:", response.status);
-        throw new Error(`API returned invalid JSON (Status: ${response.status})`);
+        throw new Error(
+          `API returned invalid JSON (Status: ${response.status})`,
+        );
       }
 
       if (!response.ok) {
         const errorMsg = data?.error || `HTTP ${response.status}`;
-        console.error("API Error - Status:", response.status, "Error:", errorMsg);
+        console.error(
+          "API Error - Status:",
+          response.status,
+          "Error:",
+          errorMsg,
+        );
         toast.error(`Failed to load visitor data: ${errorMsg}`);
         setIsLoading(false);
         return;
@@ -108,10 +115,7 @@ export default function AdminVisitorTracking() {
   };
 
   const filteredVisitors = visitors.filter((visitor) => {
-    if (
-      filters.deviceType &&
-      visitor.device_type !== filters.deviceType
-    ) {
+    if (filters.deviceType && visitor.device_type !== filters.deviceType) {
       return false;
     }
     if (
@@ -150,7 +154,7 @@ export default function AdminVisitorTracking() {
 
   const paginatedVisitors = sortedVisitors.slice(
     (page - 1) * itemsPerPage,
-    page * itemsPerPage
+    page * itemsPerPage,
   );
   const totalPages = Math.ceil(sortedVisitors.length / itemsPerPage);
 
@@ -195,9 +199,9 @@ export default function AdminVisitorTracking() {
       v.session_id,
     ]);
 
-    const csv =
-      [headers, ...rows].map((row) => row.map((cell) => `"${cell}"`).join(","))
-        .join("\n");
+    const csv = [headers, ...rows]
+      .map((row) => row.map((cell) => `"${cell}"`).join(","))
+      .join("\n");
 
     const blob = new Blob([csv], { type: "text/csv" });
     const url = window.URL.createObjectURL(blob);
@@ -284,10 +288,10 @@ export default function AdminVisitorTracking() {
               <p className="text-xl font-bold text-foreground mt-2">
                 {deviceTypes.length > 0
                   ? deviceTypes.sort(
-                    (a, b) =>
-                      visitors.filter((v) => v.device_type === b).length -
-                      visitors.filter((v) => v.device_type === a).length
-                  )[0]
+                      (a, b) =>
+                        visitors.filter((v) => v.device_type === b).length -
+                        visitors.filter((v) => v.device_type === a).length,
+                    )[0]
                   : "N/A"}
               </p>
             </div>
@@ -434,7 +438,8 @@ export default function AdminVisitorTracking() {
                       Resolution
                       <ChevronDown
                         className={`w-4 h-4 transition-transform ${
-                          sortField === "screen_resolution" && sortDirection === "asc"
+                          sortField === "screen_resolution" &&
+                          sortDirection === "asc"
                             ? "rotate-180"
                             : ""
                         }`}
@@ -449,7 +454,8 @@ export default function AdminVisitorTracking() {
                       Connection
                       <ChevronDown
                         className={`w-4 h-4 transition-transform ${
-                          sortField === "connection_type" && sortDirection === "asc"
+                          sortField === "connection_type" &&
+                          sortDirection === "asc"
                             ? "rotate-180"
                             : ""
                         }`}
@@ -467,7 +473,8 @@ export default function AdminVisitorTracking() {
                       Language
                       <ChevronDown
                         className={`w-4 h-4 transition-transform ${
-                          sortField === "browser_language" && sortDirection === "asc"
+                          sortField === "browser_language" &&
+                          sortDirection === "asc"
                             ? "rotate-180"
                             : ""
                         }`}
@@ -480,7 +487,9 @@ export default function AdminVisitorTracking() {
                 {paginatedVisitors.length === 0 ? (
                   <tr>
                     <td colSpan={7} className="px-6 py-8 text-center">
-                      <p className="text-muted-foreground">No visitor data found</p>
+                      <p className="text-muted-foreground">
+                        No visitor data found
+                      </p>
                     </td>
                   </tr>
                 ) : (
@@ -554,7 +563,7 @@ export default function AdminVisitorTracking() {
                           {pageNum}
                         </button>
                       );
-                    }
+                    },
                   )}
                 </div>
                 <button

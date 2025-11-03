@@ -172,7 +172,10 @@ export default function Index() {
                       <span>Perfect for All Ages</span>
                     </li>
                   </ul>
-                  <Link to="/products/jirani" className="w-full py-3 px-4 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-semibold inline-block text-center">
+                  <Link
+                    to="/products/jirani"
+                    className="w-full py-3 px-4 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-semibold inline-block text-center"
+                  >
                     Learn More
                   </Link>
                 </div>
@@ -214,7 +217,10 @@ export default function Index() {
                       <span>Family Favorite</span>
                     </li>
                   </ul>
-                  <Link to="/products/tabasamu" className="w-full py-3 px-4 bg-secondary text-secondary-foreground rounded-lg hover:bg-secondary/90 transition-colors font-semibold inline-block text-center">
+                  <Link
+                    to="/products/tabasamu"
+                    className="w-full py-3 px-4 bg-secondary text-secondary-foreground rounded-lg hover:bg-secondary/90 transition-colors font-semibold inline-block text-center"
+                  >
                     Learn More
                   </Link>
                 </div>

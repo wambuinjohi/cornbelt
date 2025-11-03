@@ -52,7 +52,7 @@ async function testVariation(name, url, body) {
 
     const responseText = await response.text();
     console.log(`Response Length: ${responseText.length} bytes`);
-    
+
     if (responseText) {
       console.log(`Response Body:`);
       try {
@@ -67,7 +67,9 @@ async function testVariation(name, url, body) {
 
     return response.ok;
   } catch (error) {
-    console.error(`ERROR: ${error instanceof Error ? error.message : String(error)}`);
+    console.error(
+      `ERROR: ${error instanceof Error ? error.message : String(error)}`,
+    );
     return false;
   }
 }
@@ -89,8 +91,8 @@ async function runTests() {
     await testVariation(
       "Table in URL query parameter",
       url1.toString(),
-      testData
-    )
+      testData,
+    ),
   );
 
   // Test 2: Minimal data
@@ -105,17 +107,16 @@ async function runTests() {
     await testVariation(
       "Minimal data (3 fields)",
       url2.toString(),
-      minimalData
-    )
+      minimalData,
+    ),
   );
 
   // Test 3: Without table parameter (to see if API requires it)
   results.push(
-    await testVariation(
-      "Without table parameter",
-      API_URL,
-      { ...testData, table: TABLE_NAME }
-    )
+    await testVariation("Without table parameter", API_URL, {
+      ...testData,
+      table: TABLE_NAME,
+    }),
   );
 
   // Test 4: With underscore conversion
@@ -129,8 +130,8 @@ async function runTests() {
     await testVariation(
       "With converted field names",
       url4.toString(),
-      dataWithoutUnderscores
-    )
+      dataWithoutUnderscores,
+    ),
   );
 
   // Summary
@@ -144,7 +145,7 @@ async function runTests() {
 
   if (results.some((r) => r)) {
     console.log(
-      `\n✅ At least one test passed! Use that method in the frontend.`
+      `\n✅ At least one test passed! Use that method in the frontend.`,
     );
   } else {
     console.log(`\n❌ All tests failed. Check your API logs for details:`);
