@@ -26,14 +26,20 @@ async function checkAvailability(): Promise<boolean> {
       signal: controller.signal,
     });
     clearTimeout(timeout);
-    const ok = res.ok && (res.headers.get("content-type") || "").includes("application/json");
+    const ok =
+      res.ok &&
+      (res.headers.get("content-type") || "").includes("application/json");
     cached = ok;
-    try { sessionStorage.setItem("apiAvailable", ok ? "1" : "0"); } catch {}
+    try {
+      sessionStorage.setItem("apiAvailable", ok ? "1" : "0");
+    } catch {}
     return ok;
   } catch {
     clearTimeout(timeout);
     cached = false;
-    try { sessionStorage.setItem("apiAvailable", "0"); } catch {}
+    try {
+      sessionStorage.setItem("apiAvailable", "0");
+    } catch {}
     return false;
   }
 }

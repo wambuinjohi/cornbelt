@@ -38,7 +38,13 @@ export default function ProductGallery({
         setImages(data);
       } else {
         setImages([
-          { id: 0, productId, imageUrl: fallbackImage, altText: fallbackAlt, displayOrder: 0 },
+          {
+            id: 0,
+            productId,
+            imageUrl: fallbackImage,
+            altText: fallbackAlt,
+            displayOrder: 0,
+          },
         ]);
       }
       setIsLoading(false);

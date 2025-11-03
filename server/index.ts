@@ -1043,7 +1043,10 @@ Disallow: /api/`;
     try {
       // store data in app.locals for process-lifetime persistence
       const db = (app.locals._phpDB ||= {} as Record<string, any[]>);
-      const meta = (app.locals._phpMeta ||= {} as Record<string, Record<string, string>>);
+      const meta = (app.locals._phpMeta ||= {} as Record<
+        string,
+        Record<string, string>
+      >);
       const seq = (app.locals._phpSeq ||= {} as Record<string, number>);
 
       const method = req.method.toUpperCase();
@@ -1085,14 +1088,17 @@ Disallow: /api/`;
         // alter_table
         if (req.body && req.body.alter_table) {
           ensureTable(table);
-          const actions = Array.isArray(req.body.actions) ? req.body.actions : [];
+          const actions = Array.isArray(req.body.actions)
+            ? req.body.actions
+            : [];
           for (const a of actions) {
             const type = (a.type || "").toUpperCase();
             if (type === "ADD") {
               meta[table][a.name] = a.definition || "TEXT";
               // no further action needed for existing rows
             } else if (type === "MODIFY") {
-              if (meta[table][a.name]) meta[table][a.name] = a.definition || meta[table][a.name];
+              if (meta[table][a.name])
+                meta[table][a.name] = a.definition || meta[table][a.name];
             } else if (type === "CHANGE") {
               const newName = a.new_name || a.name;
               if (meta[table][a.name] !== undefined) {
@@ -1144,10 +1150,16 @@ Disallow: /api/`;
       // PUT: update record
       if (method === "PUT" || method === "PATCH") {
         ensureTable(table);
-        const id = idParam ? Number(idParam) : (req.body && req.body.id ? Number(req.body.id) : undefined);
-        if (!id) return res.status(400).json({ error: "Missing id for update" });
+        const id = idParam
+          ? Number(idParam)
+          : req.body && req.body.id
+            ? Number(req.body.id)
+            : undefined;
+        if (!id)
+          return res.status(400).json({ error: "Missing id for update" });
         const idx = db[table].findIndex((r) => Number(r.id) === id);
-        if (idx === -1) return res.status(404).json({ error: "Record not found" });
+        if (idx === -1)
+          return res.status(404).json({ error: "Record not found" });
         const updates = { ...(req.body || {}) };
         delete updates.id;
         const updated = Object.assign({}, db[table][idx], updates);
@@ -1158,10 +1170,16 @@ Disallow: /api/`;
       // DELETE: remove record
       if (method === "DELETE") {
         ensureTable(table);
-        const id = idParam ? Number(idParam) : (req.body && req.body.id ? Number(req.body.id) : undefined);
-        if (!id) return res.status(400).json({ error: "Missing id for delete" });
+        const id = idParam
+          ? Number(idParam)
+          : req.body && req.body.id
+            ? Number(req.body.id)
+            : undefined;
+        if (!id)
+          return res.status(400).json({ error: "Missing id for delete" });
         const idx = db[table].findIndex((r) => Number(r.id) === id);
-        if (idx === -1) return res.status(404).json({ error: "Record not found" });
+        if (idx === -1)
+          return res.status(404).json({ error: "Record not found" });
         db[table].splice(idx, 1);
         return res.json({ success: true, id });
       }
