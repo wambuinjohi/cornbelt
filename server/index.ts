@@ -1037,6 +1037,142 @@ Disallow: /api/`;
     }
   });
 
+  // Lightweight emulation of legacy api.php for local development/testing.
+  // Supports: create_table, drop_table, alter_table (ADD/MODIFY/CHANGE/DROP), CRUD on records
+  app.all("/api.php", async (req, res) => {
+    try {
+      // store data in app.locals for process-lifetime persistence
+      const db = (app.locals._phpDB ||= {} as Record<string, any[]>);
+      const meta = (app.locals._phpMeta ||= {} as Record<string, Record<string, string>>);
+      const seq = (app.locals._phpSeq ||= {} as Record<string, number>);
+
+      const method = req.method.toUpperCase();
+      const table = (req.query.table || req.body.table) as string;
+      const idParam = req.query.id as string | undefined;
+
+      if (!table) {
+        return res.status(400).json({ error: "Missing 'table' parameter" });
+      }
+
+      // Helpers
+      const ensureTable = (name: string) => {
+        if (!db[name]) {
+          db[name] = [];
+          meta[name] = {};
+          seq[name] = 1;
+        }
+      };
+
+      // POST: create table or insert
+      if (method === "POST") {
+        // create_table
+        if (req.body && req.body.create_table) {
+          const columns = req.body.columns || {};
+          db[table] = [];
+          meta[table] = columns;
+          seq[table] = 1;
+          return res.json({ success: true, table, columns });
+        }
+
+        // drop_table
+        if (req.body && req.body.drop_table) {
+          delete db[req.body.drop_table];
+          delete meta[req.body.drop_table];
+          delete seq[req.body.drop_table];
+          return res.json({ success: true, dropped: req.body.drop_table });
+        }
+
+        // alter_table
+        if (req.body && req.body.alter_table) {
+          ensureTable(table);
+          const actions = Array.isArray(req.body.actions) ? req.body.actions : [];
+          for (const a of actions) {
+            const type = (a.type || "").toUpperCase();
+            if (type === "ADD") {
+              meta[table][a.name] = a.definition || "TEXT";
+              // no further action needed for existing rows
+            } else if (type === "MODIFY") {
+              if (meta[table][a.name]) meta[table][a.name] = a.definition || meta[table][a.name];
+            } else if (type === "CHANGE") {
+              const newName = a.new_name || a.name;
+              if (meta[table][a.name] !== undefined) {
+                meta[table][newName] = a.definition || meta[table][a.name];
+                delete meta[table][a.name];
+                // rename keys in rows
+                for (const r of db[table]) {
+                  if (r.hasOwnProperty(a.name)) {
+                    r[newName] = r[a.name];
+                    delete r[a.name];
+                  }
+                }
+              }
+            } else if (type === "DROP") {
+              delete meta[table][a.name];
+              for (const r of db[table]) {
+                delete r[a.name];
+              }
+            }
+          }
+          return res.json({ success: true, table, meta: meta[table] });
+        }
+
+        // Insert record
+        ensureTable(table);
+        const payload = { ...(req.body || {}) };
+        // remove control keys if present
+        delete payload.create_table;
+        delete payload.alter_table;
+        delete payload.drop_table;
+
+        const newId = seq[table]++;
+        const record = { id: newId, ...payload };
+        db[table].push(record);
+        return res.json({ success: true, id: newId, record });
+      }
+
+      // GET: read records
+      if (method === "GET") {
+        ensureTable(table);
+        if (idParam) {
+          const id = Number(idParam);
+          const row = db[table].find((r) => Number(r.id) === id) || null;
+          return res.json(row);
+        }
+        return res.json(db[table]);
+      }
+
+      // PUT: update record
+      if (method === "PUT" || method === "PATCH") {
+        ensureTable(table);
+        const id = idParam ? Number(idParam) : (req.body && req.body.id ? Number(req.body.id) : undefined);
+        if (!id) return res.status(400).json({ error: "Missing id for update" });
+        const idx = db[table].findIndex((r) => Number(r.id) === id);
+        if (idx === -1) return res.status(404).json({ error: "Record not found" });
+        const updates = { ...(req.body || {}) };
+        delete updates.id;
+        const updated = Object.assign({}, db[table][idx], updates);
+        db[table][idx] = updated;
+        return res.json({ success: true, id, record: updated });
+      }
+
+      // DELETE: remove record
+      if (method === "DELETE") {
+        ensureTable(table);
+        const id = idParam ? Number(idParam) : (req.body && req.body.id ? Number(req.body.id) : undefined);
+        if (!id) return res.status(400).json({ error: "Missing id for delete" });
+        const idx = db[table].findIndex((r) => Number(r.id) === id);
+        if (idx === -1) return res.status(404).json({ error: "Record not found" });
+        db[table].splice(idx, 1);
+        return res.json({ success: true, id });
+      }
+
+      return res.status(405).json({ error: "Method not supported" });
+    } catch (error) {
+      console.error("/api.php emulation error:", error);
+      return res.status(500).json({ error: "Server error" });
+    }
+  });
+
   // Admin testimonials management
   app.get("/api/admin/testimonials", async (req, res) => {
     const token = req.headers.authorization?.split(" ")[1];
