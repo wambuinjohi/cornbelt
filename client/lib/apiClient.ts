@@ -17,25 +17,33 @@ async function checkAvailability(): Promise<boolean> {
   const existing = readCache();
   if (existing !== null) return existing;
 
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 2000);
+  // Use Promise.race-based timeout instead of AbortController to avoid
+  // issues with third-party scripts that patch fetch and may not support signals.
+  const timeoutMs = 2000;
+  const timer = new Promise<never>((_, reject) =>
+    setTimeout(() => reject(new Error("timeout")), timeoutMs),
+  );
+
   try {
-    const res = await fetch("/api/ping", {
+    const fetchPromise = fetch("/api/ping", {
       method: "GET",
       headers: { Accept: "application/json" },
-      signal: controller.signal,
     });
-    clearTimeout(timeout);
+
+    const res = (await Promise.race([fetchPromise, timer])) as Response;
+
     const ok =
+      res instanceof Response &&
       res.ok &&
       (res.headers.get("content-type") || "").includes("application/json");
+
     cached = ok;
     try {
       sessionStorage.setItem("apiAvailable", ok ? "1" : "0");
     } catch {}
     return ok;
-  } catch {
-    clearTimeout(timeout);
+  } catch (err) {
+    // Any error (network, timeout, or sync exception) -> treat as unavailable
     cached = false;
     try {
       sessionStorage.setItem("apiAvailable", "0");
