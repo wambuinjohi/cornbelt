@@ -166,7 +166,8 @@ export const useVisitorTracking = () => {
         memory: getDeviceMemory(),
         processor_cores: getProcessorCores(),
         platform: navigator.platform,
-        session_id: sessionIdRef.current,
+        // omit session_id to avoid server-side UNIQUE constraint errors
+        session_id: null,
         geolocation_latitude: geolocation.latitude,
         geolocation_longitude: geolocation.longitude,
         geolocation_accuracy: geolocation.accuracy,
