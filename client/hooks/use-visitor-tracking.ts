@@ -140,7 +140,6 @@ const fetchIPAddress = async (): Promise<string | null> => {
 export const useVisitorTracking = () => {
   const location = useLocation();
   const previousPageRef = useRef<string | null>(null);
-  const sessionIdRef = useRef<string>(generateSessionId());
 
   useEffect(() => {
     const trackVisitor = async () => {
