@@ -73,13 +73,21 @@ export default function AdminVisitorTracking() {
         method: "GET",
       });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("API Error - Status:", response.status, "Response:", errorText);
-        throw new Error(`Failed to fetch visitor data: ${response.status} ${response.statusText}`);
+      let data;
+      try {
+        data = await response.json();
+      } catch {
+        console.error("Failed to parse API response. Status:", response.status);
+        throw new Error(`API returned invalid JSON (Status: ${response.status})`);
       }
 
-      const data = await response.json();
+      if (!response.ok) {
+        const errorMsg = data?.error || `HTTP ${response.status}`;
+        console.error("API Error - Status:", response.status, "Error:", errorMsg);
+        toast.error(`Failed to load visitor data: ${errorMsg}`);
+        setIsLoading(false);
+        return;
+      }
 
       if (data.error) {
         console.error("API returned error:", data.error);

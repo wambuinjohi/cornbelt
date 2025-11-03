@@ -200,15 +200,15 @@ const sendVisitorData = async (data: VisitorData) => {
       body: JSON.stringify(data),
     });
 
+    const responseData = await response.json();
+
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error("Failed to track visitor. Status:", response.status, "Response:", errorText);
+      console.error("Failed to track visitor. Status:", response.status, "Error:", responseData?.error || "Unknown error");
       return;
     }
 
-    const result = await response.json();
-    if (result.error) {
-      console.error("API Error:", result.error);
+    if (responseData.error) {
+      console.error("API Error:", responseData.error);
     }
   } catch (error) {
     console.error("Error tracking visitor:", error instanceof Error ? error.message : String(error));
