@@ -6,6 +6,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import PageLoadingBar from "./components/PageLoadingBar";
+import { useVisitorTracking } from "./hooks/use-visitor-tracking";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Products from "./pages/Products";
@@ -20,6 +22,7 @@ import AdminSubmissions from "./pages/AdminSubmissions";
 import AdminTestimonials from "./pages/AdminTestimonials";
 import AdminChat from "./pages/AdminChat";
 import AdminOrders from "./pages/AdminOrders";
+import AdminVisitorTracking from "./pages/AdminVisitorTracking";
 
 const queryClient = new QueryClient();
 
