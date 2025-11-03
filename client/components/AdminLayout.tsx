@@ -23,6 +23,7 @@ import {
   Settings,
   MessageCircle,
   ShoppingCart,
+  Eye,
 } from "lucide-react";
 
 interface AdminLayoutProps {
@@ -65,6 +66,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       icon: Settings,
       label: "Testimonials",
       href: "/admin/testimonials",
+    },
+    {
+      icon: Eye,
+      label: "Visitor Tracking",
+      href: "/admin/visitor-tracking",
     },
   ];
 

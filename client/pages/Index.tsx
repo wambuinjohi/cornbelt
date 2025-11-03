@@ -60,7 +60,7 @@ export default function Index() {
               <img
                 src="https://cdn.builder.io/api/v1/image/assets%2Fbf7a511dd4454ae88c7c49627a9a0f54%2F80b3bed3a8e14bf3ae5cc941d2cfab50?format=webp&width=200"
                 alt="Cornbelt Logo"
-                className="w-24 h-24 mx-auto object-contain"
+                className="w-40 h-40 mx-auto object-contain"
               />
               <div className="space-y-4">
                 <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight drop-shadow-lg">
@@ -172,9 +172,12 @@ export default function Index() {
                       <span>Perfect for All Ages</span>
                     </li>
                   </ul>
-                  <button className="w-full py-3 px-4 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-semibold">
+                  <Link
+                    to="/products/jirani"
+                    className="w-full py-3 px-4 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-semibold inline-block text-center"
+                  >
                     Learn More
-                  </button>
+                  </Link>
                 </div>
               </div>
 
@@ -214,9 +217,12 @@ export default function Index() {
                       <span>Family Favorite</span>
                     </li>
                   </ul>
-                  <button className="w-full py-3 px-4 bg-secondary text-secondary-foreground rounded-lg hover:bg-secondary/90 transition-colors font-semibold">
+                  <Link
+                    to="/products/tabasamu"
+                    className="w-full py-3 px-4 bg-secondary text-secondary-foreground rounded-lg hover:bg-secondary/90 transition-colors font-semibold inline-block text-center"
+                  >
                     Learn More
-                  </button>
+                  </Link>
                 </div>
               </div>
             </div>
