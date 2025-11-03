@@ -74,15 +74,26 @@ export default function AdminVisitorTracking() {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to fetch visitor data");
+        const errorText = await response.text();
+        console.error("API Error - Status:", response.status, "Response:", errorText);
+        throw new Error(`Failed to fetch visitor data: ${response.status} ${response.statusText}`);
       }
 
       const data = await response.json();
+
+      if (data.error) {
+        console.error("API returned error:", data.error);
+        toast.error(`Database error: ${data.error}`);
+        setIsLoading(false);
+        return;
+      }
+
       setVisitors(Array.isArray(data) ? data : []);
       toast.success("Visitor data loaded successfully");
     } catch (error) {
-      console.error("Error fetching visitor data:", error);
-      toast.error("Failed to load visitor data");
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      console.error("Error fetching visitor data:", errorMsg);
+      toast.error(`Failed to load visitor data: ${errorMsg}`);
     } finally {
       setIsLoading(false);
     }
