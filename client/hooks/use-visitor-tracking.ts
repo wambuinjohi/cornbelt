@@ -18,7 +18,8 @@ interface VisitorData {
   memory: string;
   processor_cores: number;
   platform: string;
-  session_id: string;
+  // Do not send session_id to the API to avoid server unique-constraint errors
+  session_id?: string | null;
   geolocation_latitude: number | null;
   geolocation_longitude: number | null;
   geolocation_accuracy: number | null;
@@ -139,7 +140,6 @@ const fetchIPAddress = async (): Promise<string | null> => {
 export const useVisitorTracking = () => {
   const location = useLocation();
   const previousPageRef = useRef<string | null>(null);
-  const sessionIdRef = useRef<string>(generateSessionId());
 
   useEffect(() => {
     const trackVisitor = async () => {
@@ -166,7 +166,8 @@ export const useVisitorTracking = () => {
         memory: getDeviceMemory(),
         processor_cores: getProcessorCores(),
         platform: navigator.platform,
-        session_id: sessionIdRef.current,
+        // omit session_id to avoid server-side UNIQUE constraint errors
+        session_id: null,
         geolocation_latitude: geolocation.latitude,
         geolocation_longitude: geolocation.longitude,
         geolocation_accuracy: geolocation.accuracy,
