@@ -15,6 +15,8 @@ interface ProductGalleryProps {
   fallbackAlt: string;
 }
 
+import { fetchJsonIfApi } from "@/lib/apiClient";
+
 export default function ProductGallery({
   productId,
   productName,
@@ -26,28 +28,15 @@ export default function ProductGallery({
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const fetchProductImages = async () => {
-      try {
-        const response = await fetch(
-          `/api/product-images?productId=${productId}`,
-        );
-        const data = await response.json();
-
-        if (Array.isArray(data) && data.length > 0) {
-          setImages(data);
-        } else {
-          setImages([
-            {
-              id: 0,
-              productId,
-              imageUrl: fallbackImage,
-              altText: fallbackAlt,
-              displayOrder: 0,
-            },
-          ]);
-        }
-      } catch (error) {
-        console.error("Error fetching product images:", error);
+    let cancelled = false;
+    const load = async () => {
+      const data = await fetchJsonIfApi<ProductImage[]>(
+        `/api/product-images?productId=${productId}`,
+      );
+      if (cancelled) return;
+      if (Array.isArray(data) && data.length > 0) {
+        setImages(data);
+      } else {
         setImages([
           {
             id: 0,
@@ -57,12 +46,13 @@ export default function ProductGallery({
             displayOrder: 0,
           },
         ]);
-      } finally {
-        setIsLoading(false);
       }
+      setIsLoading(false);
     };
-
-    fetchProductImages();
+    load();
+    return () => {
+      cancelled = true;
+    };
   }, [productId, fallbackImage, fallbackAlt]);
 
   const currentImage = images[currentImageIndex] || {

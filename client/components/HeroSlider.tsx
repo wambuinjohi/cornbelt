@@ -5,6 +5,8 @@ interface Slide {
   alt: string;
 }
 
+import { fetchJsonIfApi } from "@/lib/apiClient";
+
 export default function HeroSlider() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [slides, setSlides] = useState<Slide[]>([]);
@@ -33,29 +35,26 @@ export default function HeroSlider() {
     },
   ];
 
-  // Fetch images from API
+  // Fetch images from API (only if available) and fall back silently
   useEffect(() => {
-    const fetchSliderImages = async () => {
-      try {
-        const response = await fetch("/api/hero-images");
-        const data = await response.json();
-
-        if (Array.isArray(data) && data.length > 0) {
-          const mappedSlides = data.map((image: any) => ({
-            url: image.imageUrl,
-            alt: image.altText || "Hero slider image",
-          }));
-          setSlides(mappedSlides);
-        } else {
-          setSlides(defaultSlides);
-        }
-      } catch (error) {
-        console.error("Error fetching slider images:", error);
+    let cancelled = false;
+    const load = async () => {
+      const data = await fetchJsonIfApi<any[]>("/api/hero-images");
+      if (cancelled) return;
+      if (Array.isArray(data) && data.length > 0) {
+        const mappedSlides = data.map((image: any) => ({
+          url: image.imageUrl,
+          alt: image.altText || "Hero slider image",
+        }));
+        setSlides(mappedSlides);
+      } else {
         setSlides(defaultSlides);
       }
     };
-
-    fetchSliderImages();
+    load();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // Auto-rotate slides every 5 seconds

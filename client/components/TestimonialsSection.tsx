@@ -40,30 +40,28 @@ const defaultTestimonials: Testimonial[] = [
   },
 ];
 
+import { fetchJsonIfApi } from "@/lib/apiClient";
+
 export default function TestimonialsSection() {
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const fetchTestimonials = async () => {
-      try {
-        const response = await fetch("/api/testimonials");
-        const data = await response.json();
-
-        if (Array.isArray(data) && data.length > 0) {
-          setTestimonials(data);
-        } else {
-          setTestimonials(defaultTestimonials);
-        }
-      } catch (error) {
-        console.error("Error fetching testimonials:", error);
+    let cancelled = false;
+    const load = async () => {
+      const data = await fetchJsonIfApi<Testimonial[]>("/api/testimonials");
+      if (cancelled) return;
+      if (Array.isArray(data) && data.length > 0) {
+        setTestimonials(data);
+      } else {
         setTestimonials(defaultTestimonials);
-      } finally {
-        setIsLoading(false);
       }
+      setIsLoading(false);
     };
-
-    fetchTestimonials();
+    load();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   if (isLoading) {
