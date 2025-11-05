@@ -228,7 +228,8 @@ export default function AdminHeroImages() {
   const handleUpdateOrder = async (id: number, newOrder: number) => {
     try {
       const token = localStorage.getItem("adminToken");
-      const response = await fetch(`/api/admin/hero-images/${id}`, {
+      const adminFetch = (await import('@/lib/adminApi')).default;
+      const response = await adminFetch(`/api/admin/hero-images/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -237,7 +238,7 @@ export default function AdminHeroImages() {
         body: JSON.stringify({ displayOrder: newOrder }),
       });
 
-      if (!response.ok) {
+      if (!response || !response.ok) {
         throw new Error("Failed to update image order");
       }
 
