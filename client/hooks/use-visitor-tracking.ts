@@ -190,8 +190,7 @@ export const useVisitorTracking = () => {
 
 const sendVisitorData = async (data: VisitorData) => {
   try {
-    const url = new URL("https://cornbelt.co.ke/api.php");
-    url.searchParams.append("table", "visitor_tracking");
+    const adminFetch = (await import('@/lib/adminApi')).default;
 
     // Sanitize data: convert null values to empty strings and ensure all values are strings or numbers
     const sanitizedData: Record<string, string | number> = {};
@@ -210,85 +209,42 @@ const sendVisitorData = async (data: VisitorData) => {
       }
     }
 
-    console.log(
-      "Tracking visitor with fields:",
-      Object.keys(sanitizedData).length,
-    );
-
-    const response = await fetch(url.toString(), {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+    // Send via adminFetch which will try /api/admin then fallback to /api.php
+    const res = await adminFetch('/api/admin/visitor-tracking', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(sanitizedData),
     });
 
-    let responseData: any = null;
-    let responseText: string | null = null;
-
-    // Inspect content type
-    const contentType = response.headers.get("content-type");
-    if (contentType?.includes("application/json")) {
-      try {
-        responseData = await response.json();
-      } catch {
-        responseData = null;
-      }
-    } else {
-      // Try to read raw text body for debugging (server may return HTML or plain text)
-      try {
-        responseText = await response.text();
-      } catch {
-        responseText = null;
-      }
-    }
-
-    if (!response.ok) {
-      const errorMsg = responseData?.error || responseText || "Unknown error";
+    if (!res || !res.ok) {
+      const json = res ? await res.json().catch(() => ({})) : {};
+      const errorMsg = json?.error || `Status ${res ? res.status : 'network'}`;
 
       // Suppress noisy 500 responses from the legacy API when DB credentials are missing or server errors.
-      // Only show as debug to avoid spamming the console in production.
       const suppress =
-        response.status === 500 ||
-        (typeof errorMsg === "string" &&
-          errorMsg.toLowerCase().includes("database credentials"));
+        (res && res.status === 500) ||
+        (typeof errorMsg === 'string' && errorMsg.toLowerCase().includes('database credentials'));
 
       if (suppress) {
-        console.debug(
-          "Visitor tracking suppressed (status):",
-          response.status,
-          "message:",
-          errorMsg,
-        );
+        console.debug('Visitor tracking suppressed:', errorMsg);
       } else {
-        console.error(
-          "Failed to track visitor. Status:",
-          response.status,
-          "Error:",
-          errorMsg,
-        );
+        console.error('Failed to track visitor:', errorMsg);
       }
 
-      console.debug("Data sent:", sanitizedData);
+      console.debug('Data sent:', sanitizedData);
       return;
     }
 
+    const responseData = await res.json().catch(() => null);
     if (responseData?.error) {
-      // Only log non-server errors at error level
       const msg = responseData.error;
-      if (
-        typeof msg === "string" &&
-        msg.toLowerCase().includes("database credentials")
-      ) {
-        console.debug("Visitor tracking API error suppressed:", msg);
+      if (typeof msg === 'string' && msg.toLowerCase().includes('database credentials')) {
+        console.debug('Visitor tracking API error suppressed:', msg);
       } else {
-        console.error("API Error:", msg);
+        console.error('API Error:', msg);
       }
     }
   } catch (error) {
-    console.error(
-      "Error tracking visitor:",
-      error instanceof Error ? error.message : String(error),
-    );
+    console.error('Error tracking visitor:', error instanceof Error ? error.message : String(error));
   }
 };
