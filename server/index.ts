@@ -515,7 +515,7 @@ export function createServer() {
   // Example API routes
   app.get("/api/ping", (_req, res) => {
     const ping = process.env.PING_MESSAGE ?? "ping";
-    res.json({ message: ping });
+    res.json({ backend: 'node', message: ping });
   });
 
   app.get("/api/demo", handleDemo);
