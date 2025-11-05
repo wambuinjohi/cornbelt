@@ -138,7 +138,8 @@ export default function AdminTestimonials() {
 
       const payload = { ...formData, imageUrl };
 
-      const response = await fetch(url, {
+      const adminFetch = (await import('@/lib/adminApi')).default;
+      const response = await adminFetch(url, {
         method,
         headers: {
           "Content-Type": "application/json",
@@ -147,9 +148,9 @@ export default function AdminTestimonials() {
         body: JSON.stringify(payload),
       });
 
-      const data = await response.json();
+      const data = response ? await response.json() : { error: 'No response' };
 
-      if (!response.ok) {
+      if (!response || !response.ok) {
         throw new Error(data.error || "Failed to save testimonial");
       }
 
