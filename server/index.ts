@@ -755,8 +755,12 @@ Disallow: /api/`;
     }
 
     try {
-      const filename = `hero-${Date.now()}-${Math.random().toString(36).substr(2, 9)}.jpg`;
-      const storagePath = `https://cornbelt.co.ke/sliderimages/${filename}`;
+      // Use the provided imageUrl (could be a relative /assets path or external URL)
+      let filename = path.basename(imageUrl);
+      if (!filename) {
+        filename = `hero-${Date.now()}-${Math.random().toString(36).substr(2, 9)}.jpg`;
+      }
+      const storagePath = imageUrl;
 
       const result = await apiCall("POST", "hero_slider_images", {
         filename,
