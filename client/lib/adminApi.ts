@@ -30,18 +30,30 @@ export default async function adminFetch(path: string, init: RequestInit = {}): 
   try {
     const adminUrl = path.startsWith('/api/admin') ? path : `/api/admin/${path.replace(/^\/+/, '')}`;
 
-    // Prefer PHP fallback automatically when running on cornbelt.co.ke (local host mapping)
-    const preferPhp = typeof window !== 'undefined' && (window.location.hostname === 'cornbelt.co.ke' || window.location.hostname.endsWith('.cornbelt.co.ke'));
-
-    // Try primary admin endpoint first unless we prefer PHP
-    if (!preferPhp) {
-      try {
-        const res = await fetch(adminUrl, init);
-        if (res.ok) return { ok: true, status: res.status, json: async () => res.json() };
-        // non-OK -> try fallback
-      } catch (err) {
-        // network error - try fallback
+    // First try /api/ping (node) then /api.php?action=ping (php) to determine which backend to prefer
+    try {
+      const nodePing = await fetch('/api/ping', { method: 'GET' });
+      if (nodePing.ok) {
+        // Node is active; try node admin first
+        try {
+          const res = await fetch(adminUrl, init);
+          if (res.ok) return { ok: true, status: res.status, json: async () => res.json() };
+        } catch (err) {
+          // fallthrough to php fallback
+        }
       }
+    } catch (e) {
+      // node ping failed, try php ping
+    }
+
+    try {
+      const phpPingRes = await fetch('/api.php?action=ping', { method: 'GET' });
+      if (phpPingRes.ok) {
+        // PHP backend active, prefer php fallback
+        // continue to fallback handling below
+      }
+    } catch (e) {
+      // no php ping
     }
 
     // Fallback to php api
