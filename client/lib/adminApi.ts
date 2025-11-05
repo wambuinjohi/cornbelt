@@ -62,9 +62,25 @@ export default async function adminFetch(
 
     // Probe backends to determine which to prefer and cache result
     let preferred: "node" | "php" | null = null;
+    // Try multiple base origins: current origin and the canonical cornBelt host
+    const bases = [window.location.origin, "https://cornbelt.co.ke"].filter(Boolean);
+
+    const tryFetchOnBases = async (path: string) => {
+      for (const b of bases) {
+        try {
+          const url = path.startsWith("/") ? b + path : b + "/" + path;
+          const res = await fetch(url, { method: "GET" });
+          if (res.ok) return res;
+        } catch (e) {
+          // try next base
+        }
+      }
+      return null;
+    };
+
     try {
-      const nodePing = await fetch("/api/ping", { method: "GET" });
-      if (nodePing.ok) {
+      const nodePing = await tryFetchOnBases("/api/ping");
+      if (nodePing) {
         preferred = "node";
       }
     } catch (e) {
@@ -73,8 +89,8 @@ export default async function adminFetch(
 
     if (!preferred) {
       try {
-        const phpPing = await fetch("/api.php?action=ping", { method: "GET" });
-        if (phpPing.ok) preferred = "php";
+        const phpPing = await tryFetchOnBases("/api.php?action=ping");
+        if (phpPing) preferred = "php";
       } catch (e) {
         // both failed
       }
