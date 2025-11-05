@@ -780,6 +780,7 @@ Disallow: /api/`;
         imageUrl: storagePath,
         altText: altText || "Hero slider image",
         displayOrder: displayOrder || 0,
+        isActive: true,
       });
 
       if (result.error) {
