@@ -35,38 +35,94 @@ export default async function adminFetch(
       ? path
       : `/api/admin/${path.replace(/^\/+/, "")}`;
 
-    // First try /api/ping (node) then /api.php?action=ping (php) to determine which backend to prefer
+    // Use cached backend preference if available (short TTL)
     try {
-      const nodePing = await fetch("/api/ping", { method: "GET" });
-      if (nodePing.ok) {
-        // Node is active; try node admin first
-        try {
-          const res = await fetch(adminUrl, init);
-          if (res.ok)
-            return {
-              ok: true,
-              status: res.status,
-              json: async () => res.json(),
-            };
-        } catch (err) {
-          // fallthrough to php fallback
+      const cached = sessionStorage.getItem("adminPreferredBackend");
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        const age = Date.now() - (parsed.ts || 0);
+        const TTL = 60 * 1000; // 60s
+        if (age >= 0 && age < TTL && parsed.backend) {
+          if (parsed.backend === "node") {
+            try {
+              const res = await fetch(adminUrl, init);
+              if (res.ok)
+                return {
+                  ok: true,
+                  status: res.status,
+                  json: async () => res.json(),
+                };
+            } catch (e) {
+              // try php fallback below
+            }
+          } else if (parsed.backend === "php") {
+            // prefer php fallback - skip node check
+            // continue to fallback handling below
+          }
         }
       }
     } catch (e) {
-      // node ping failed, try php ping
+      // ignore cache errors
+    }
+
+    // Probe backends to determine which to prefer and cache result
+    let preferred: "node" | "php" | null = null;
+    // Try multiple base origins: current origin and the canonical cornBelt host
+    const bases = [window.location.origin, "https://cornbelt.co.ke"].filter(
+      Boolean,
+    );
+
+    const tryFetchOnBases = async (path: string) => {
+      for (const b of bases) {
+        try {
+          const url = path.startsWith("/") ? b + path : b + "/" + path;
+          const res = await fetch(url, { method: "GET" });
+          if (res.ok) return res;
+        } catch (e) {
+          // try next base
+        }
+      }
+      return null;
+    };
+
+    try {
+      const nodePing = await tryFetchOnBases("/api/ping");
+      if (nodePing) {
+        preferred = "node";
+      }
+    } catch (e) {
+      // node ping failed
+    }
+
+    if (!preferred) {
+      try {
+        const phpPing = await tryFetchOnBases("/api.php?action=ping");
+        if (phpPing) preferred = "php";
+      } catch (e) {
+        // both failed
+      }
     }
 
     try {
-      const phpPingRes = await fetch("/api.php?action=ping", { method: "GET" });
-      if (phpPingRes.ok) {
-        // PHP backend active, prefer php fallback
-        // continue to fallback handling below
+      if (preferred)
+        sessionStorage.setItem(
+          "adminPreferredBackend",
+          JSON.stringify({ backend: preferred, ts: Date.now() }),
+        );
+    } catch (e) {}
+
+    // If node is preferred, try it first
+    if (preferred === "node") {
+      try {
+        const res = await fetch(adminUrl, init);
+        if (res.ok)
+          return { ok: true, status: res.status, json: async () => res.json() };
+      } catch (e) {
+        // fallthrough to php
       }
-    } catch (e) {
-      // no php ping
     }
 
-    // Fallback to php api
+    // Otherwise fall through to php
     // parse resource and id
     const p = adminUrl.replace(/^\/api\/admin\/?/, "");
     const segs = p.split("/").filter(Boolean);
@@ -81,14 +137,30 @@ export default async function adminFetch(
       try {
         bodyObj = init.body ? JSON.parse(init.body as string) : null;
       } catch {}
-      const phpRes = await fetch("/api.php?action=upload", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(init.headers || {}),
-        },
-        body: bodyObj ? JSON.stringify(bodyObj) : init.body,
-      });
+      // try upload across bases
+      let phpRes: Response | null = null;
+      for (const b of [window.location.origin, "https://cornbelt.co.ke"]) {
+        try {
+          const url = b + "/api.php?action=upload";
+          phpRes = await fetch(url, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              ...(init.headers || {}),
+            },
+            body: bodyObj ? JSON.stringify(bodyObj) : init.body,
+          });
+          if (phpRes) break;
+        } catch (e) {
+          phpRes = null;
+        }
+      }
+      if (!phpRes)
+        return {
+          ok: false,
+          status: 0,
+          json: async () => ({ error: "Network error" }),
+        };
       const json = await (phpRes.ok
         ? phpRes.json()
         : phpRes.text().then((t) => {
@@ -103,7 +175,19 @@ export default async function adminFetch(
 
     // For chat-sessions -> fetch chats and group
     if (resource === "chat-sessions" && method === "GET") {
-      const phpRes = await fetch(buildPhpUrlForResource("chat-sessions"));
+      // try fetch across bases
+      let phpRes: Response | null = null;
+      for (const b of [window.location.origin, "https://cornbelt.co.ke"]) {
+        try {
+          const url =
+            b + buildPhpUrlForResource("chat-sessions").replace(/^[.\/]+/, "/");
+          phpRes = await fetch(url);
+          if (phpRes) break;
+        } catch (e) {
+          phpRes = null;
+        }
+      }
+      if (!phpRes) return { ok: false, status: 0, json: async () => [] };
       if (!phpRes.ok)
         return {
           ok: false,
@@ -129,7 +213,20 @@ export default async function adminFetch(
 
     // For chat/:sessionId -> fetch chats and filter
     if (resource === "chat" && resourceId && method === "GET") {
-      const phpRes = await fetch(buildPhpUrlForResource("chat", resourceId));
+      // try fetch across bases for chat session
+      let phpRes: Response | null = null;
+      for (const b of [window.location.origin, "https://cornbelt.co.ke"]) {
+        try {
+          const url =
+            b +
+            buildPhpUrlForResource("chat", resourceId).replace(/^[.\/]+/, "/");
+          phpRes = await fetch(url);
+          if (phpRes) break;
+        } catch (e) {
+          phpRes = null;
+        }
+      }
+      if (!phpRes) return { ok: false, status: 0, json: async () => [] };
       if (!phpRes.ok)
         return {
           ok: false,
@@ -145,19 +242,41 @@ export default async function adminFetch(
     const headers: any = { ...(init.headers || {}) };
     if (!headers["Content-Type"] && init.body)
       headers["Content-Type"] = "application/json";
-    const phpRes = await fetch(phpUrl, { method, headers, body: init.body });
-    const contentType = phpRes.headers.get("content-type") || "";
+
+    // try across bases
+    let finalPhpRes: Response | null = null;
+    for (const b of [window.location.origin, "https://cornbelt.co.ke"]) {
+      try {
+        const url = b + phpUrl.replace(/^[.\/]+/, "/");
+        finalPhpRes = await fetch(url, { method, headers, body: init.body });
+        if (finalPhpRes) break;
+      } catch (e) {
+        finalPhpRes = null;
+      }
+    }
+    if (!finalPhpRes)
+      return {
+        ok: false,
+        status: 0,
+        json: async () => ({ error: "Network error" }),
+      };
+    const contentType = finalPhpRes.headers.get("content-type") || "";
     let parsed: any;
-    if (contentType.includes("application/json")) parsed = await phpRes.json();
+    if (contentType.includes("application/json"))
+      parsed = await finalPhpRes.json();
     else
-      parsed = await phpRes.text().then((t) => {
+      parsed = await finalPhpRes.text().then((t) => {
         try {
           return JSON.parse(t);
         } catch {
           return t;
         }
       });
-    return { ok: phpRes.ok, status: phpRes.status, json: async () => parsed };
+    return {
+      ok: finalPhpRes.ok,
+      status: finalPhpRes.status,
+      json: async () => parsed,
+    };
   } catch (err) {
     console.error("adminFetch error", err);
     return null;

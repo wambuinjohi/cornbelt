@@ -147,6 +147,101 @@
   <body>
     <div id="root"></div>
 
+    <script>
+      // Block FullStory / edge.fullstory scripts and requests
+      (function () {
+        var blockedPatterns = [
+          "fullstory.com",
+          "edge.fullstory.com",
+          "/s/fs.js",
+          "fs.js",
+        ];
+
+        function isBlocked(src) {
+          if (!src) return false;
+          try {
+            src = src.toString().toLowerCase();
+          } catch (e) {
+            return false;
+          }
+          return blockedPatterns.some(function (p) {
+            return src.indexOf(p) !== -1;
+          });
+        }
+
+        // Remove any existing script tags that match
+        try {
+          var scripts = Array.from(document.getElementsByTagName("script"));
+          scripts.forEach(function (s) {
+            if (s.src && isBlocked(s.src))
+              s.parentNode && s.parentNode.removeChild(s);
+          });
+        } catch (e) {}
+
+        // Intercept future insertions of scripts
+        var origAppend = Element.prototype.appendChild;
+        Element.prototype.appendChild = function (node) {
+          try {
+            if (node && node.tagName === "SCRIPT" && isBlocked(node.src)) {
+              // silently ignore
+              return node;
+            }
+          } catch (e) {}
+          return origAppend.call(this, node);
+        };
+
+        var origInsertBefore = Node.prototype.insertBefore;
+        Node.prototype.insertBefore = function (newNode, referenceNode) {
+          try {
+            if (
+              newNode &&
+              newNode.tagName === "SCRIPT" &&
+              isBlocked(newNode.src)
+            ) {
+              return newNode;
+            }
+          } catch (e) {}
+          return origInsertBefore.call(this, newNode, referenceNode);
+        };
+
+        // Monkey-patch fetch/XHR to block network calls to FullStory
+        if (window.fetch) {
+          var origFetch = window.fetch.bind(window);
+          window.fetch = function (resource, init) {
+            try {
+              var url =
+                typeof resource === "string"
+                  ? resource
+                  : resource && resource.url
+                    ? resource.url
+                    : "";
+              if (isBlocked(url)) {
+                return Promise.reject(
+                  new Error("Blocked external analytics request"),
+                );
+              }
+            } catch (e) {}
+            return origFetch(resource, init);
+          };
+        }
+        try {
+          var XHR = window.XMLHttpRequest;
+          var origOpen = XHR.prototype.open;
+          XHR.prototype.open = function () {
+            try {
+              var url = arguments[1] || "";
+              if (isBlocked(url)) {
+                // noop the request by marking readyState to DONE in a microtask (best-effort)
+                this.abort && this.abort();
+                return origOpen.apply(this, arguments);
+              }
+            } catch (e) {}
+            return origOpen.apply(this, arguments);
+          };
+        } catch (e) {}
+      })();
+    </script>
+
     <script type="module" src="/client/App.tsx"></script>
   </body>
 </html>
