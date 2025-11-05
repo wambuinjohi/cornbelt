@@ -1,0 +1,16 @@
+[Unit]
+Description=Cornbelt Node Server
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=/var/www/cornbelt
+# Put runtime envs in /etc/cornbelt.env (create from cornbelt.env.example)
+EnvironmentFile=/etc/cornbelt.env
+ExecStart=/usr/bin/node dist/server/node-build.mjs
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target
