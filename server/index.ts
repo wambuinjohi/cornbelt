@@ -852,7 +852,7 @@ Disallow: /api/`;
     }
   });
 
-  // File upload endpoint
+  // File upload endpoint — saves images to /assets/hero_slider_images and returns a public path
   app.post("/api/admin/upload", async (req, res) => {
     const token = req.headers.authorization?.split(" ")[1];
 
@@ -867,15 +867,27 @@ Disallow: /api/`;
     }
 
     try {
-      // Store the file as a data URL (base64 encoded)
-      // This approach works well for images and doesn't require file system operations
-      const dataUrl = `data:image/${getImageMimeType(fileName)};base64,${fileData}`;
+      // Decode base64
+      const buffer = Buffer.from(fileData, "base64");
 
-      res.json({
-        success: true,
-        imageUrl: dataUrl,
-        filename: fileName,
-      });
+      // Sanitize extension
+      const ext = path.extname(fileName) || ".jpg";
+      const safeExt = ext.replace(/[^a-zA-Z0-9.]/g, "") || ".jpg";
+
+      // Build filename
+      const filename = `hero-${Date.now()}-${Math.random().toString(36).slice(2,9)}${safeExt}`;
+
+      // Ensure assets folder exists at project root: /assets/hero_slider_images
+      const assetsDir = path.join(process.cwd(), "assets", "hero_slider_images");
+      fs.mkdirSync(assetsDir, { recursive: true });
+
+      const filePath = path.join(assetsDir, filename);
+      fs.writeFileSync(filePath, buffer);
+
+      // Public URL path served by node-build static middleware
+      const imageUrl = `/assets/hero_slider_images/${filename}`;
+
+      res.json({ success: true, imageUrl, filename });
     } catch (error) {
       console.error("Error processing file:", error);
       res.status(500).json({
