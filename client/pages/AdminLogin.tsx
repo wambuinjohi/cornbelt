@@ -53,7 +53,10 @@ export default function AdminLogin() {
       }
 
       if (!response.ok) {
-        throw new Error(result.error || "Login failed");
+        const errMsg = result && typeof result === 'object' && 'error' in result
+          ? (result.error || `Login failed (status ${response.status})`)
+          : `Login failed (status ${response.status})`;
+        throw new Error(errMsg);
       }
 
       // Store token in localStorage
