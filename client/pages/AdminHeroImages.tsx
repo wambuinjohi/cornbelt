@@ -205,14 +205,15 @@ export default function AdminHeroImages() {
 
     try {
       const token = localStorage.getItem("adminToken");
-      const response = await fetch(`/api/admin/hero-images/${id}`, {
+      const adminFetch = (await import('@/lib/adminApi')).default;
+      const response = await adminFetch(`/api/admin/hero-images/${id}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
 
-      if (!response.ok) {
+      if (!response || !response.ok) {
         throw new Error("Failed to delete image");
       }
 
