@@ -228,7 +228,7 @@ if (isset($input['alter_table'])) {
                 $alter_parts[] = "MODIFY COLUMN `" . $conn->real_escape_string($name) . "` " . $definition;
                 break;
             case 'CHANGE':
-                if (!valid_identifier($new_name)) continue;
+                if (!valid_identifier($new_name)) continue 2;
                 $alter_parts[] = "CHANGE `" . $conn->real_escape_string($name) . "` `" . $conn->real_escape_string($new_name) . "` " . $definition;
                 break;
             case 'DROP':
