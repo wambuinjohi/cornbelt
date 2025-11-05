@@ -231,6 +231,190 @@ if (strpos($uri, '/api/admin') !== false) {
         exit;
     }
 
+    // Upload endpoint - accept JSON base64 (fileData,fileName) or multipart file under 'file'
+    if ($resource === 'upload' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        // Authentication
+        $authHeader = null;
+        if (isset($_SERVER['HTTP_AUTHORIZATION'])) $authHeader = $_SERVER['HTTP_AUTHORIZATION'];
+        elseif (function_exists('apache_request_headers')) {
+            $hdrs = apache_request_headers();
+            if (isset($hdrs['Authorization'])) $authHeader = $hdrs['Authorization'];
+        }
+        $token = null;
+        if ($authHeader && preg_match('/Bearer\s+(\S+)/', $authHeader, $m)) $token = $m[1];
+        if (!$token || !verify_jwt($token)) {
+            http_response_code(401);
+            echo json_encode(['error' => 'Unauthorized']);
+            $conn->close();
+            exit;
+        }
+
+        // Destination dir
+        $publicDir = __DIR__ . '/public';
+        if (!is_dir($publicDir)) mkdir($publicDir, 0755, true);
+        $uploadsDir = $publicDir . '/uploads';
+        if (!is_dir($uploadsDir)) mkdir($uploadsDir, 0755, true);
+
+        // Handle multipart
+        if (!empty($_FILES) && isset($_FILES['file'])) {
+            $file = $_FILES['file'];
+            if ($file['error'] !== UPLOAD_ERR_OK) {
+                http_response_code(400);
+                echo json_encode(['error' => 'File upload error']);
+                $conn->close();
+                exit;
+            }
+            $orig = basename($file['name']);
+            $ext = pathinfo($orig, PATHINFO_EXTENSION);
+            $safeName = preg_replace('/[^A-Za-z0-9._-]/', '-', $orig);
+            $filename = time() . '-' . bin2hex(random_bytes(4)) . ($ext ? '.' . $ext : '');
+            $dest = $uploadsDir . '/' . $filename;
+            if (!move_uploaded_file($file['tmp_name'], $dest)) {
+                http_response_code(500);
+                echo json_encode(['error' => 'Failed to save file']);
+                $conn->close();
+                exit;
+            }
+            $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+            $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+            $url = $scheme . '://' . $host . '/uploads/' . $filename;
+            echo json_encode(['imageUrl' => $url, 'path' => '/uploads/' . $filename]);
+            $conn->close();
+            exit;
+        }
+
+        // Handle JSON base64 { fileData, fileName }
+        if (isset($input['fileData']) && isset($input['fileName'])) {
+            $fileData = $input['fileData'];
+            $fileName = basename($input['fileName']);
+            $ext = pathinfo($fileName, PATHINFO_EXTENSION);
+            $filename = time() . '-' . bin2hex(random_bytes(4)) . ($ext ? '.' . $ext : '');
+            $dest = $uploadsDir . '/' . $filename;
+            $decoded = base64_decode($fileData);
+            if ($decoded === false) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Invalid base64 data']);
+                $conn->close();
+                exit;
+            }
+            if (file_put_contents($dest, $decoded) === false) {
+                http_response_code(500);
+                echo json_encode(['error' => 'Failed to write file']);
+                $conn->close();
+                exit;
+            }
+            $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+            $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+            $url = $scheme . '://' . $host . '/uploads/' . $filename;
+            echo json_encode(['imageUrl' => $url, 'path' => '/uploads/' . $filename]);
+            $conn->close();
+            exit;
+        }
+
+        http_response_code(400);
+        echo json_encode(['error' => 'No file provided']);
+        $conn->close();
+        exit;
+    }
+
+    // Reseed hero active: ensure at least one isActive
+    if ($resource === 'reseed-hero-active' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        // auth
+        $authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? null;
+        $token = null; if ($authHeader && preg_match('/Bearer\s+(\S+)/', $authHeader, $m)) $token = $m[1];
+        if (!$token || !verify_jwt($token)) { http_response_code(401); echo json_encode(['error'=>'Unauthorized']); $conn->close(); exit; }
+
+        // get images
+        $res = $conn->query("SELECT * FROM `hero_slider_images`");
+        $images = [];
+        if ($res) {
+            while ($r = $res->fetch_assoc()) $images[] = $r;
+        }
+        if (count($images) === 0) { echo json_encode(['success'=>true,'message'=>'No images to update']); $conn->close(); exit; }
+        foreach ($images as $img) {
+            if (isset($img['isActive']) && ($img['isActive'] === '1' || $img['isActive'] === 1 || $img['isActive'] === true)) {
+                echo json_encode(['success'=>true,'message'=>'Active images present']); $conn->close(); exit;
+            }
+        }
+        // pick lowest displayOrder or first
+        usort($images, function($a,$b){ $aa = isset($a['displayOrder'])?(int)$a['displayOrder']:0; $bb = isset($b['displayOrder'])?(int)$b['displayOrder']:0; return $aa - $bb; });
+        $first = $images[0];
+        $id = isset($first['id']) ? intval($first['id']) : null;
+        if ($id) {
+            $conn->query("UPDATE `hero_slider_images` SET `isActive`=1 WHERE id=".intval($id));
+            echo json_encode(['success'=>true,'message'=>'Set first image active','id'=>$id]);
+            $conn->close();
+            exit;
+        }
+        echo json_encode(['error'=>'Unable to reseed']);
+        $conn->close();
+        exit;
+    }
+
+    // Reseed bot responses
+    if ($resource === 'reseed-bot-responses' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? null;
+        $token = null; if ($authHeader && preg_match('/Bearer\s+(\S+)/', $authHeader, $m)) $token = $m[1];
+        if (!$token || !verify_jwt($token)) { http_response_code(401); echo json_encode(['error'=>'Unauthorized']); $conn->close(); exit; }
+
+        $defaultResponses = [
+            ['keyword'=>'hours','answer'=>'Our business hours are Monday - Friday: 8:00 AM - 5:00 PM, Saturday: 9:00 AM - 2:00 PM, Sunday: Closed.'],
+            ['keyword'=>'location','answer'=>'We are located at Cornbelt Flour Mill Limited, National Cereals & Produce Board Land, Kenya.'],
+            ['keyword'=>'contact','answer'=>'You can reach us via email at info@cornbeltmill.com or support@cornbeltmill.com, or use the contact form on our website.'],
+            ['keyword'=>'products','answer'=>'We offer a range of fortified maize meal and other products. Visit our Products page for more details.'],
+            ['keyword'=>'shipping','answer'=>'For shipping inquiries, please contact our support team via email and provide your location so we can advise on availability and rates.']
+        ];
+        $count = 0;
+        foreach ($defaultResponses as $r) {
+            $k = $conn->real_escape_string($r['keyword']);
+            $a = $conn->real_escape_string($r['answer']);
+            if ($conn->query("INSERT INTO `bot_responses` (`keyword`,`answer`,`createdAt`) VALUES ('$k','$a','" . $conn->real_escape_string(date('c')) . "')")) $count++;
+        }
+        echo json_encode(['success'=>true,'message'=>'Bot responses reseeded successfully','count'=>$count]);
+        $conn->close();
+        exit;
+    }
+
+    // Chat sessions list
+    if ($resource === 'chat-sessions' && $_SERVER['REQUEST_METHOD'] === 'GET') {
+        $authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? null;
+        $token = null; if ($authHeader && preg_match('/Bearer\s+(\S+)/', $authHeader, $m)) $token = $m[1];
+        if (!$token || !verify_jwt($token)) { http_response_code(401); echo json_encode(['error'=>'Unauthorized']); $conn->close(); exit; }
+        $res = $conn->query("SELECT * FROM `chats` ORDER BY createdAt ASC");
+        $sessions = [];
+        if ($res) {
+            while ($r = $res->fetch_assoc()) {
+                $sid = $r['sessionId'] ?? '';
+                if (!isset($sessions[$sid])) $sessions[$sid] = [];
+                $sessions[$sid][] = $r;
+            }
+        }
+        $out = [];
+        foreach ($sessions as $sid => $msgs) {
+            $last = end($msgs);
+            $out[] = ['sessionId'=>$sid,'lastMessageAt'=>$last['createdAt'] ?? null,'messages'=>$msgs];
+        }
+        echo json_encode($out);
+        $conn->close();
+        exit;
+    }
+
+    // Chat messages for a specific session
+    if ($resource === 'chat' && $resourceId && $_SERVER['REQUEST_METHOD'] === 'GET') {
+        $authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? null;
+        $token = null; if ($authHeader && preg_match('/Bearer\s+(\S+)/', $authHeader, $m)) $token = $m[1];
+        if (!$token || !verify_jwt($token)) { http_response_code(401); echo json_encode(['error'=>'Unauthorized']); $conn->close(); exit; }
+        $sessionId = $conn->real_escape_string(urldecode($resourceId));
+        $res = $conn->query("SELECT * FROM `chats` WHERE sessionId='" . $sessionId . "' ORDER BY createdAt ASC");
+        $messages = [];
+        if ($res) {
+            while ($r = $res->fetch_assoc()) $messages[] = $r;
+        }
+        echo json_encode($messages);
+        $conn->close();
+        exit;
+    }
+
     // For other admin resources, map resource to a table and require JWT auth
     if ($resource && isset($map[$resource])) {
         // Authenticate
@@ -259,12 +443,46 @@ if (strpos($uri, '/api/admin') !== false) {
         // set table and id for reuse in main CRUD handling below
         $table = $map[$resource];
         if ($resourceId) {
-            // allow numeric id or other identifiers like sessionId for chats
             $_GET['id'] = $resourceId;
         }
-        // make input available as before
-        // if method is POST/PUT/PATCH/DELETE the body will be processed as usual
-        // continue to the generic CRUD section below by not exiting here
+
+        // Special-case GET sorting/behavior for certain tables
+        if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+            if ($resource === 'hero-images') {
+                $q = $conn->query("SELECT * FROM `hero_slider_images` ORDER BY COALESCE(displayOrder,0) ASC");
+                $out = [];
+                if ($q) while ($r = $q->fetch_assoc()) $out[] = $r;
+                echo json_encode($out);
+                $conn->close();
+                exit;
+            }
+            if ($resource === 'product-images') {
+                $q = $conn->query("SELECT * FROM `product_images` ORDER BY COALESCE(displayOrder,0) ASC");
+                $out = [];
+                if ($q) while ($r = $q->fetch_assoc()) $out[] = $r;
+                echo json_encode($out);
+                $conn->close();
+                exit;
+            }
+            if ($resource === 'testimonials') {
+                $q = $conn->query("SELECT * FROM `testimonials` ORDER BY COALESCE(displayOrder,0) ASC");
+                $out = [];
+                if ($q) while ($r = $q->fetch_assoc()) $out[] = $r;
+                echo json_encode($out);
+                $conn->close();
+                exit;
+            }
+            if ($resource === 'bot-responses') {
+                $q = $conn->query("SELECT * FROM `bot_responses` ORDER BY id ASC");
+                $out = [];
+                if ($q) while ($r = $q->fetch_assoc()) $out[] = $r;
+                echo json_encode($out);
+                $conn->close();
+                exit;
+            }
+            // default falls through to generic CRUD below
+        }
+        // continue to generic CRUD handler
     } else {
         // resource not mapped -> return 404
         http_response_code(404);
