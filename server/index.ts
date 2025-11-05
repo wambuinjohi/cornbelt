@@ -7,7 +7,7 @@ import { handleDemo } from "./routes/demo";
 import fs from "fs";
 import path from "path";
 
-const API_BASE_URL = process.env.API_BASE_URL ?? "";
+const API_BASE_URL = process.env.API_BASE_URL ?? (process.env.NODE_ENV === 'production' ? 'https://cornbelt.co.ke' : "");
 
 // Initialize database tables
 async function initializeAdminTable() {
