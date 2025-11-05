@@ -260,7 +260,8 @@ export default function AdminHeroImages() {
       }
 
       const token = localStorage.getItem("adminToken");
-      const response = await fetch(`/api/admin/hero-images/${id}`, {
+      const adminFetch = (await import('@/lib/adminApi')).default;
+      const response = await adminFetch(`/api/admin/hero-images/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -269,7 +270,7 @@ export default function AdminHeroImages() {
         body: JSON.stringify({ isActive: newActive }),
       });
 
-      if (!response.ok) {
+      if (!response || !response.ok) {
         throw new Error("Failed to toggle active");
       }
 
