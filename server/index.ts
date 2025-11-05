@@ -486,6 +486,14 @@ export function createServer() {
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
 
+  // Serve project-level assets in dev/production at /assets/*
+  try {
+    const assetsDir = path.join(process.cwd(), 'assets');
+    app.use('/assets', express.static(assetsDir));
+  } catch (e) {
+    console.warn('Failed to set up assets static middleware:', e);
+  }
+
   // Initialize admin table on startup
   initializeAdminTable();
 
