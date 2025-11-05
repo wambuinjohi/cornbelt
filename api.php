@@ -382,5 +382,3 @@ switch ($method) {
 }
 
 $conn->close();
-
-?>
