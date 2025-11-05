@@ -200,14 +200,15 @@ export default function AdminTestimonials() {
     if (!deleteId) return;
 
     try {
-      const response = await fetch(`/api/admin/testimonials/${deleteId}`, {
+      const adminFetch = (await import('@/lib/adminApi')).default;
+      const response = await adminFetch(`/api/admin/testimonials/${deleteId}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
         },
       });
 
-      if (!response.ok) throw new Error("Failed to delete testimonial");
+      if (!response || !response.ok) throw new Error("Failed to delete testimonial");
 
       setSuccess("Testimonial deleted successfully");
       fetchTestimonials();
