@@ -50,10 +50,8 @@ export default function Index() {
       <main className="flex-1">
         {/* Hero Section */}
         <section className="relative overflow-hidden h-screen max-h-screen flex items-center justify-center">
-          {/* Background Slider */}
-          <div className="absolute inset-0">
-            <HeroSlider />
-          </div>
+          {/* Background (hero image removed) */}
+          <div className="absolute inset-0 bg-gradient-to-b from-primary/10 to-background" />
 
           <div className="container mx-auto px-4 md:px-6 relative z-10">
             <div className="text-center space-y-8 mb-12">
