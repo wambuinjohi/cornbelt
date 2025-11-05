@@ -180,7 +180,8 @@ export default function AdminChat() {
     }
 
     try {
-      const res = await fetch(`/api/admin/bot-responses/${id}`, {
+      const adminFetch = (await import('@/lib/adminApi')).default;
+      const res = await adminFetch(`/api/admin/bot-responses/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -192,7 +193,7 @@ export default function AdminChat() {
         }),
       });
 
-      if (!res.ok) throw new Error("Failed to update response");
+      if (!res || !res.ok) throw new Error("Failed to update response");
 
       toast.success("Bot response updated successfully");
       setKeyword("");
