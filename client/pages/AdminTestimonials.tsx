@@ -65,9 +65,13 @@ export default function AdminTestimonials() {
     try {
       setIsLoading(true);
       const token = localStorage.getItem("adminToken");
-      const response = await fetch("/api/admin/testimonials", {
+      const response = await (
+        await import("@/lib/adminApi")
+      ).default("/api/admin/testimonials", {
         headers: { Authorization: `Bearer ${token}` },
       });
+      if (!response || !response.ok)
+        throw new Error("Failed to fetch testimonials");
       const data = await response.json();
       setTestimonials(Array.isArray(data) ? data : []);
     } catch (err) {
@@ -86,7 +90,8 @@ export default function AdminTestimonials() {
         try {
           const base64Data = (reader.result as string).split(",")[1];
           const token = localStorage.getItem("adminToken");
-          const response = await fetch("/api/admin/upload", {
+          const adminFetch = (await import("@/lib/adminApi")).default;
+          const response = await adminFetch("/api/admin/upload", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -95,7 +100,8 @@ export default function AdminTestimonials() {
             body: JSON.stringify({ fileData: base64Data, fileName: file.name }),
           });
 
-          if (!response.ok) throw new Error("Failed to upload file");
+          if (!response || !response.ok)
+            throw new Error("Failed to upload file");
 
           const result = await response.json();
           resolve(result.imageUrl);
@@ -138,7 +144,8 @@ export default function AdminTestimonials() {
 
       const payload = { ...formData, imageUrl };
 
-      const response = await fetch(url, {
+      const adminFetch = (await import("@/lib/adminApi")).default;
+      const response = await adminFetch(url, {
         method,
         headers: {
           "Content-Type": "application/json",
@@ -147,9 +154,9 @@ export default function AdminTestimonials() {
         body: JSON.stringify(payload),
       });
 
-      const data = await response.json();
+      const data = response ? await response.json() : { error: "No response" };
 
-      if (!response.ok) {
+      if (!response || !response.ok) {
         throw new Error(data.error || "Failed to save testimonial");
       }
 
@@ -199,14 +206,16 @@ export default function AdminTestimonials() {
     if (!deleteId) return;
 
     try {
-      const response = await fetch(`/api/admin/testimonials/${deleteId}`, {
+      const adminFetch = (await import("@/lib/adminApi")).default;
+      const response = await adminFetch(`/api/admin/testimonials/${deleteId}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
         },
       });
 
-      if (!response.ok) throw new Error("Failed to delete testimonial");
+      if (!response || !response.ok)
+        throw new Error("Failed to delete testimonial");
 
       setSuccess("Testimonial deleted successfully");
       fetchTestimonials();

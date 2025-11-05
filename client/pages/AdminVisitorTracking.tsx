@@ -66,43 +66,19 @@ export default function AdminVisitorTracking() {
   const fetchVisitorData = async () => {
     setIsLoading(true);
     try {
-      const url = new URL("https://cornbelt.co.ke/api.php");
-      url.searchParams.append("table", "visitor_tracking");
-
-      const response = await fetch(url.toString(), {
+      const adminFetch = (await import("@/lib/adminApi")).default;
+      const res = await adminFetch("/api/admin/visitor-tracking", {
         method: "GET",
       });
-
-      let data;
-      try {
-        data = await response.json();
-      } catch {
-        console.error("Failed to parse API response. Status:", response.status);
-        throw new Error(
-          `API returned invalid JSON (Status: ${response.status})`,
-        );
+      if (!res || !res.ok) {
+        const json = res ? await res.json().catch(() => ({})) : {};
+        const msg = json?.error || `Status ${res ? res.status : "network"}`;
+        throw new Error(msg);
       }
-
-      if (!response.ok) {
-        const errorMsg = data?.error || `HTTP ${response.status}`;
-        console.error(
-          "API Error - Status:",
-          response.status,
-          "Error:",
-          errorMsg,
-        );
-        toast.error(`Failed to load visitor data: ${errorMsg}`);
-        setIsLoading(false);
-        return;
-      }
-
+      const data = await res.json();
       if (data.error) {
-        console.error("API returned error:", data.error);
-        toast.error(`Database error: ${data.error}`);
-        setIsLoading(false);
-        return;
+        throw new Error(data.error);
       }
-
       setVisitors(Array.isArray(data) ? data : []);
       toast.success("Visitor data loaded successfully");
     } catch (error) {

@@ -61,16 +61,14 @@ export default function AdminHeroImages() {
   const fetchImages = async () => {
     try {
       const token = localStorage.getItem("adminToken");
-      const response = await fetch("/api/admin/hero-images", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      const response = await (
+        await import("@/lib/adminApi")
+      ).default("/api/admin/hero-images", {
+        headers: { Authorization: `Bearer ${token}` },
       });
-
-      if (!response.ok) {
+      if (!response || !response.ok) {
         throw new Error("Failed to fetch images");
       }
-
       const data = await response.json();
       setImages(Array.isArray(data) ? data : []);
     } catch (error) {
@@ -117,7 +115,8 @@ export default function AdminHeroImages() {
           const base64Data = (reader.result as string).split(",")[1];
 
           const token = localStorage.getItem("adminToken");
-          const response = await fetch("/api/admin/upload", {
+          const adminFetch = (await import("@/lib/adminApi")).default;
+          const response = await adminFetch("/api/admin/upload", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -129,7 +128,7 @@ export default function AdminHeroImages() {
             }),
           });
 
-          if (!response.ok) {
+          if (!response || !response.ok) {
             throw new Error("Failed to upload file");
           }
 
@@ -167,7 +166,8 @@ export default function AdminHeroImages() {
 
       // Save image metadata
       const token = localStorage.getItem("adminToken");
-      const response = await fetch("/api/admin/hero-images", {
+      const adminFetch = (await import("@/lib/adminApi")).default;
+      const response = await adminFetch("/api/admin/hero-images", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -180,7 +180,7 @@ export default function AdminHeroImages() {
         }),
       });
 
-      if (!response.ok) {
+      if (!response || !response.ok) {
         throw new Error("Failed to add image");
       }
 
@@ -209,14 +209,15 @@ export default function AdminHeroImages() {
 
     try {
       const token = localStorage.getItem("adminToken");
-      const response = await fetch(`/api/admin/hero-images/${id}`, {
+      const adminFetch = (await import("@/lib/adminApi")).default;
+      const response = await adminFetch(`/api/admin/hero-images/${id}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
 
-      if (!response.ok) {
+      if (!response || !response.ok) {
         throw new Error("Failed to delete image");
       }
 
@@ -231,7 +232,8 @@ export default function AdminHeroImages() {
   const handleUpdateOrder = async (id: number, newOrder: number) => {
     try {
       const token = localStorage.getItem("adminToken");
-      const response = await fetch(`/api/admin/hero-images/${id}`, {
+      const adminFetch = (await import("@/lib/adminApi")).default;
+      const response = await adminFetch(`/api/admin/hero-images/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -240,7 +242,7 @@ export default function AdminHeroImages() {
         body: JSON.stringify({ displayOrder: newOrder }),
       });
 
-      if (!response.ok) {
+      if (!response || !response.ok) {
         throw new Error("Failed to update image order");
       }
 
@@ -262,7 +264,8 @@ export default function AdminHeroImages() {
       }
 
       const token = localStorage.getItem("adminToken");
-      const response = await fetch(`/api/admin/hero-images/${id}`, {
+      const adminFetch = (await import("@/lib/adminApi")).default;
+      const response = await adminFetch(`/api/admin/hero-images/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -271,7 +274,7 @@ export default function AdminHeroImages() {
         body: JSON.stringify({ isActive: newActive }),
       });
 
-      if (!response.ok) {
+      if (!response || !response.ok) {
         throw new Error("Failed to toggle active");
       }
 

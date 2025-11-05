@@ -56,6 +56,12 @@ function load_dotenv_if_needed($path = __DIR__ . '/.env') {
 
 load_dotenv_if_needed();
 
+// Quick ping endpoint so clients can detect this PHP backend is active
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['action'] === 'ping') {
+    echo json_encode(["backend" => "php", "message" => "pong"]);
+    exit;
+}
+
 $DB_HOST = getenv('DB_HOST');
 $DB_USER = getenv('DB_USER');
 $DB_PASS = getenv('DB_PASS');
@@ -75,10 +81,451 @@ if ($conn->connect_error) {
     exit;
 }
 
-// Admin login endpoint using php api.php?action=admin_login
+// Helper: simple identifier validation
+function valid_identifier($s) {
+    return is_string($s) && preg_match('/^[A-Za-z0-9_]+$/', $s);
+}
+
+// JWT helpers for admin endpoints
+function base64url_encode($data) {
+    return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
+}
+function base64url_decode($data) {
+    $pad = 4 - (strlen($data) % 4);
+    if ($pad < 4) $data .= str_repeat('=', $pad);
+    return base64_decode(strtr($data, '-_', '+/'));
+}
+function verify_jwt($token) {
+    $jwt_secret = getenv('JWT_SECRET') ?: 'secret-key';
+    $parts = explode('.', $token);
+    if (count($parts) !== 3) return false;
+    list($h, $p, $s) = $parts;
+    $rawSig = base64url_decode($s);
+    $expected = hash_hmac('sha256', $h . '.' . $p, $jwt_secret, true);
+    if (!hash_equals($expected, $rawSig)) return false;
+    $payloadJson = base64url_decode($p);
+    $payload = json_decode($payloadJson, true);
+    if (!is_array($payload)) return false;
+    if (isset($payload['exp']) && time() > intval($payload['exp'])) return false;
+    return $payload;
+}
+
+// Read incoming raw JSON body once
+$rawInput = file_get_contents('php://input');
+$input = json_decode($rawInput, true) ?: [];
+
+// Support legacy action=upload so clients can POST to /api.php?action=upload with JSON {fileData,fileName}
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['action']) && $_GET['action'] === 'upload') {
+    // Auth required
+    $authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? null;
+    $token = null; if ($authHeader && preg_match('/Bearer\s+(\S+)/', $authHeader, $m)) $token = $m[1];
+    if (!$token || !verify_jwt($token)) { http_response_code(401); echo json_encode(['error'=>'Unauthorized']); $conn->close(); exit; }
+
+    $publicDir = __DIR__ . '/public';
+    if (!is_dir($publicDir)) mkdir($publicDir, 0755, true);
+    $uploadsDir = $publicDir . '/uploads';
+    if (!is_dir($uploadsDir)) mkdir($uploadsDir, 0755, true);
+
+    if (isset($input['fileData']) && isset($input['fileName'])) {
+        $fileData = $input['fileData'];
+        $fileName = basename($input['fileName']);
+        $ext = pathinfo($fileName, PATHINFO_EXTENSION);
+        $filename = time() . '-' . bin2hex(random_bytes(4)) . ($ext ? '.' . $ext : '');
+        $dest = $uploadsDir . '/' . $filename;
+        $decoded = base64_decode($fileData);
+        if ($decoded === false) { http_response_code(400); echo json_encode(['error'=>'Invalid base64 data']); $conn->close(); exit; }
+        if (file_put_contents($dest, $decoded) === false) { http_response_code(500); echo json_encode(['error'=>'Failed to write file']); $conn->close(); exit; }
+        $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+        $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+        $url = $scheme . '://' . $host . '/uploads/' . $filename;
+        echo json_encode(['imageUrl' => $url, 'path' => '/uploads/' . $filename]);
+        $conn->close();
+        exit;
+    }
+    http_response_code(400); echo json_encode(['error'=>'No file provided']); $conn->close(); exit;
+}
+
+// ADMIN ROUTING shim for deployments without the Node /api/admin server
+$uri = $_SERVER['REQUEST_URI'] ?? '';
+if (strpos($uri, '/api/admin') !== false) {
+    // extract path after /api/admin
+    $path = preg_replace('#^.*?/api/admin#', '', $uri);
+    $path = preg_replace('#\?.*$#', '', $path);
+    $path = trim($path, '/');
+    $segments = $path === '' ? [] : explode('/', $path);
+    $resource = $segments[0] ?? '';
+    $resourceId = $segments[1] ?? null;
+
+    // map resource names (from client) to table names
+    $map = [
+        'contact-submissions' => 'contact_submissions',
+        'hero-images' => 'hero_slider_images',
+        'product-images' => 'product_images',
+        'testimonials' => 'testimonials',
+        'orders' => 'orders',
+        'bot-responses' => 'bot_responses',
+        'chat-sessions' => 'chats',
+        'chat' => 'chats',
+        'visitor-tracking' => 'visitor_tracking',
+        'support-chat' => 'support_chat',
+        'admin-users' => 'admin_users'
+    ];
+
+    // check-initialized: returns whether admin_users has any rows
+    if ($resource === 'check-initialized' && $_SERVER['REQUEST_METHOD'] === 'GET') {
+        $res = $conn->query("SELECT COUNT(*) as c FROM `admin_users`");
+        $count = 0;
+        if ($res) {
+            $r = $res->fetch_assoc();
+            $count = intval($r['c'] ?? 0);
+        }
+        echo json_encode(['initialized' => $count > 0]);
+        $conn->close();
+        exit;
+    }
+
+    // setup: create initial admin user (only allowed if no admin exists)
+    if ($resource === 'setup' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $email = isset($input['email']) ? $conn->real_escape_string($input['email']) : '';
+        $password = isset($input['password']) ? $input['password'] : '';
+        $fullName = isset($input['fullName']) ? $conn->real_escape_string($input['fullName']) : '';
+        if (!$email || !$password || !$fullName) {
+            http_response_code(400);
+            echo json_encode(['error' => 'email, password and fullName required']);
+            $conn->close();
+            exit;
+        }
+        // ensure no admin exists
+        $res = $conn->query("SELECT id FROM `admin_users` LIMIT 1");
+        if ($res && $res->num_rows > 0) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Admin already initialized']);
+            $conn->close();
+            exit;
+        }
+        $hashed = hash('sha256', $password);
+        $createdAt = date('c');
+        $sql = "INSERT INTO `admin_users` (`email`,`password`,`fullName`,`createdAt`) VALUES ('" . $conn->real_escape_string($email) . "','" . $conn->real_escape_string($hashed) . "','" . $conn->real_escape_string($fullName) . "','" . $conn->real_escape_string($createdAt) . "')";
+        if ($conn->query($sql) === TRUE) {
+            echo json_encode(['success' => true]);
+        } else {
+            http_response_code(500);
+            echo json_encode(['error' => $conn->error]);
+        }
+        $conn->close();
+        exit;
+    }
+
+    // login via /api/admin/login -> delegate to existing admin_login flow
+    if ($resource === 'login' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $email = isset($input['email']) ? $conn->real_escape_string($input['email']) : '';
+        $password = isset($input['password']) ? $input['password'] : '';
+        if (!$email || !$password) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Email and password are required']);
+            $conn->close();
+            exit;
+        }
+        $sql = "SELECT * FROM `admin_users` WHERE `email`='" . $conn->real_escape_string($email) . "' LIMIT 1";
+        $res = $conn->query($sql);
+        if (!$res || $res->num_rows === 0) {
+            http_response_code(401);
+            echo json_encode(['error' => 'Invalid credentials']);
+            $conn->close();
+            exit;
+        }
+        $user = $res->fetch_assoc();
+        $hashed = hash('sha256', $password);
+        if (!isset($user['password']) || $user['password'] !== $hashed) {
+            http_response_code(401);
+            echo json_encode(['error' => 'Invalid credentials']);
+            $conn->close();
+            exit;
+        }
+        // create JWT
+        $header = base64url_encode(json_encode(["alg" => "HS256", "typ" => "JWT"]));
+        $payloadArr = [
+            "id" => isset($user['id']) ? (int)$user['id'] : 0,
+            "iat" => time(),
+            "exp" => time() + 7 * 24 * 60 * 60
+        ];
+        $payload = base64url_encode(json_encode($payloadArr));
+        $jwt_secret = getenv('JWT_SECRET') ?: 'secret-key';
+        $signature = base64url_encode(hash_hmac('sha256', $header . "." . $payload, $jwt_secret, true));
+        $token = $header . "." . $payload . "." . $signature;
+        $response = [
+            "success" => true,
+            "token" => $token,
+            "user" => [
+                "id" => isset($user['id']) ? (int)$user['id'] : null,
+                "email" => $user['email'] ?? null,
+                "fullName" => $user['fullName'] ?? null,
+                "createdAt" => $user['createdAt'] ?? null
+            ]
+        ];
+        echo json_encode($response);
+        $conn->close();
+        exit;
+    }
+
+    // Upload endpoint - accept JSON base64 (fileData,fileName) or multipart file under 'file' — supports /api/admin/upload
+    if ($resource === 'upload' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        // Authentication
+        $authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? null;
+        $token = null;
+        if ($authHeader && preg_match('/Bearer\s+(\S+)/', $authHeader, $m)) $token = $m[1];
+        if (!$token || !verify_jwt($token)) {
+            http_response_code(401);
+            echo json_encode(['error' => 'Unauthorized']);
+            $conn->close();
+            exit;
+        }
+
+        // Destination dir
+        $publicDir = __DIR__ . '/public';
+        if (!is_dir($publicDir)) mkdir($publicDir, 0755, true);
+        $uploadsDir = $publicDir . '/uploads';
+        if (!is_dir($uploadsDir)) mkdir($uploadsDir, 0755, true);
+
+        // Handle multipart
+        if (!empty($_FILES) && isset($_FILES['file'])) {
+            $file = $_FILES['file'];
+            if ($file['error'] !== UPLOAD_ERR_OK) {
+                http_response_code(400);
+                echo json_encode(['error' => 'File upload error']);
+                $conn->close();
+                exit;
+            }
+            $orig = basename($file['name']);
+            $ext = pathinfo($orig, PATHINFO_EXTENSION);
+            $filename = time() . '-' . bin2hex(random_bytes(4)) . ($ext ? '.' . $ext : '');
+            $dest = $uploadsDir . '/' . $filename;
+            if (!move_uploaded_file($file['tmp_name'], $dest)) {
+                http_response_code(500);
+                echo json_encode(['error' => 'Failed to save file']);
+                $conn->close();
+                exit;
+            }
+            $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+            $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+            $url = $scheme . '://' . $host . '/uploads/' . $filename;
+            echo json_encode(['imageUrl' => $url, 'path' => '/uploads/' . $filename]);
+            $conn->close();
+            exit;
+        }
+
+        // Handle JSON base64 { fileData, fileName }
+        if (isset($input['fileData']) && isset($input['fileName'])) {
+            $fileData = $input['fileData'];
+            $fileName = basename($input['fileName']);
+            $ext = pathinfo($fileName, PATHINFO_EXTENSION);
+            $filename = time() . '-' . bin2hex(random_bytes(4)) . ($ext ? '.' . $ext : '');
+            $dest = $uploadsDir . '/' . $filename;
+            $decoded = base64_decode($fileData);
+            if ($decoded === false) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Invalid base64 data']);
+                $conn->close();
+                exit;
+            }
+            if (file_put_contents($dest, $decoded) === false) {
+                http_response_code(500);
+                echo json_encode(['error' => 'Failed to write file']);
+                $conn->close();
+                exit;
+            }
+            $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+            $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+            $url = $scheme . '://' . $host . '/uploads/' . $filename;
+            echo json_encode(['imageUrl' => $url, 'path' => '/uploads/' . $filename]);
+            $conn->close();
+            exit;
+        }
+
+        http_response_code(400);
+        echo json_encode(['error' => 'No file provided']);
+        $conn->close();
+        exit;
+    }
+
+    // Reseed hero active: ensure at least one isActive
+    if ($resource === 'reseed-hero-active' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        // auth
+        $authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? null;
+        $token = null; if ($authHeader && preg_match('/Bearer\s+(\S+)/', $authHeader, $m)) $token = $m[1];
+        if (!$token || !verify_jwt($token)) { http_response_code(401); echo json_encode(['error'=>'Unauthorized']); $conn->close(); exit; }
+
+        // get images
+        $res = $conn->query("SELECT * FROM `hero_slider_images`");
+        $images = [];
+        if ($res) {
+            while ($r = $res->fetch_assoc()) $images[] = $r;
+        }
+        if (count($images) === 0) { echo json_encode(['success'=>true,'message'=>'No images to update']); $conn->close(); exit; }
+        foreach ($images as $img) {
+            if (isset($img['isActive']) && ($img['isActive'] === '1' || $img['isActive'] === 1 || $img['isActive'] === true)) {
+                echo json_encode(['success'=>true,'message'=>'Active images present']); $conn->close(); exit;
+            }
+        }
+        // pick lowest displayOrder or first
+        usort($images, function($a,$b){ $aa = isset($a['displayOrder'])?(int)$a['displayOrder']:0; $bb = isset($b['displayOrder'])?(int)$b['displayOrder']:0; return $aa - $bb; });
+        $first = $images[0];
+        $id = isset($first['id']) ? intval($first['id']) : null;
+        if ($id) {
+            $conn->query("UPDATE `hero_slider_images` SET `isActive`=1 WHERE id=".intval($id));
+            echo json_encode(['success'=>true,'message'=>'Set first image active','id'=>$id]);
+            $conn->close();
+            exit;
+        }
+        echo json_encode(['error'=>'Unable to reseed']);
+        $conn->close();
+        exit;
+    }
+
+    // Reseed bot responses
+    if ($resource === 'reseed-bot-responses' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? null;
+        $token = null; if ($authHeader && preg_match('/Bearer\s+(\S+)/', $authHeader, $m)) $token = $m[1];
+        if (!$token || !verify_jwt($token)) { http_response_code(401); echo json_encode(['error'=>'Unauthorized']); $conn->close(); exit; }
+
+        $defaultResponses = [
+            ['keyword'=>'hours','answer'=>'Our business hours are Monday - Friday: 8:00 AM - 5:00 PM, Saturday: 9:00 AM - 2:00 PM, Sunday: Closed.'],
+            ['keyword'=>'location','answer'=>'We are located at Cornbelt Flour Mill Limited, National Cereals & Produce Board Land, Kenya.'],
+            ['keyword'=>'contact','answer'=>'You can reach us via email at info@cornbeltmill.com or support@cornbeltmill.com, or use the contact form on our website.'],
+            ['keyword'=>'products','answer'=>'We offer a range of fortified maize meal and other products. Visit our Products page for more details.'],
+            ['keyword'=>'shipping','answer'=>'For shipping inquiries, please contact our support team via email and provide your location so we can advise on availability and rates.']
+        ];
+        $count = 0;
+        foreach ($defaultResponses as $r) {
+            $k = $conn->real_escape_string($r['keyword']);
+            $a = $conn->real_escape_string($r['answer']);
+            if ($conn->query("INSERT INTO `bot_responses` (`keyword`,`answer`,`createdAt`) VALUES ('$k','$a','" . $conn->real_escape_string(date('c')) . "')")) $count++;
+        }
+        echo json_encode(['success'=>true,'message'=>'Bot responses reseeded successfully','count'=>$count]);
+        $conn->close();
+        exit;
+    }
+
+    // Chat sessions list
+    if ($resource === 'chat-sessions' && $_SERVER['REQUEST_METHOD'] === 'GET') {
+        $authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? null;
+        $token = null; if ($authHeader && preg_match('/Bearer\s+(\S+)/', $authHeader, $m)) $token = $m[1];
+        if (!$token || !verify_jwt($token)) { http_response_code(401); echo json_encode(['error'=>'Unauthorized']); $conn->close(); exit; }
+        $res = $conn->query("SELECT * FROM `chats` ORDER BY createdAt ASC");
+        $sessions = [];
+        if ($res) {
+            while ($r = $res->fetch_assoc()) {
+                $sid = $r['sessionId'] ?? '';
+                if (!isset($sessions[$sid])) $sessions[$sid] = [];
+                $sessions[$sid][] = $r;
+            }
+        }
+        $out = [];
+        foreach ($sessions as $sid => $msgs) {
+            $last = end($msgs);
+            $out[] = ['sessionId'=>$sid,'lastMessageAt'=>$last['createdAt'] ?? null,'messages'=>$msgs];
+        }
+        echo json_encode($out);
+        $conn->close();
+        exit;
+    }
+
+    // Chat messages for a specific session
+    if ($resource === 'chat' && $resourceId && $_SERVER['REQUEST_METHOD'] === 'GET') {
+        $authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? null;
+        $token = null; if ($authHeader && preg_match('/Bearer\s+(\S+)/', $authHeader, $m)) $token = $m[1];
+        if (!$token || !verify_jwt($token)) { http_response_code(401); echo json_encode(['error'=>'Unauthorized']); $conn->close(); exit; }
+        $sessionId = $conn->real_escape_string(urldecode($resourceId));
+        $res = $conn->query("SELECT * FROM `chats` WHERE sessionId='" . $sessionId . "' ORDER BY createdAt ASC");
+        $messages = [];
+        if ($res) {
+            while ($r = $res->fetch_assoc()) $messages[] = $r;
+        }
+        echo json_encode($messages);
+        $conn->close();
+        exit;
+    }
+
+    // For other admin resources, map resource to a table and require JWT auth
+    if ($resource && isset($map[$resource])) {
+        // Authenticate
+        $authHeader = null;
+        if (isset($_SERVER['HTTP_AUTHORIZATION'])) $authHeader = $_SERVER['HTTP_AUTHORIZATION'];
+        elseif (function_exists('apache_request_headers')) {
+            $hdrs = apache_request_headers();
+            if (isset($hdrs['Authorization'])) $authHeader = $hdrs['Authorization'];
+        }
+        $token = null;
+        if ($authHeader && preg_match('/Bearer\s+(\S+)/', $authHeader, $m)) $token = $m[1];
+        if (!$token) {
+            http_response_code(401);
+            echo json_encode(['error' => 'Unauthorized']);
+            $conn->close();
+            exit;
+        }
+        $payload = verify_jwt($token);
+        if (!$payload) {
+            http_response_code(401);
+            echo json_encode(['error' => 'Unauthorized']);
+            $conn->close();
+            exit;
+        }
+
+        // set table and id for reuse in main CRUD handling below
+        $table = $map[$resource];
+        if ($resourceId) {
+            $_GET['id'] = $resourceId;
+        }
+
+        // Special-case GET sorting/behavior for certain tables
+        if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+            if ($resource === 'hero-images') {
+                $q = $conn->query("SELECT * FROM `hero_slider_images` ORDER BY COALESCE(displayOrder,0) ASC");
+                $out = [];
+                if ($q) while ($r = $q->fetch_assoc()) $out[] = $r;
+                echo json_encode($out);
+                $conn->close();
+                exit;
+            }
+            if ($resource === 'product-images') {
+                $q = $conn->query("SELECT * FROM `product_images` ORDER BY COALESCE(displayOrder,0) ASC");
+                $out = [];
+                if ($q) while ($r = $q->fetch_assoc()) $out[] = $r;
+                echo json_encode($out);
+                $conn->close();
+                exit;
+            }
+            if ($resource === 'testimonials') {
+                $q = $conn->query("SELECT * FROM `testimonials` ORDER BY COALESCE(displayOrder,0) ASC");
+                $out = [];
+                if ($q) while ($r = $q->fetch_assoc()) $out[] = $r;
+                echo json_encode($out);
+                $conn->close();
+                exit;
+            }
+            if ($resource === 'bot-responses') {
+                $q = $conn->query("SELECT * FROM `bot_responses` ORDER BY id ASC");
+                $out = [];
+                if ($q) while ($r = $q->fetch_assoc()) $out[] = $r;
+                echo json_encode($out);
+                $conn->close();
+                exit;
+            }
+            // default falls through to generic CRUD below
+        }
+        // continue to generic CRUD handler
+    } else {
+        // resource not mapped -> return 404
+        http_response_code(404);
+        echo json_encode(['error' => 'Not found']);
+        $conn->close();
+        exit;
+    }
+}
+
+// Admin login endpoint using php api.php?action=admin_login (legacy)
 // Expects POST { email, password }
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['action']) && $_GET['action'] === 'admin_login') {
-    $input = json_decode(file_get_contents('php://input'), true) ?: [];
     $email = isset($input['email']) ? $conn->real_escape_string($input['email']) : '';
     $password = isset($input['password']) ? $input['password'] : '';
 
@@ -115,12 +562,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['action']) && $_GET['ac
         exit;
     }
 
-    // JWT helpers
-    function base64url_encode($data) {
-        return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
-    }
-
-    $jwt_secret = getenv('JWT_SECRET') ?: 'secret-key';
     $header = base64url_encode(json_encode(["alg" => "HS256", "typ" => "JWT"]));
     $payloadArr = [
         "id" => isset($user['id']) ? (int)$user['id'] : 0,
@@ -128,6 +569,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['action']) && $_GET['ac
         "exp" => time() + 7 * 24 * 60 * 60
     ];
     $payload = base64url_encode(json_encode($payloadArr));
+    $jwt_secret = getenv('JWT_SECRET') ?: 'secret-key';
     $signature = base64url_encode(hash_hmac('sha256', $header . "." . $payload, $jwt_secret, true));
     $token = $header . "." . $payload . "." . $signature;
 
@@ -148,13 +590,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['action']) && $_GET['ac
 }
 
 $method = $_SERVER['REQUEST_METHOD'];
-$input = json_decode(file_get_contents('php://input'), true) ?: [];
+// $input is already set above
 $table = isset($_GET['table']) ? $_GET['table'] : (isset($input['table']) ? $input['table'] : null);
-
-// validate table name (simple whitelist: letters, numbers, underscore)
-function valid_identifier($s) {
-    return is_string($s) && preg_match('/^[A-Za-z0-9_]+$/', $s);
-}
 
 if (!$table && !isset($input['drop_table']) && !isset($input['create_table']) && !isset($input['alter_table'])) {
     echo json_encode(["error" => "Table name is required"]);

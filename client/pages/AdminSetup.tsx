@@ -39,9 +39,11 @@ export default function AdminSetup() {
   useEffect(() => {
     const checkInitialization = async () => {
       try {
-        const response = await fetch("/api/admin/check-initialized");
-        if (response.ok) {
-          const data = await response.json();
+        const res = await (
+          await import("@/lib/adminApi")
+        ).default("/api/admin/check-initialized");
+        if (res && res.ok) {
+          const data = await res.json();
           setIsInitialized(data.initialized);
           if (data.initialized) {
             toast.info("Admin already initialized. Redirecting to login...");
@@ -64,7 +66,8 @@ export default function AdminSetup() {
 
     setIsLoading(true);
     try {
-      const response = await fetch("/api/admin/setup", {
+      const adminFetch = (await import("@/lib/adminApi")).default;
+      const response = await adminFetch("/api/admin/setup", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -76,9 +79,11 @@ export default function AdminSetup() {
         }),
       });
 
-      const result = await response.json();
+      const result = response
+        ? await response.json()
+        : { error: "No response" };
 
-      if (!response.ok) {
+      if (!response || !response.ok) {
         throw new Error(result.error || "Setup failed");
       }
 

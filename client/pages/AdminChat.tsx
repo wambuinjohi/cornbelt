@@ -102,10 +102,11 @@ export default function AdminChat() {
 
   const fetchResponses = async () => {
     try {
-      const res = await fetch("/api/admin/bot-responses", {
+      const adminFetch = (await import("@/lib/adminApi")).default;
+      const res = await adminFetch("/api/admin/bot-responses", {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (!res.ok) throw new Error("Failed to fetch responses");
+      if (!res || !res.ok) throw new Error("Failed to fetch responses");
       const data = await res.json();
       setResponses(Array.isArray(data) ? data : []);
     } catch (e) {
@@ -116,10 +117,11 @@ export default function AdminChat() {
 
   const fetchSessions = async () => {
     try {
-      const res = await fetch("/api/admin/chat-sessions", {
+      const adminFetch = (await import("@/lib/adminApi")).default;
+      const res = await adminFetch("/api/admin/chat-sessions", {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (!res.ok) throw new Error("Failed to fetch sessions");
+      if (!res || !res.ok) throw new Error("Failed to fetch sessions");
       const data = await res.json();
       setSessions(Array.isArray(data) ? data : []);
     } catch (e) {
@@ -130,11 +132,12 @@ export default function AdminChat() {
 
   const fetchSessionMessages = async (sessionId: string) => {
     try {
-      const res = await fetch(
+      const adminFetch = (await import("@/lib/adminApi")).default;
+      const res = await adminFetch(
         `/api/admin/chat/${encodeURIComponent(sessionId)}`,
         { headers: { Authorization: `Bearer ${token}` } },
       );
-      if (!res.ok) throw new Error("Failed to fetch messages");
+      if (!res || !res.ok) throw new Error("Failed to fetch messages");
       const data = await res.json();
       setMessages(Array.isArray(data) ? data : []);
       setSelectedSession(sessionId);
@@ -151,7 +154,8 @@ export default function AdminChat() {
     }
 
     try {
-      const res = await fetch("/api/admin/bot-responses", {
+      const adminFetch = (await import("@/lib/adminApi")).default;
+      const res = await adminFetch("/api/admin/bot-responses", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -163,7 +167,7 @@ export default function AdminChat() {
         }),
       });
 
-      if (!res.ok) throw new Error("Failed to create response");
+      if (!res || !res.ok) throw new Error("Failed to create response");
 
       toast.success("Bot response created successfully");
       setKeyword("");
@@ -183,7 +187,8 @@ export default function AdminChat() {
     }
 
     try {
-      const res = await fetch(`/api/admin/bot-responses/${id}`, {
+      const adminFetch = (await import("@/lib/adminApi")).default;
+      const res = await adminFetch(`/api/admin/bot-responses/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -195,7 +200,7 @@ export default function AdminChat() {
         }),
       });
 
-      if (!res.ok) throw new Error("Failed to update response");
+      if (!res || !res.ok) throw new Error("Failed to update response");
 
       toast.success("Bot response updated successfully");
       setKeyword("");
@@ -211,12 +216,13 @@ export default function AdminChat() {
 
   const deleteResponse = async (id: number) => {
     try {
-      const res = await fetch(`/api/admin/bot-responses/${id}`, {
+      const adminFetch = (await import("@/lib/adminApi")).default;
+      const res = await adminFetch(`/api/admin/bot-responses/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      if (!res.ok) throw new Error("Failed to delete response");
+      if (!res || !res.ok) throw new Error("Failed to delete response");
 
       toast.success("Bot response deleted successfully");
       await fetchResponses();
@@ -228,12 +234,13 @@ export default function AdminChat() {
 
   const reseedDefaultResponses = async () => {
     try {
-      const res = await fetch("/api/admin/reseed-bot-responses", {
+      const adminFetch = (await import("@/lib/adminApi")).default;
+      const res = await adminFetch("/api/admin/reseed-bot-responses", {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      if (!res.ok) throw new Error("Failed to reseed responses");
+      if (!res || !res.ok) throw new Error("Failed to reseed responses");
 
       const data = await res.json();
       toast.success(`Default responses loaded (${data.count} responses)`);

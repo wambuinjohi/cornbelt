@@ -43,13 +43,13 @@ export default function AdminDashboard() {
   const fetchContactSubmissions = async () => {
     try {
       const token = localStorage.getItem("adminToken");
-      const response = await fetch("/api/admin/contact-submissions", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      const response = await (
+        await import("@/lib/adminApi")
+      ).default("/api/admin/contact-submissions", {
+        headers: { Authorization: `Bearer ${token}` },
       });
 
-      if (!response.ok) {
+      if (!response || !response.ok) {
         throw new Error("Failed to fetch submissions");
       }
 
