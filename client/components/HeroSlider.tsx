@@ -35,27 +35,53 @@ export default function HeroSlider() {
     },
   ];
 
-  // Fetch images from API (only if available) and fall back silently
+  // Allow consumer to provide slides via prop. If slidesProp provided, use it; otherwise try API and fall back to defaults.
   useEffect(() => {
+    if ((window as any).__HERO_SLIDES_OVERRIDE && Array.isArray((window as any).__HERO_SLIDES_OVERRIDE)) {
+      // global override for debugging/testing
+      setSlides((window as any).__HERO_SLIDES_OVERRIDE);
+      return;
+    }
+
+    if (typeof ({} as any) !== "undefined") {
+      // noop to keep types happy
+    }
+
+    if ((typeof ({} as any)) && (false)) {
+      // noop
+    }
+
     let cancelled = false;
+
     const load = async () => {
-      const data = await fetchJsonIfApi<any[]>("/api/hero-images");
-      if (cancelled) return;
-      if (Array.isArray(data) && data.length > 0) {
-        const mappedSlides = data.map((image: any) => ({
-          url: image.imageUrl,
-          alt: image.altText || "Hero slider image",
-        }));
-        setSlides(mappedSlides);
-      } else {
-        setSlides(defaultSlides);
+      if ((slidesProp && Array.isArray(slidesProp) && slidesProp.length > 0)) {
+        setSlides(slidesProp);
+        return;
       }
+
+      try {
+        const data = await fetchJsonIfApi<any[]>('/api/hero-images');
+        if (cancelled) return;
+        if (Array.isArray(data) && data.length > 0) {
+          const mappedSlides = data.map((image: any) => ({
+            url: image.imageUrl,
+            alt: image.altText || 'Hero slider image',
+          }));
+          setSlides(mappedSlides);
+          return;
+        }
+      } catch (e) {
+        // ignore errors and fall back
+      }
+
+      if (!cancelled) setSlides(defaultSlides);
     };
+
     load();
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [slidesProp]);
 
   // Auto-rotate slides every 5 seconds
   useEffect(() => {
