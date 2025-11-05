@@ -250,7 +250,8 @@ const sendVisitorData = async (data: VisitorData) => {
       // Only show as debug to avoid spamming the console in production.
       const suppress =
         response.status === 500 ||
-        (typeof errorMsg === "string" && errorMsg.toLowerCase().includes("database credentials"));
+        (typeof errorMsg === "string" &&
+          errorMsg.toLowerCase().includes("database credentials"));
 
       if (suppress) {
         console.debug(
@@ -275,7 +276,10 @@ const sendVisitorData = async (data: VisitorData) => {
     if (responseData?.error) {
       // Only log non-server errors at error level
       const msg = responseData.error;
-      if (typeof msg === "string" && msg.toLowerCase().includes("database credentials")) {
+      if (
+        typeof msg === "string" &&
+        msg.toLowerCase().includes("database credentials")
+      ) {
         console.debug("Visitor tracking API error suppressed:", msg);
       } else {
         console.error("API Error:", msg);

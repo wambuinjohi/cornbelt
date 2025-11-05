@@ -68,17 +68,23 @@ export default function AdminLogin() {
           const serverErr = result?.error || responseText || null;
           if (!response.ok) {
             // If this was the Node endpoint, try fallback
-            if (!ep.usePhpFallback && (response.status === 404 || (typeof serverErr === 'string' && serverErr.toLowerCase().includes("missing 'table'")))) {
+            if (
+              !ep.usePhpFallback &&
+              (response.status === 404 ||
+                (typeof serverErr === "string" &&
+                  serverErr.toLowerCase().includes("missing 'table'")))
+            ) {
               lastError = { status: response.status, message: serverErr };
               continue; // try next endpoint
             }
 
             // Otherwise treat as permanent error
-            const errMsg = result && typeof result === "object" && "error" in result
-              ? result.error
-              : responseText
-              ? responseText
-              : `Login failed (status ${response.status})`;
+            const errMsg =
+              result && typeof result === "object" && "error" in result
+                ? result.error
+                : responseText
+                  ? responseText
+                  : `Login failed (status ${response.status})`;
             throw new Error(errMsg);
           }
 

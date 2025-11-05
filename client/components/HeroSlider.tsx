@@ -41,7 +41,10 @@ export default function HeroSlider({ slidesProp }: HeroSliderProps) {
 
   // Allow consumer to provide slides via prop. If slidesProp provided, use it; otherwise try API and fall back to defaults.
   useEffect(() => {
-    if ((window as any).__HERO_SLIDES_OVERRIDE && Array.isArray((window as any).__HERO_SLIDES_OVERRIDE)) {
+    if (
+      (window as any).__HERO_SLIDES_OVERRIDE &&
+      Array.isArray((window as any).__HERO_SLIDES_OVERRIDE)
+    ) {
       // global override for debugging/testing
       setSlides((window as any).__HERO_SLIDES_OVERRIDE);
       return;
@@ -51,25 +54,25 @@ export default function HeroSlider({ slidesProp }: HeroSliderProps) {
       // noop to keep types happy
     }
 
-    if ((typeof ({} as any)) && (false)) {
+    if (typeof ({} as any) && false) {
       // noop
     }
 
     let cancelled = false;
 
     const load = async () => {
-      if ((slidesProp && Array.isArray(slidesProp) && slidesProp.length > 0)) {
+      if (slidesProp && Array.isArray(slidesProp) && slidesProp.length > 0) {
         setSlides(slidesProp);
         return;
       }
 
       try {
-        const data = await fetchJsonIfApi<any[]>('/api/hero-images');
+        const data = await fetchJsonIfApi<any[]>("/api/hero-images");
         if (cancelled) return;
         if (Array.isArray(data) && data.length > 0) {
           const mappedSlides = data.map((image: any) => ({
             url: image.imageUrl,
-            alt: image.altText || 'Hero slider image',
+            alt: image.altText || "Hero slider image",
           }));
           setSlides(mappedSlides);
           return;
@@ -115,7 +118,7 @@ export default function HeroSlider({ slidesProp }: HeroSliderProps) {
     try {
       const u = new URL(url);
       // set or replace width param
-      u.searchParams.set('width', String(width));
+      u.searchParams.set("width", String(width));
       return u.toString();
     } catch (e) {
       // fallback: try to replace width in string
@@ -138,8 +141,8 @@ export default function HeroSlider({ slidesProp }: HeroSliderProps) {
     imgRefs.current.forEach((img, idx) => {
       if (!img) return;
       try {
-        if (idx === currentSlide) img.setAttribute('fetchpriority', 'high');
-        else img.setAttribute('fetchpriority', 'auto');
+        if (idx === currentSlide) img.setAttribute("fetchpriority", "high");
+        else img.setAttribute("fetchpriority", "auto");
       } catch (e) {
         // Some browsers may not support fetchpriority; ignore errors
       }
@@ -165,7 +168,7 @@ export default function HeroSlider({ slidesProp }: HeroSliderProps) {
               alt={slide.alt}
               className="w-full h-full object-cover"
               decoding="async"
-              loading={index === 0 ? 'eager' : 'lazy'}
+              loading={index === 0 ? "eager" : "lazy"}
             />
             {/* Dark overlay for better text readability */}
             <div className="absolute inset-0 bg-black/40" />
