@@ -654,6 +654,47 @@ Disallow: /api/`;
     }
   });
 
+  // Development-only debug endpoints to inspect and seed admin_users
+  if (process.env.NODE_ENV !== 'production') {
+    app.get('/api/debug/admin-users', async (_req, res) => {
+      try {
+        const users = await apiCall('GET', 'admin_users');
+        res.json(Array.isArray(users) ? users : []);
+      } catch (err) {
+        console.error('Debug: fetch admin_users failed', err);
+        res.status(500).json({ error: 'Failed to fetch admin_users' });
+      }
+    });
+
+    app.post('/api/debug/seed-admin', async (req, res) => {
+      try {
+        const { email, password, fullName } = req.body;
+        if (!email || !password || !fullName) {
+          return res.status(400).json({ error: 'email, password, fullName required' });
+        }
+
+        // Check existing
+        const existing = await apiCall('GET', 'admin_users');
+        if (Array.isArray(existing) && existing.some((u: any) => u.email === email)) {
+          return res.status(400).json({ error: 'Admin already exists' });
+        }
+
+        const hashed = hashPassword(password);
+        const result = await apiCall('POST', 'admin_users', {
+          email,
+          password: hashed,
+          fullName,
+          createdAt: new Date().toISOString(),
+        });
+
+        res.json(result);
+      } catch (err) {
+        console.error('Debug seed admin failed', err);
+        res.status(500).json({ error: 'Failed to seed admin' });
+      }
+    });
+  }
+
   app.get("/api/admin/contact-submissions", async (req, res) => {
     const token = req.headers.authorization?.split(" ")[1];
 
