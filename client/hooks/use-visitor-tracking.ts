@@ -223,21 +223,28 @@ const sendVisitorData = async (data: VisitorData) => {
       body: JSON.stringify(sanitizedData),
     });
 
-    let responseData = null;
+    let responseData: any = null;
+    let responseText: string | null = null;
 
-    // Only try to parse JSON if there's a content-type header indicating JSON
+    // Inspect content type
     const contentType = response.headers.get("content-type");
     if (contentType?.includes("application/json")) {
       try {
         responseData = await response.json();
       } catch {
-        // Empty or invalid JSON response
         responseData = null;
+      }
+    } else {
+      // Try to read raw text body for debugging (server may return HTML or plain text)
+      try {
+        responseText = await response.text();
+      } catch {
+        responseText = null;
       }
     }
 
     if (!response.ok) {
-      const errorMsg = responseData?.error || "Unknown error";
+      const errorMsg = responseData?.error || responseText || "Unknown error";
       console.error(
         "Failed to track visitor. Status:",
         response.status,
