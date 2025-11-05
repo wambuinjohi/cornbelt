@@ -299,7 +299,14 @@ switch ($method) {
             echo json_encode(["success" => true, "id" => $conn->insert_id]);
         } else {
             http_response_code(500);
-            echo json_encode(["error" => $conn->error]);
+            $err = $conn->error;
+            error_log("DB insert error for table $table: $err; SQL: $sql");
+            // If DEBUG env is set, include SQL/err in response for easier debugging (do not enable in production)
+            $response = ["error" => $err];
+            if (getenv('API_DEBUG') === '1') {
+                $response['sql'] = $sql;
+            }
+            echo json_encode($response);
         }
         break;
 
