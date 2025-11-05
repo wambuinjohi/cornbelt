@@ -942,9 +942,13 @@ Disallow: /api/`;
   app.get("/api/hero-images", async (_req, res) => {
     try {
       const images = await apiCall("GET", "hero_slider_images");
-      const sortedImages = Array.isArray(images)
-        ? images.sort((a: any, b: any) => a.displayOrder - b.displayOrder)
-        : [];
+      let arr = Array.isArray(images) ? images : [];
+
+      // Prefer images explicitly marked active. If none are active, return all.
+      const active = arr.filter((i: any) => i.isActive === true || i.isActive === 1 || i.isActive === '1');
+      const toReturn = active.length > 0 ? active : arr;
+
+      const sortedImages = toReturn.sort((a: any, b: any) => (a.displayOrder || 0) - (b.displayOrder || 0));
       res.json(sortedImages);
     } catch (error) {
       console.error("Error fetching hero images:", error);
