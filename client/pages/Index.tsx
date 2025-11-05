@@ -50,9 +50,24 @@ export default function Index() {
       <main className="flex-1">
         {/* Hero Section */}
         <section className="relative overflow-hidden h-screen max-h-screen flex items-center justify-center">
-          {/* Background Slider */}
+          {/* Background Slider (hero) */}
           <div className="absolute inset-0">
-            <HeroSlider />
+            <HeroSlider
+              slidesProp={[
+                {
+                  url: "https://cdn.builder.io/api/v1/image/assets%2Fffba8e3c2b3042bab528316b71e4306e%2Fa295aff0325347cb807559c07d9339b9?format=webp&width=1800",
+                  alt: "Cornbelt Neutral 1",
+                },
+                {
+                  url: "https://cdn.builder.io/api/v1/image/assets%2Fffba8e3c2b3042bab528316b71e4306e%2Fa1d4b830e83e4da5a372a8006bf59083?format=webp&width=1800",
+                  alt: "Cornbelt Neutral 2",
+                },
+                {
+                  url: "https://cdn.builder.io/api/v1/image/assets%2Fffba8e3c2b3042bab528316b71e4306e%2Fe90258ada9c5410bb1c4cd7fea2e9a56?format=webp&width=1800",
+                  alt: "Cornbelt Neutral 3",
+                },
+              ]}
+            />
           </div>
 
           <div className="container mx-auto px-4 md:px-6 relative z-10">

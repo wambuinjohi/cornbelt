@@ -33,36 +33,78 @@ export default function AdminLogin() {
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true);
     try {
-      const response = await fetch("/api/admin/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      });
+      // Try Node/Express endpoint first (used in dev). If it fails with a 'Missing \"table\"' error or 404, fall back to PHP endpoint.
+      const tryEndpoints = [
+        { url: "/api/admin/login", usePhpFallback: false },
+        { url: "/api.php?action=admin_login", usePhpFallback: true },
+      ];
 
-      let result = null;
-      const _ct = response.headers.get("content-type") || "";
-      if (_ct.includes("application/json")) {
+      let lastError: any = null;
+      let successResult: any = null;
+
+      for (const ep of tryEndpoints) {
         try {
-          // use clone() to avoid "body stream already read" if something else read the response
-          result = await response.clone().json();
-        } catch (e) {
-          result = null;
+          const response = await fetch(ep.url, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(data),
+          });
+
+          let result: any = null;
+          let responseText: string | null = null;
+          try {
+            result = await response.clone().json();
+          } catch (e) {
+            try {
+              responseText = await response.clone().text();
+            } catch (e2) {
+              responseText = null;
+            }
+          }
+
+          // If the response indicates the generic php emulation 'Missing \"table\" parameter', try next
+          const serverErr = result?.error || responseText || null;
+          if (!response.ok) {
+            // If this was the Node endpoint, try fallback
+            if (
+              !ep.usePhpFallback &&
+              (response.status === 404 ||
+                (typeof serverErr === "string" &&
+                  serverErr.toLowerCase().includes("missing 'table'")))
+            ) {
+              lastError = { status: response.status, message: serverErr };
+              continue; // try next endpoint
+            }
+
+            // Otherwise treat as permanent error
+            const errMsg =
+              result && typeof result === "object" && "error" in result
+                ? result.error
+                : responseText
+                  ? responseText
+                  : `Login failed (status ${response.status})`;
+            throw new Error(errMsg);
+          }
+
+          // success
+          successResult = result;
+          break;
+        } catch (err) {
+          lastError = err;
+          // if this was the first endpoint, continue to try php fallback
+          continue;
         }
       }
 
-      if (!response.ok) {
-        const errMsg =
-          result && typeof result === "object" && "error" in result
-            ? result.error || `Login failed (status ${response.status})`
-            : `Login failed (status ${response.status})`;
-        throw new Error(errMsg);
+      if (!successResult) {
+        throw lastError || new Error("Login failed");
       }
 
       // Store token in localStorage
-      localStorage.setItem("adminToken", result.token);
-      localStorage.setItem("adminUser", JSON.stringify(result.user));
+      localStorage.setItem("adminToken", successResult?.token);
+      localStorage.setItem("adminUser", JSON.stringify(successResult?.user));
 
       toast.success("Login successful!");
       navigate("/admin/dashboard");

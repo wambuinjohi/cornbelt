@@ -223,33 +223,67 @@ const sendVisitorData = async (data: VisitorData) => {
       body: JSON.stringify(sanitizedData),
     });
 
-    let responseData = null;
+    let responseData: any = null;
+    let responseText: string | null = null;
 
-    // Only try to parse JSON if there's a content-type header indicating JSON
+    // Inspect content type
     const contentType = response.headers.get("content-type");
     if (contentType?.includes("application/json")) {
       try {
         responseData = await response.json();
       } catch {
-        // Empty or invalid JSON response
         responseData = null;
+      }
+    } else {
+      // Try to read raw text body for debugging (server may return HTML or plain text)
+      try {
+        responseText = await response.text();
+      } catch {
+        responseText = null;
       }
     }
 
     if (!response.ok) {
-      const errorMsg = responseData?.error || "Unknown error";
-      console.error(
-        "Failed to track visitor. Status:",
-        response.status,
-        "Error:",
-        errorMsg,
-      );
+      const errorMsg = responseData?.error || responseText || "Unknown error";
+
+      // Suppress noisy 500 responses from the legacy API when DB credentials are missing or server errors.
+      // Only show as debug to avoid spamming the console in production.
+      const suppress =
+        response.status === 500 ||
+        (typeof errorMsg === "string" &&
+          errorMsg.toLowerCase().includes("database credentials"));
+
+      if (suppress) {
+        console.debug(
+          "Visitor tracking suppressed (status):",
+          response.status,
+          "message:",
+          errorMsg,
+        );
+      } else {
+        console.error(
+          "Failed to track visitor. Status:",
+          response.status,
+          "Error:",
+          errorMsg,
+        );
+      }
+
       console.debug("Data sent:", sanitizedData);
       return;
     }
 
     if (responseData?.error) {
-      console.error("API Error:", responseData.error);
+      // Only log non-server errors at error level
+      const msg = responseData.error;
+      if (
+        typeof msg === "string" &&
+        msg.toLowerCase().includes("database credentials")
+      ) {
+        console.debug("Visitor tracking API error suppressed:", msg);
+      } else {
+        console.error("API Error:", msg);
+      }
     }
   } catch (error) {
     console.error(

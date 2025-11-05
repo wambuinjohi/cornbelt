@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 interface Slide {
   url: string;
@@ -7,15 +7,19 @@ interface Slide {
 
 import { fetchJsonIfApi } from "@/lib/apiClient";
 
-export default function HeroSlider() {
+interface HeroSliderProps {
+  slidesProp?: Slide[];
+}
+
+export default function HeroSlider({ slidesProp }: HeroSliderProps) {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [slides, setSlides] = useState<Slide[]>([]);
 
   // Default fallback images
   const defaultSlides: Slide[] = [
     {
-      url: "https://cdn.builder.io/api/v1/image/assets%2F1ffce8bff4d5493bafecc479d3963466%2F5faa80f695624fab98c4b8cdbca4e0d7?format=webp&width=800",
-      alt: "Cornbelt flour mill billboard advertisement",
+      url: "https://cdn.builder.io/api/v1/image/assets%2Fffba8e3c2b3042bab528316b71e4306e%2Ff21188f906c3408783bc64a9665d33e0?format=webp&width=1200",
+      alt: "Cornbelt Flour Mill exterior",
     },
     {
       url: "https://cdn.builder.io/api/v1/image/assets%2F1ffce8bff4d5493bafecc479d3963466%2F0d117e54429f404bb6e71a4b18a98876?format=webp&width=800",
@@ -35,27 +39,56 @@ export default function HeroSlider() {
     },
   ];
 
-  // Fetch images from API (only if available) and fall back silently
+  // Allow consumer to provide slides via prop. If slidesProp provided, use it; otherwise try API and fall back to defaults.
   useEffect(() => {
+    if (
+      (window as any).__HERO_SLIDES_OVERRIDE &&
+      Array.isArray((window as any).__HERO_SLIDES_OVERRIDE)
+    ) {
+      // global override for debugging/testing
+      setSlides((window as any).__HERO_SLIDES_OVERRIDE);
+      return;
+    }
+
+    if (typeof ({} as any) !== "undefined") {
+      // noop to keep types happy
+    }
+
+    if (typeof ({} as any) && false) {
+      // noop
+    }
+
     let cancelled = false;
+
     const load = async () => {
-      const data = await fetchJsonIfApi<any[]>("/api/hero-images");
-      if (cancelled) return;
-      if (Array.isArray(data) && data.length > 0) {
-        const mappedSlides = data.map((image: any) => ({
-          url: image.imageUrl,
-          alt: image.altText || "Hero slider image",
-        }));
-        setSlides(mappedSlides);
-      } else {
-        setSlides(defaultSlides);
+      if (slidesProp && Array.isArray(slidesProp) && slidesProp.length > 0) {
+        setSlides(slidesProp);
+        return;
       }
+
+      try {
+        const data = await fetchJsonIfApi<any[]>("/api/hero-images");
+        if (cancelled) return;
+        if (Array.isArray(data) && data.length > 0) {
+          const mappedSlides = data.map((image: any) => ({
+            url: image.imageUrl,
+            alt: image.altText || "Hero slider image",
+          }));
+          setSlides(mappedSlides);
+          return;
+        }
+      } catch (e) {
+        // ignore errors and fall back
+      }
+
+      if (!cancelled) setSlides(defaultSlides);
     };
+
     load();
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [slidesProp]);
 
   // Auto-rotate slides every 5 seconds
   useEffect(() => {
@@ -80,6 +113,42 @@ export default function HeroSlider() {
     setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
   };
 
+  // Helpers to build responsive srcSet/sizes from Builder.io image URL that includes a width query param
+  const buildUrlWithWidth = (url: string, width: number) => {
+    try {
+      const u = new URL(url);
+      // set or replace width param
+      u.searchParams.set("width", String(width));
+      return u.toString();
+    } catch (e) {
+      // fallback: try to replace width in string
+      return url.replace(/width=\d+/, `width=${width}`);
+    }
+  };
+
+  const buildSrcSet = (url: string) => {
+    const w1 = 800;
+    const w2 = 1200;
+    const w3 = 1800;
+    return `${buildUrlWithWidth(url, w1)} ${w1}w, ${buildUrlWithWidth(url, w2)} ${w2}w, ${buildUrlWithWidth(url, w3)} ${w3}w`;
+  };
+
+  // Refs to image elements so we can set fetchpriority attribute without passing unknown prop to React
+  const imgRefs = useRef<Array<HTMLImageElement | null>>([]);
+
+  useEffect(() => {
+    // update fetchpriority attributes on images when currentSlide changes
+    imgRefs.current.forEach((img, idx) => {
+      if (!img) return;
+      try {
+        if (idx === currentSlide) img.setAttribute("fetchpriority", "high");
+        else img.setAttribute("fetchpriority", "auto");
+      } catch (e) {
+        // Some browsers may not support fetchpriority; ignore errors
+      }
+    });
+  }, [currentSlide, slides.length]);
+
   return (
     <div className="relative w-full h-full overflow-hidden rounded-lg">
       {/* Slides */}
@@ -92,9 +161,14 @@ export default function HeroSlider() {
             }`}
           >
             <img
-              src={slide.url}
+              ref={(el) => (imgRefs.current[index] = el)}
+              src={buildUrlWithWidth(slide.url, 1200)}
+              srcSet={buildSrcSet(slide.url)}
+              sizes="(max-width: 640px) 800px, (max-width: 1200px) 1200px, 1800px"
               alt={slide.alt}
               className="w-full h-full object-cover"
+              decoding="async"
+              loading={index === 0 ? "eager" : "lazy"}
             />
             {/* Dark overlay for better text readability */}
             <div className="absolute inset-0 bg-black/40" />
