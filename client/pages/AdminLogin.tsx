@@ -41,28 +41,34 @@ export default function AdminLogin() {
         body: JSON.stringify(data),
       });
 
-      let result = null;
-      const _ct = response.headers.get("content-type") || "";
-      if (_ct.includes("application/json")) {
+      let result: any = null;
+      let responseText: string | null = null;
+
+      // Always attempt to parse JSON, but fall back gracefully
+      try {
+        result = await response.clone().json();
+      } catch (e) {
         try {
-          // use clone() to avoid "body stream already read" if something else read the response
-          result = await response.clone().json();
-        } catch (e) {
-          result = null;
+          responseText = await response.clone().text();
+        } catch (e2) {
+          responseText = null;
         }
       }
 
       if (!response.ok) {
+        // Prefer explicit error from JSON, then raw text, then status
         const errMsg =
           result && typeof result === "object" && "error" in result
-            ? result.error || `Login failed (status ${response.status})`
+            ? result.error
+            : responseText
+            ? responseText
             : `Login failed (status ${response.status})`;
         throw new Error(errMsg);
       }
 
       // Store token in localStorage
-      localStorage.setItem("adminToken", result.token);
-      localStorage.setItem("adminUser", JSON.stringify(result.user));
+      localStorage.setItem("adminToken", result?.token);
+      localStorage.setItem("adminUser", JSON.stringify(result?.user));
 
       toast.success("Login successful!");
       navigate("/admin/dashboard");
