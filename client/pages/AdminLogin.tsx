@@ -34,9 +34,10 @@ export default function AdminLogin() {
     setIsLoading(true);
     try {
       // Try Node/Express endpoint first (used in dev). If it fails with a 'Missing \"table\"' error or 404, fall back to PHP endpoint.
+      // Try PHP endpoint first (typical for Apache deployments), then Node endpoint as fallback
       const tryEndpoints = [
-        { url: "/api/admin/login", usePhpFallback: false },
         { url: "/api.php?action=admin_login", usePhpFallback: true },
+        { url: "/api/admin/login", usePhpFallback: false },
       ];
 
       let lastError: any = null;
@@ -64,15 +65,20 @@ export default function AdminLogin() {
             }
           }
 
-          // If the response indicates the generic php emulation 'Missing \"table\" parameter', try next
+          // If the response indicates the generic php emulation 'missing table' or similar, try next
           const serverErr = result?.error || responseText || null;
           if (!response.ok) {
-            // If this was the Node endpoint, try fallback
+            const serverErrLower =
+              typeof serverErr === "string" ? serverErr.toLowerCase() : "";
+            const looksLikeTableError =
+              serverErrLower.includes("table") ||
+              serverErrLower.includes("table name") ||
+              serverErrLower.includes("missing");
+
+            // If this was the Node endpoint (not the PHP fallback) and it looks like the request was routed to the generic API handler, try the next endpoint
             if (
               !ep.usePhpFallback &&
-              (response.status === 404 ||
-                (typeof serverErr === "string" &&
-                  serverErr.toLowerCase().includes("missing 'table'")))
+              (response.status === 404 || looksLikeTableError)
             ) {
               lastError = { status: response.status, message: serverErr };
               continue; // try next endpoint
