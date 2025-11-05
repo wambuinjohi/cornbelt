@@ -61,16 +61,10 @@ export default function AdminHeroImages() {
   const fetchImages = async () => {
     try {
       const token = localStorage.getItem("adminToken");
-      const response = await fetch("/api/admin/hero-images", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
+      const response = await (await import('@/lib/adminApi')).default("/api/admin/hero-images", { headers: { Authorization: `Bearer ${token}` } });
+      if (!response || !response.ok) {
         throw new Error("Failed to fetch images");
       }
-
       const data = await response.json();
       setImages(Array.isArray(data) ? data : []);
     } catch (error) {
