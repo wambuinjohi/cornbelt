@@ -50,8 +50,25 @@ export default function Index() {
       <main className="flex-1">
         {/* Hero Section */}
         <section className="relative overflow-hidden h-screen max-h-screen flex items-center justify-center">
-          {/* Background (hero image removed) */}
-          <div className="absolute inset-0 bg-gradient-to-b from-primary/10 to-background" />
+          {/* Background Slider (hero) */}
+          <div className="absolute inset-0">
+            <HeroSlider
+              slidesProp={[
+                {
+                  url: "https://cdn.builder.io/api/v1/image/assets%2Fffba8e3c2b3042bab528316b71e4306e%2Fec142aace783400cb1660c8e9af57761?format=webp&width=1800",
+                  alt: "Cornbelt Hero 1",
+                },
+                {
+                  url: "https://cdn.builder.io/api/v1/image/assets%2Fffba8e3c2b3042bab528316b71e4306e%2Fe9c6bea915c0445f8ad0d76d6a8546b3?format=webp&width=1800",
+                  alt: "Cornbelt Hero 2",
+                },
+                {
+                  url: "https://cdn.builder.io/api/v1/image/assets%2Fffba8e3c2b3042bab528316b71e4306e%2F2b85374288c34e46a982661a00a3a487?format=webp&width=1800",
+                  alt: "Cornbelt Hero 3",
+                },
+              ]}
+            />
+          </div>
 
           <div className="container mx-auto px-4 md:px-6 relative z-10">
             <div className="text-center space-y-8 mb-12">
