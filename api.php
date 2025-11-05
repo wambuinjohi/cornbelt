@@ -97,6 +97,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['action']) && $_GET['ac
     $sql = "SELECT * FROM `admin_users` WHERE `email`='" . $conn->real_escape_string($email) . "' LIMIT 1";
     $res = $conn->query($sql);
     if (!$res || $res->num_rows === 0) {
+        error_log("admin_login: user not found for email: " . $email);
         http_response_code(401);
         echo json_encode(["error" => "Invalid credentials"]);
         $conn->close();
@@ -106,6 +107,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['action']) && $_GET['ac
     $user = $res->fetch_assoc();
     $hashed = hash('sha256', $password);
     if (!isset($user['password']) || $user['password'] !== $hashed) {
+        // Avoid logging raw passwords; log hashed comparison and user id/email for debugging
+        error_log(sprintf("admin_login: password mismatch for user id=%s email=%s hashed_given=%s stored=%s", isset($user['id']) ? $user['id'] : 'unknown', $email, $hashed, isset($user['password']) ? substr($user['password'],0,16) . '...' : 'none'));
         http_response_code(401);
         echo json_encode(["error" => "Invalid credentials"]);
         $conn->close();
