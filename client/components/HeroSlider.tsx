@@ -7,7 +7,11 @@ interface Slide {
 
 import { fetchJsonIfApi } from "@/lib/apiClient";
 
-export default function HeroSlider() {
+interface HeroSliderProps {
+  slidesProp?: Slide[];
+}
+
+export default function HeroSlider({ slidesProp }: HeroSliderProps) {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [slides, setSlides] = useState<Slide[]>([]);
 
