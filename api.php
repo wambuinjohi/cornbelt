@@ -8,6 +8,27 @@ header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
 header("Content-Type: application/json; charset=utf-8");
 
+// Don't leak HTML errors to clients; ensure JSON responses for errors
+ini_set('display_errors', '0');
+error_reporting(E_ALL & ~E_DEPRECATED & ~E_STRICT);
+
+set_exception_handler(function($e) {
+    http_response_code(500);
+    error_log("Unhandled exception in api.php: " . $e->getMessage());
+    echo json_encode(["error" => "Server error: " . $e->getMessage()]);
+    exit;
+});
+
+register_shutdown_function(function() {
+    $err = error_get_last();
+    if ($err && in_array($err['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR])) {
+        http_response_code(500);
+        error_log("Fatal error in api.php: " . $err['message']);
+        echo json_encode(["error" => "Fatal server error: " . $err['message']]);
+        exit;
+    }
+});
+
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
     exit;
