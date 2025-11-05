@@ -4,8 +4,12 @@ import cors from "cors";
 import crypto from "crypto";
 import { Readable } from "stream";
 import { handleDemo } from "./routes/demo";
+import fs from "fs";
+import path from "path";
 
-const API_BASE_URL = process.env.API_BASE_URL ?? "";
+const API_BASE_URL =
+  process.env.API_BASE_URL ??
+  (process.env.NODE_ENV === "production" ? "https://cornbelt.co.ke" : "");
 
 // Initialize database tables
 async function initializeAdminTable() {
@@ -137,7 +141,7 @@ async function initializeAdminTable() {
       console.log("Default bot responses seeded");
     }
 
-    // Create hero_slider_images table
+    // Create hero_slider_images table (include isActive column)
     const heroTableData = {
       create_table: true,
       columns: {
@@ -146,6 +150,7 @@ async function initializeAdminTable() {
         imageUrl: "VARCHAR(500) NOT NULL",
         altText: "VARCHAR(255)",
         displayOrder: "INT DEFAULT 0",
+        isActive: "BOOLEAN DEFAULT true",
         createdAt: "DATETIME DEFAULT CURRENT_TIMESTAMP",
         updatedAt:
           "DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
@@ -156,6 +161,18 @@ async function initializeAdminTable() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(heroTableData),
+    });
+
+    // Ensure isActive column exists (in case table already existed without it)
+    await fetch(`${baseUrl}/api.php?table=hero_slider_images`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        alter_table: true,
+        actions: [
+          { type: "ADD", name: "isActive", definition: "BOOLEAN DEFAULT true" },
+        ],
+      }),
     });
 
     console.log("Hero slider images table initialized");
@@ -484,6 +501,14 @@ export function createServer() {
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
 
+  // Serve project-level assets in dev/production at /assets/*
+  try {
+    const assetsDir = path.join(process.cwd(), "assets");
+    app.use("/assets", express.static(assetsDir));
+  } catch (e) {
+    console.warn("Failed to set up assets static middleware:", e);
+  }
+
   // Initialize admin table on startup
   initializeAdminTable();
 
@@ -654,6 +679,52 @@ Disallow: /api/`;
     }
   });
 
+  // Development-only debug endpoints to inspect and seed admin_users
+  if (process.env.NODE_ENV !== "production") {
+    app.get("/api/debug/admin-users", async (_req, res) => {
+      try {
+        const users = await apiCall("GET", "admin_users");
+        res.json(Array.isArray(users) ? users : []);
+      } catch (err) {
+        console.error("Debug: fetch admin_users failed", err);
+        res.status(500).json({ error: "Failed to fetch admin_users" });
+      }
+    });
+
+    app.post("/api/debug/seed-admin", async (req, res) => {
+      try {
+        const { email, password, fullName } = req.body;
+        if (!email || !password || !fullName) {
+          return res
+            .status(400)
+            .json({ error: "email, password, fullName required" });
+        }
+
+        // Check existing
+        const existing = await apiCall("GET", "admin_users");
+        if (
+          Array.isArray(existing) &&
+          existing.some((u: any) => u.email === email)
+        ) {
+          return res.status(400).json({ error: "Admin already exists" });
+        }
+
+        const hashed = hashPassword(password);
+        const result = await apiCall("POST", "admin_users", {
+          email,
+          password: hashed,
+          fullName,
+          createdAt: new Date().toISOString(),
+        });
+
+        res.json(result);
+      } catch (err) {
+        console.error("Debug seed admin failed", err);
+        res.status(500).json({ error: "Failed to seed admin" });
+      }
+    });
+  }
+
   app.get("/api/admin/contact-submissions", async (req, res) => {
     const token = req.headers.authorization?.split(" ")[1];
 
@@ -704,14 +775,19 @@ Disallow: /api/`;
     }
 
     try {
-      const filename = `hero-${Date.now()}-${Math.random().toString(36).substr(2, 9)}.jpg`;
-      const storagePath = `https://cornbelt.co.ke/sliderimages/${filename}`;
+      // Use the provided imageUrl (could be a relative /assets path or external URL)
+      let filename = path.basename(imageUrl);
+      if (!filename) {
+        filename = `hero-${Date.now()}-${Math.random().toString(36).substr(2, 9)}.jpg`;
+      }
+      const storagePath = imageUrl;
 
       const result = await apiCall("POST", "hero_slider_images", {
         filename,
         imageUrl: storagePath,
         altText: altText || "Hero slider image",
         displayOrder: displayOrder || 0,
+        isActive: true,
       });
 
       if (result.error) {
@@ -746,9 +822,38 @@ Disallow: /api/`;
       const updates: any = {};
       if (altText !== undefined) updates.altText = altText;
       if (displayOrder !== undefined) updates.displayOrder = displayOrder;
+      const setActive =
+        req.body.isActive !== undefined ? req.body.isActive : undefined;
+      if (setActive !== undefined) updates.isActive = setActive;
 
       if (Object.keys(updates).length === 0) {
         return res.status(400).json({ error: "No fields to update" });
+      }
+
+      // If setting this image active, unset isActive on all other images first
+      if (setActive === true) {
+        try {
+          const allImages = await apiCall("GET", "hero_slider_images");
+          if (Array.isArray(allImages)) {
+            for (const img of allImages) {
+              if (
+                Number(img.id) !== Number(id) &&
+                (img.isActive === true ||
+                  img.isActive === 1 ||
+                  img.isActive === "1")
+              ) {
+                await apiCall(
+                  "PUT",
+                  "hero_slider_images",
+                  { isActive: false },
+                  Number(img.id),
+                );
+              }
+            }
+          }
+        } catch (e) {
+          console.warn("Failed to unset other active hero images:", e);
+        }
       }
 
       const result = await apiCall(
@@ -809,7 +914,7 @@ Disallow: /api/`;
     }
   });
 
-  // File upload endpoint
+  // File upload endpoint — saves images to /assets/hero_slider_images and returns a public path
   app.post("/api/admin/upload", async (req, res) => {
     const token = req.headers.authorization?.split(" ")[1];
 
@@ -824,15 +929,31 @@ Disallow: /api/`;
     }
 
     try {
-      // Store the file as a data URL (base64 encoded)
-      // This approach works well for images and doesn't require file system operations
-      const dataUrl = `data:image/${getImageMimeType(fileName)};base64,${fileData}`;
+      // Decode base64
+      const buffer = Buffer.from(fileData, "base64");
 
-      res.json({
-        success: true,
-        imageUrl: dataUrl,
-        filename: fileName,
-      });
+      // Sanitize extension
+      const ext = path.extname(fileName) || ".jpg";
+      const safeExt = ext.replace(/[^a-zA-Z0-9.]/g, "") || ".jpg";
+
+      // Build filename
+      const filename = `hero-${Date.now()}-${Math.random().toString(36).slice(2, 9)}${safeExt}`;
+
+      // Ensure assets folder exists at project root: /assets/hero_slider_images
+      const assetsDir = path.join(
+        process.cwd(),
+        "assets",
+        "hero_slider_images",
+      );
+      fs.mkdirSync(assetsDir, { recursive: true });
+
+      const filePath = path.join(assetsDir, filename);
+      fs.writeFileSync(filePath, buffer);
+
+      // Public URL path served by node-build static middleware
+      const imageUrl = `/assets/hero_slider_images/${filename}`;
+
+      res.json({ success: true, imageUrl, filename });
     } catch (error) {
       console.error("Error processing file:", error);
       res.status(500).json({
@@ -860,13 +981,66 @@ Disallow: /api/`;
   app.get("/api/hero-images", async (_req, res) => {
     try {
       const images = await apiCall("GET", "hero_slider_images");
-      const sortedImages = Array.isArray(images)
-        ? images.sort((a: any, b: any) => a.displayOrder - b.displayOrder)
-        : [];
+      let arr = Array.isArray(images) ? images : [];
+
+      // Prefer images explicitly marked active. If none are active, return all.
+      const active = arr.filter(
+        (i: any) =>
+          i.isActive === true || i.isActive === 1 || i.isActive === "1",
+      );
+      const toReturn = active.length > 0 ? active : arr;
+
+      const sortedImages = toReturn.sort(
+        (a: any, b: any) => (a.displayOrder || 0) - (b.displayOrder || 0),
+      );
       res.json(sortedImages);
     } catch (error) {
       console.error("Error fetching hero images:", error);
       res.json([]);
+    }
+  });
+
+  // Development: ensure at least one active hero image — admin can call this
+  app.post("/api/admin/reseed-hero-active", async (req, res) => {
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token || !verifyToken(token)) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    try {
+      const images = await apiCall("GET", "hero_slider_images");
+      if (!Array.isArray(images) || images.length === 0) {
+        return res.json({ success: true, message: "No images to update" });
+      }
+
+      const active = images.filter(
+        (i: any) =>
+          i.isActive === true || i.isActive === 1 || i.isActive === "1",
+      );
+      if (active.length > 0) {
+        return res.json({ success: true, message: "Active images present" });
+      }
+
+      // find lowest displayOrder or first and set it active
+      const sorted = images.sort(
+        (a: any, b: any) => (a.displayOrder || 0) - (b.displayOrder || 0),
+      );
+      const first = sorted[0];
+      await apiCall(
+        "PUT",
+        "hero_slider_images",
+        { isActive: true },
+        Number(first.id),
+      );
+
+      res.json({
+        success: true,
+        message: "Set first image active",
+        id: first.id,
+      });
+    } catch (err) {
+      console.error("Failed to reseed hero active:", err);
+      res.status(500).json({ error: "Failed to reseed hero active" });
     }
   });
 

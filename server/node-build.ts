@@ -1,6 +1,7 @@
 import path from "path";
 import { createServer } from "./index";
 import * as express from "express";
+import path from "path";
 
 const app = createServer();
 const port = process.env.PORT || 3000;
@@ -11,6 +12,10 @@ const distPath = path.resolve(__dirname, "..");
 
 // Serve static files
 app.use(express.static(distPath));
+
+// Serve project-level assets folder (e.g., /assets/*)
+const assetsPath = path.resolve(distPath, "..", "assets");
+app.use("/assets", express.static(assetsPath));
 
 // Handle React Router - serve index.html for all non-API routes
 // Express 5 uses path-to-regexp v8 which doesn't accept "*" as a path.

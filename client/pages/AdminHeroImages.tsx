@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { ArrowLeft, Upload, Trash2, Eye, FileUp } from "lucide-react";
+import { ArrowLeft, Upload, Trash2, Eye, FileUp, Download } from "lucide-react";
 
 interface HeroImage {
   id: number;
@@ -249,6 +249,37 @@ export default function AdminHeroImages() {
     } catch (error) {
       console.error("Error updating order:", error);
       toast.error("Failed to update order");
+    }
+  };
+
+  const handleToggleActive = async (id: number, newActive: boolean) => {
+    try {
+      if (newActive) {
+        const ok = confirm(
+          "Marking this image active will unset other active images. Continue?",
+        );
+        if (!ok) return;
+      }
+
+      const token = localStorage.getItem("adminToken");
+      const response = await fetch(`/api/admin/hero-images/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ isActive: newActive }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to toggle active");
+      }
+
+      toast.success("Updated");
+      fetchImages();
+    } catch (error) {
+      console.error("Error toggling active:", error);
+      toast.error("Failed to update");
     }
   };
 
@@ -503,18 +534,55 @@ export default function AdminHeroImages() {
                           />
                         </div>
                       </div>
+
+                      <div>
+                        <label className="flex items-center gap-2 text-sm">
+                          <input
+                            type="checkbox"
+                            checked={!!image.isActive}
+                            onChange={() =>
+                              handleToggleActive(image.id, !image.isActive)
+                            }
+                            className="w-4 h-4"
+                          />
+                          <span className="text-xs text-muted-foreground">
+                            Active
+                          </span>
+                        </label>
+                      </div>
                     </div>
 
-                    {/* Delete Button */}
-                    <Button
-                      onClick={() => handleDeleteImage(image.id)}
-                      variant="destructive"
-                      size="sm"
-                      className="w-full gap-2"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                      Delete
-                    </Button>
+                    {/* Actions: View / Download / Delete */}
+                    <div className="flex gap-2">
+                      <a
+                        href={image.imageUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 border rounded bg-white/5 hover:bg-white/10 text-sm"
+                      >
+                        <Eye className="w-4 h-4" />
+                        View
+                      </a>
+
+                      <a
+                        href={image.imageUrl}
+                        download
+                        className="inline-flex items-center justify-center gap-2 px-3 py-2 border rounded bg-white/5 hover:bg-white/10 text-sm"
+                      >
+                        <Download className="w-4 h-4" />
+                        Download
+                      </a>
+
+                      <Button
+                        onClick={() => handleDeleteImage(image.id)}
+                        variant="destructive"
+                        size="sm"
+                        className="gap-2"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        Delete
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </div>
