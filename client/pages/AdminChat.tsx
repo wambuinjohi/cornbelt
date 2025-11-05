@@ -209,12 +209,13 @@ export default function AdminChat() {
 
   const deleteResponse = async (id: number) => {
     try {
-      const res = await fetch(`/api/admin/bot-responses/${id}`, {
+      const adminFetch = (await import('@/lib/adminApi')).default;
+      const res = await adminFetch(`/api/admin/bot-responses/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      if (!res.ok) throw new Error("Failed to delete response");
+      if (!res || !res.ok) throw new Error("Failed to delete response");
 
       toast.success("Bot response deleted successfully");
       await fetchResponses();
