@@ -14,8 +14,8 @@ export default function HeroSlider() {
   // Default fallback images
   const defaultSlides: Slide[] = [
     {
-      url: "https://cdn.builder.io/api/v1/image/assets%2F1ffce8bff4d5493bafecc479d3963466%2F5faa80f695624fab98c4b8cdbca4e0d7?format=webp&width=800",
-      alt: "Cornbelt flour mill billboard advertisement",
+      url: "https://cdn.builder.io/api/v1/image/assets%2Fffba8e3c2b3042bab528316b71e4306e%2Ff21188f906c3408783bc64a9665d33e0?format=webp&width=1200",
+      alt: "Cornbelt Flour Mill exterior",
     },
     {
       url: "https://cdn.builder.io/api/v1/image/assets%2F1ffce8bff4d5493bafecc479d3963466%2F0d117e54429f404bb6e71a4b18a98876?format=webp&width=800",
