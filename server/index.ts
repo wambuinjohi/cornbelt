@@ -4,6 +4,8 @@ import cors from "cors";
 import crypto from "crypto";
 import { Readable } from "stream";
 import { handleDemo } from "./routes/demo";
+import fs from "fs";
+import path from "path";
 
 const API_BASE_URL = process.env.API_BASE_URL ?? "";
 
