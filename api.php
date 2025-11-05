@@ -108,6 +108,37 @@ function verify_jwt($token) {
 $rawInput = file_get_contents('php://input');
 $input = json_decode($rawInput, true) ?: [];
 
+// Support legacy action=upload so clients can POST to /api.php?action=upload with JSON {fileData,fileName}
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['action']) && $_GET['action'] === 'upload') {
+    // Auth required
+    $authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? null;
+    $token = null; if ($authHeader && preg_match('/Bearer\s+(\S+)/', $authHeader, $m)) $token = $m[1];
+    if (!$token || !verify_jwt($token)) { http_response_code(401); echo json_encode(['error'=>'Unauthorized']); $conn->close(); exit; }
+
+    $publicDir = __DIR__ . '/public';
+    if (!is_dir($publicDir)) mkdir($publicDir, 0755, true);
+    $uploadsDir = $publicDir . '/uploads';
+    if (!is_dir($uploadsDir)) mkdir($uploadsDir, 0755, true);
+
+    if (isset($input['fileData']) && isset($input['fileName'])) {
+        $fileData = $input['fileData'];
+        $fileName = basename($input['fileName']);
+        $ext = pathinfo($fileName, PATHINFO_EXTENSION);
+        $filename = time() . '-' . bin2hex(random_bytes(4)) . ($ext ? '.' . $ext : '');
+        $dest = $uploadsDir . '/' . $filename;
+        $decoded = base64_decode($fileData);
+        if ($decoded === false) { http_response_code(400); echo json_encode(['error'=>'Invalid base64 data']); $conn->close(); exit; }
+        if (file_put_contents($dest, $decoded) === false) { http_response_code(500); echo json_encode(['error'=>'Failed to write file']); $conn->close(); exit; }
+        $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+        $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+        $url = $scheme . '://' . $host . '/uploads/' . $filename;
+        echo json_encode(['imageUrl' => $url, 'path' => '/uploads/' . $filename]);
+        $conn->close();
+        exit;
+    }
+    http_response_code(400); echo json_encode(['error'=>'No file provided']); $conn->close(); exit;
+}
+
 // ADMIN ROUTING shim for deployments without the Node /api/admin server
 $uri = $_SERVER['REQUEST_URI'] ?? '';
 if (strpos($uri, '/api/admin') !== false) {
@@ -231,15 +262,10 @@ if (strpos($uri, '/api/admin') !== false) {
         exit;
     }
 
-    // Upload endpoint - accept JSON base64 (fileData,fileName) or multipart file under 'file'
+    // Upload endpoint - accept JSON base64 (fileData,fileName) or multipart file under 'file' — supports /api/admin/upload
     if ($resource === 'upload' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         // Authentication
-        $authHeader = null;
-        if (isset($_SERVER['HTTP_AUTHORIZATION'])) $authHeader = $_SERVER['HTTP_AUTHORIZATION'];
-        elseif (function_exists('apache_request_headers')) {
-            $hdrs = apache_request_headers();
-            if (isset($hdrs['Authorization'])) $authHeader = $hdrs['Authorization'];
-        }
+        $authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? null;
         $token = null;
         if ($authHeader && preg_match('/Bearer\s+(\S+)/', $authHeader, $m)) $token = $m[1];
         if (!$token || !verify_jwt($token)) {
@@ -266,7 +292,6 @@ if (strpos($uri, '/api/admin') !== false) {
             }
             $orig = basename($file['name']);
             $ext = pathinfo($orig, PATHINFO_EXTENSION);
-            $safeName = preg_replace('/[^A-Za-z0-9._-]/', '-', $orig);
             $filename = time() . '-' . bin2hex(random_bytes(4)) . ($ext ? '.' . $ext : '');
             $dest = $uploadsDir . '/' . $filename;
             if (!move_uploaded_file($file['tmp_name'], $dest)) {
