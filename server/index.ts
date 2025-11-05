@@ -973,6 +973,36 @@ Disallow: /api/`;
     }
   });
 
+  // Development: ensure at least one active hero image — admin can call this
+  app.post('/api/admin/reseed-hero-active', async (req, res) => {
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token || !verifyToken(token)) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    try {
+      const images = await apiCall('GET', 'hero_slider_images');
+      if (!Array.isArray(images) || images.length === 0) {
+        return res.json({ success: true, message: 'No images to update' });
+      }
+
+      const active = images.filter((i: any) => i.isActive === true || i.isActive === 1 || i.isActive === '1');
+      if (active.length > 0) {
+        return res.json({ success: true, message: 'Active images present' });
+      }
+
+      // find lowest displayOrder or first and set it active
+      const sorted = images.sort((a: any, b: any) => (a.displayOrder || 0) - (b.displayOrder || 0));
+      const first = sorted[0];
+      await apiCall('PUT', 'hero_slider_images', { isActive: true }, Number(first.id));
+
+      res.json({ success: true, message: 'Set first image active', id: first.id });
+    } catch (err) {
+      console.error('Failed to reseed hero active:', err);
+      res.status(500).json({ error: 'Failed to reseed hero active' });
+    }
+  });
+
   // Admin product images management
   app.get("/api/admin/product-images", async (req, res) => {
     const token = req.headers.authorization?.split(" ")[1];
