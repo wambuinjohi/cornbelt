@@ -158,13 +158,19 @@ export default async function adminFetch(
 
     // For chat-sessions -> fetch chats and group
     if (resource === "chat-sessions" && method === "GET") {
-      const phpRes = await fetch(buildPhpUrlForResource("chat-sessions"));
-      if (!phpRes.ok)
-        return {
-          ok: false,
-          status: phpRes.status,
-          json: async () => await phpRes.json(),
-        };
+      // try fetch across bases
+      let phpRes: Response | null = null;
+      for (const b of [window.location.origin, "https://cornbelt.co.ke"]) {
+        try {
+          const url = b + buildPhpUrlForResource("chat-sessions").replace(/^[.\/]+/, '/');
+          phpRes = await fetch(url);
+          if (phpRes) break;
+        } catch (e) {
+          phpRes = null;
+        }
+      }
+      if (!phpRes) return { ok: false, status: 0, json: async () => [] };
+      if (!phpRes.ok) return { ok: false, status: phpRes.status, json: async () => await phpRes.json() };
       const chats = await phpRes.json();
       const sessions: Record<string, any[]> = {};
       if (Array.isArray(chats)) {
