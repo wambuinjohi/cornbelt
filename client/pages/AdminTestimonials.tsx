@@ -65,9 +65,8 @@ export default function AdminTestimonials() {
     try {
       setIsLoading(true);
       const token = localStorage.getItem("adminToken");
-      const response = await fetch("/api/admin/testimonials", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await (await import('@/lib/adminApi')).default("/api/admin/testimonials", { headers: { Authorization: `Bearer ${token}` } });
+      if (!response || !response.ok) throw new Error('Failed to fetch testimonials');
       const data = await response.json();
       setTestimonials(Array.isArray(data) ? data : []);
     } catch (err) {
