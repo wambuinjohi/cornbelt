@@ -254,6 +254,11 @@ export default function AdminHeroImages() {
 
   const handleToggleActive = async (id: number, newActive: boolean) => {
     try {
+      if (newActive) {
+        const ok = confirm('Marking this image active will unset other active images. Continue?');
+        if (!ok) return;
+      }
+
       const token = localStorage.getItem("adminToken");
       const response = await fetch(`/api/admin/hero-images/${id}`, {
         method: "PUT",
