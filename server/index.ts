@@ -815,6 +815,7 @@ Disallow: /api/`;
       const updates: any = {};
       if (altText !== undefined) updates.altText = altText;
       if (displayOrder !== undefined) updates.displayOrder = displayOrder;
+      if (req.body.isActive !== undefined) updates.isActive = req.body.isActive;
 
       if (Object.keys(updates).length === 0) {
         return res.status(400).json({ error: "No fields to update" });
