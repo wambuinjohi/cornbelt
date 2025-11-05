@@ -1,0 +1,247 @@
+<?php
+// Lightweight api.php compatible with existing cornbelt API
+// Reads DB credentials from environment variables: DB_HOST, DB_USER, DB_PASS, DB_NAME
+
+// CORS
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type, Authorization");
+header("Content-Type: application/json; charset=utf-8");
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit;
+}
+
+$DB_HOST = getenv('DB_HOST');
+$DB_USER = getenv('DB_USER');
+$DB_PASS = getenv('DB_PASS');
+$DB_NAME = getenv('DB_NAME');
+
+if (!$DB_HOST || !$DB_USER || $DB_PASS === false || !$DB_NAME) {
+    http_response_code(500);
+    echo json_encode(["error" => "Database credentials not configured. Please set DB_HOST, DB_USER, DB_PASS and DB_NAME environment variables."]);
+    exit;
+}
+
+// Connect
+$conn = new mysqli($DB_HOST, $DB_USER, $DB_PASS, $DB_NAME);
+if ($conn->connect_error) {
+    http_response_code(500);
+    echo json_encode(["error" => "Database connection failed: " . $conn->connect_error]);
+    exit;
+}
+
+$method = $_SERVER['REQUEST_METHOD'];
+$input = json_decode(file_get_contents('php://input'), true) ?: [];
+$table = isset($_GET['table']) ? $_GET['table'] : (isset($input['table']) ? $input['table'] : null);
+
+// validate table name (simple whitelist: letters, numbers, underscore)
+function valid_identifier($s) {
+    return is_string($s) && preg_match('/^[A-Za-z0-9_]+$/', $s);
+}
+
+if (!$table && !isset($input['drop_table']) && !isset($input['create_table']) && !isset($input['alter_table'])) {
+    echo json_encode(["error" => "Table name is required"]);
+    exit;
+}
+
+if ($table && !valid_identifier($table)) {
+    echo json_encode(["error" => "Invalid table name"]);
+    exit;
+}
+
+// CREATE TABLE
+if (isset($input['create_table'])) {
+    if (!$table) {
+        echo json_encode(["error" => "Table name required for create_table"]);
+        exit;
+    }
+    $columns = $input['columns'] ?? [];
+    if (!is_array($columns) || count($columns) === 0) {
+        echo json_encode(["error" => "No columns provided"]);
+        exit;
+    }
+    $fields = [];
+    foreach ($columns as $name => $type) {
+        if (!valid_identifier($name) || !is_string($type)) {
+            continue;
+        }
+        // allow type string as-is (developer responsibility)
+        $fields[] = "`" . $conn->real_escape_string($name) . "` " . $type;
+    }
+    if (count($fields) === 0) {
+        echo json_encode(["error" => "No valid columns provided"]);
+        exit;
+    }
+    $sql = "CREATE TABLE IF NOT EXISTS `" . $conn->real_escape_string($table) . "` (" . implode(", ", $fields) . ")";
+    if ($conn->query($sql) === TRUE) {
+        echo json_encode(["success" => "Table created or already exists"]);
+    } else {
+        http_response_code(500);
+        echo json_encode(["error" => $conn->error]);
+    }
+    $conn->close();
+    exit;
+}
+
+// ALTER TABLE
+if (isset($input['alter_table'])) {
+    if (!$table) {
+        echo json_encode(["error" => "Table name required for alter_table"]);
+        exit;
+    }
+    $actions = $input['actions'] ?? [];
+    if (!is_array($actions) || count($actions) === 0) {
+        echo json_encode(["error" => "No ALTER actions provided"]);
+        exit;
+    }
+    $alter_parts = [];
+    foreach ($actions as $action) {
+        $type = isset($action['type']) ? strtoupper($action['type']) : '';
+        $name = $action['name'] ?? '';
+        $definition = $action['definition'] ?? '';
+        $new_name = $action['new_name'] ?? '';
+        if (!valid_identifier($name) && $type !== 'CHANGE') {
+            continue;
+        }
+        switch ($type) {
+            case 'ADD':
+                $alter_parts[] = "ADD COLUMN `" . $conn->real_escape_string($name) . "` " . $definition;
+                break;
+            case 'MODIFY':
+                $alter_parts[] = "MODIFY COLUMN `" . $conn->real_escape_string($name) . "` " . $definition;
+                break;
+            case 'CHANGE':
+                if (!valid_identifier($new_name)) continue;
+                $alter_parts[] = "CHANGE `" . $conn->real_escape_string($name) . "` `" . $conn->real_escape_string($new_name) . "` " . $definition;
+                break;
+            case 'DROP':
+                $alter_parts[] = "DROP COLUMN `" . $conn->real_escape_string($name) . "`";
+                break;
+            default:
+                http_response_code(400);
+                echo json_encode(["error" => "Unsupported ALTER type: $type"]);
+                $conn->close();
+                exit;
+        }
+    }
+    if (count($alter_parts) === 0) {
+        echo json_encode(["error" => "No valid ALTER parts"]);
+        $conn->close();
+        exit;
+    }
+    $sql = "ALTER TABLE `" . $conn->real_escape_string($table) . "` " . implode(", ", $alter_parts);
+    if ($conn->query($sql) === TRUE) {
+        echo json_encode(["success" => "Table altered successfully"]);
+    } else {
+        http_response_code(500);
+        echo json_encode(["error" => $conn->error]);
+    }
+    $conn->close();
+    exit;
+}
+
+// DROP TABLE
+if (isset($input['drop_table'])) {
+    $tableToDrop = $input['drop_table'];
+    if (!valid_identifier($tableToDrop)) {
+        echo json_encode(["error" => "Invalid table name to drop"]);
+        exit;
+    }
+    $sql = "DROP TABLE IF EXISTS `" . $conn->real_escape_string($tableToDrop) . "`";
+    if ($conn->query($sql) === TRUE) {
+        echo json_encode(["success" => "Table $tableToDrop dropped successfully"]);
+    } else {
+        http_response_code(500);
+        echo json_encode(["error" => $conn->error]);
+    }
+    $conn->close();
+    exit;
+}
+
+// CRUD operations
+switch ($method) {
+    case 'GET':
+        $id = isset($_GET['id']) ? intval($_GET['id']) : null;
+        $sql = "SELECT * FROM `" . $conn->real_escape_string($table) . "`" . ($id ? " WHERE id=" . intval($id) : "");
+        $result = $conn->query($sql);
+        $data = [];
+        if ($result) {
+            while ($row = $result->fetch_assoc()) {
+                $data[] = $row;
+            }
+        }
+        echo json_encode($data);
+        break;
+
+    case 'POST':
+        // insert record
+        $payload = $input;
+        // remove control keys
+        unset($payload['create_table'], $payload['alter_table'], $payload['drop_table'], $payload['table']);
+        if (!is_array($payload) || count($payload) === 0) {
+            echo json_encode(["error" => "No data provided for insert"]);
+            break;
+        }
+        $keys = array_keys($payload);
+        $escaped = array_map(function($v) use ($conn) { return $conn->real_escape_string((string)$v); }, array_values($payload));
+        $sql = "INSERT INTO `" . $conn->real_escape_string($table) . "` (`" . implode('`, `', array_map(function($k) use ($conn) { return $conn->real_escape_string($k); }, $keys)) . "`) VALUES ('" . implode("', '", $escaped) . "')";
+        if ($conn->query($sql) === TRUE) {
+            echo json_encode(["success" => true, "id" => $conn->insert_id]);
+        } else {
+            http_response_code(500);
+            echo json_encode(["error" => $conn->error]);
+        }
+        break;
+
+    case 'PUT':
+    case 'PATCH':
+        $id = isset($_GET['id']) ? intval($_GET['id']) : (isset($input['id']) ? intval($input['id']) : null);
+        if (!$id) {
+            echo json_encode(["error" => "ID required for update"]);
+            break;
+        }
+        $updates = [];
+        foreach ($input as $key => $value) {
+            if ($key === 'id' || $key === 'table' || in_array($key, ['create_table','alter_table','drop_table'])) continue;
+            if (!valid_identifier($key)) continue;
+            $updates[] = "`" . $conn->real_escape_string($key) . "`='" . $conn->real_escape_string((string)$value) . "'";
+        }
+        if (count($updates) === 0) {
+            echo json_encode(["error" => "No valid fields to update"]);
+            break;
+        }
+        $sql = "UPDATE `" . $conn->real_escape_string($table) . "` SET " . implode(", ", $updates) . " WHERE id=" . intval($id);
+        if ($conn->query($sql) === TRUE) {
+            echo json_encode(["success" => true]);
+        } else {
+            http_response_code(500);
+            echo json_encode(["error" => $conn->error]);
+        }
+        break;
+
+    case 'DELETE':
+        $id = isset($_GET['id']) ? intval($_GET['id']) : (isset($input['id']) ? intval($input['id']) : null);
+        if (!$id) {
+            echo json_encode(["error" => "ID required for delete"]);
+            break;
+        }
+        $sql = "DELETE FROM `" . $conn->real_escape_string($table) . "` WHERE id=" . intval($id);
+        if ($conn->query($sql) === TRUE) {
+            echo json_encode(["success" => true]);
+        } else {
+            http_response_code(500);
+            echo json_encode(["error" => $conn->error]);
+        }
+        break;
+
+    default:
+        http_response_code(405);
+        echo json_encode(["error" => "Unsupported request method"]);
+        break;
+}
+
+$conn->close();
+
+?>
