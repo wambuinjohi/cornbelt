@@ -227,12 +227,10 @@ export default function AdminChat() {
 
   const reseedDefaultResponses = async () => {
     try {
-      const res = await fetch("/api/admin/reseed-bot-responses", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const adminFetch = (await import('@/lib/adminApi')).default;
+      const res = await adminFetch("/api/admin/reseed-bot-responses", { method: "POST", headers: { Authorization: `Bearer ${token}` } });
 
-      if (!res.ok) throw new Error("Failed to reseed responses");
+      if (!res || !res.ok) throw new Error("Failed to reseed responses");
 
       const data = await res.json();
       toast.success(`Default responses loaded (${data.count} responses)`);
