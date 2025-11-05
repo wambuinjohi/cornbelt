@@ -75,14 +75,11 @@ export default function AdminOrders() {
 
   const fetchOrders = async () => {
     try {
-      const response = await fetch("/api/admin/orders", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const adminFetch = (await import('@/lib/adminApi')).default;
+      const response = await adminFetch("/api/admin/orders", { headers: { Authorization: `Bearer ${token}` } });
 
-      if (!response.ok) {
-        if (response.status === 401) {
+      if (!response || !response.ok) {
+        if (response && response.status === 401) {
           navigate("/admin/login");
           return;
         }
