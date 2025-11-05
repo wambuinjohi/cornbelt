@@ -815,10 +815,27 @@ Disallow: /api/`;
       const updates: any = {};
       if (altText !== undefined) updates.altText = altText;
       if (displayOrder !== undefined) updates.displayOrder = displayOrder;
-      if (req.body.isActive !== undefined) updates.isActive = req.body.isActive;
+      const setActive = req.body.isActive !== undefined ? req.body.isActive : undefined;
+      if (setActive !== undefined) updates.isActive = setActive;
 
       if (Object.keys(updates).length === 0) {
         return res.status(400).json({ error: "No fields to update" });
+      }
+
+      // If setting this image active, unset isActive on all other images first
+      if (setActive === true) {
+        try {
+          const allImages = await apiCall("GET", "hero_slider_images");
+          if (Array.isArray(allImages)) {
+            for (const img of allImages) {
+              if (Number(img.id) !== Number(id) && (img.isActive === true || img.isActive === 1 || img.isActive === '1')) {
+                await apiCall("PUT", "hero_slider_images", { isActive: false }, Number(img.id));
+              }
+            }
+          }
+        } catch (e) {
+          console.warn("Failed to unset other active hero images:", e);
+        }
       }
 
       const result = await apiCall(
