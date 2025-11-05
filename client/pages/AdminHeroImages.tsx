@@ -162,7 +162,8 @@ export default function AdminHeroImages() {
 
       // Save image metadata
       const token = localStorage.getItem("adminToken");
-      const response = await fetch("/api/admin/hero-images", {
+      const adminFetch = (await import('@/lib/adminApi')).default;
+      const response = await adminFetch("/api/admin/hero-images", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -175,7 +176,7 @@ export default function AdminHeroImages() {
         }),
       });
 
-      if (!response.ok) {
+      if (!response || !response.ok) {
         throw new Error("Failed to add image");
       }
 
