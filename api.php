@@ -292,8 +292,25 @@ switch ($method) {
             echo json_encode(["error" => "No data provided for insert"]);
             break;
         }
-        $keys = array_keys($payload);
-        $escaped = array_map(function($v) use ($conn) { return $conn->real_escape_string((string)$v); }, array_values($payload));
+        $keys = [];
+        $escaped = [];
+        // Only include valid identifier keys and sanitize/truncate values to avoid DB errors
+        foreach ($payload as $k => $v) {
+            if (!valid_identifier($k)) continue;
+            $keys[] = $k;
+            $s = (string)$v;
+            // truncate long strings to 1024 characters (adjust if your schema allows more)
+            if (mb_strlen($s, 'UTF-8') > 1024) {
+                $s = mb_substr($s, 0, 1024, 'UTF-8');
+            }
+            $escaped[] = $conn->real_escape_string($s);
+        }
+
+        if (count($keys) === 0) {
+            echo json_encode(["error" => "No valid fields to insert"]);
+            break;
+        }
+
         $sql = "INSERT INTO `" . $conn->real_escape_string($table) . "` (`" . implode('`, `', array_map(function($k) use ($conn) { return $conn->real_escape_string($k); }, $keys)) . "`) VALUES ('" . implode("', '", $escaped) . "')";
         if ($conn->query($sql) === TRUE) {
             echo json_encode(["success" => true, "id" => $conn->insert_id]);
