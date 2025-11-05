@@ -29,13 +29,19 @@ function buildPhpUrlForResource(resource: string, id?: string | number) {
 export default async function adminFetch(path: string, init: RequestInit = {}): Promise<MiniResponse | null> {
   try {
     const adminUrl = path.startsWith('/api/admin') ? path : `/api/admin/${path.replace(/^\/+/, '')}`;
-    // Try primary admin endpoint first
-    try {
-      const res = await fetch(adminUrl, init);
-      if (res.ok) return { ok: true, status: res.status, json: async () => res.json() };
-      // non-OK -> try fallback
-    } catch (err) {
-      // network error - try fallback
+
+    // Prefer PHP fallback automatically when running on cornbelt.co.ke (local host mapping)
+    const preferPhp = typeof window !== 'undefined' && (window.location.hostname === 'cornbelt.co.ke' || window.location.hostname.endsWith('.cornbelt.co.ke'));
+
+    // Try primary admin endpoint first unless we prefer PHP
+    if (!preferPhp) {
+      try {
+        const res = await fetch(adminUrl, init);
+        if (res.ok) return { ok: true, status: res.status, json: async () => res.json() };
+        // non-OK -> try fallback
+      } catch (err) {
+        // network error - try fallback
+      }
     }
 
     // Fallback to php api
