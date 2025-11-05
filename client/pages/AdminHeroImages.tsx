@@ -503,6 +503,18 @@ export default function AdminHeroImages() {
                           />
                         </div>
                       </div>
+
+                      <div>
+                        <label className="flex items-center gap-2 text-sm">
+                          <input
+                            type="checkbox"
+                            checked={!!image.isActive}
+                            onChange={() => handleToggleActive(image.id, !image.isActive)}
+                            className="w-4 h-4"
+                          />
+                          <span className="text-xs text-muted-foreground">Active</span>
+                        </label>
+                      </div>
                     </div>
 
                     {/* Delete Button */}
