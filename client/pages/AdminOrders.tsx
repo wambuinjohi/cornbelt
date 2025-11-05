@@ -103,7 +103,8 @@ export default function AdminOrders() {
     }
 
     try {
-      const response = await fetch(`/api/admin/orders/${orderId}`, {
+      const adminFetch = (await import('@/lib/adminApi')).default;
+      const response = await adminFetch(`/api/admin/orders/${orderId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -115,7 +116,7 @@ export default function AdminOrders() {
         }),
       });
 
-      if (!response.ok) {
+      if (!response || !response.ok) {
         throw new Error("Failed to update order");
       }
 
