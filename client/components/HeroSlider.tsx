@@ -100,6 +100,22 @@ export default function HeroSlider() {
     return `${buildUrlWithWidth(url, w1)} ${w1}w, ${buildUrlWithWidth(url, w2)} ${w2}w, ${buildUrlWithWidth(url, w3)} ${w3}w`;
   };
 
+  // Refs to image elements so we can set fetchpriority attribute without passing unknown prop to React
+  const imgRefs = useRef<Array<HTMLImageElement | null>>([]);
+
+  useEffect(() => {
+    // update fetchpriority attributes on images when currentSlide changes
+    imgRefs.current.forEach((img, idx) => {
+      if (!img) return;
+      try {
+        if (idx === currentSlide) img.setAttribute('fetchpriority', 'high');
+        else img.setAttribute('fetchpriority', 'auto');
+      } catch (e) {
+        // Some browsers may not support fetchpriority; ignore errors
+      }
+    });
+  }, [currentSlide, slides.length]);
+
   return (
     <div className="relative w-full h-full overflow-hidden rounded-lg">
       {/* Slides */}
@@ -112,6 +128,7 @@ export default function HeroSlider() {
             }`}
           >
             <img
+              ref={(el) => (imgRefs.current[index] = el)}
               src={buildUrlWithWidth(slide.url, 1200)}
               srcSet={buildSrcSet(slide.url)}
               sizes="(max-width: 640px) 800px, (max-width: 1200px) 1200px, 1800px"
@@ -119,7 +136,6 @@ export default function HeroSlider() {
               className="w-full h-full object-cover"
               decoding="async"
               loading={index === 0 ? 'eager' : 'lazy'}
-              fetchPriority={index === currentSlide ? 'high' : 'auto'}
             />
             {/* Dark overlay for better text readability */}
             <div className="absolute inset-0 bg-black/40" />
