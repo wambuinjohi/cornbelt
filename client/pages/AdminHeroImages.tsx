@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { ArrowLeft, Upload, Trash2, Eye, FileUp } from "lucide-react";
+import { ArrowLeft, Upload, Trash2, Eye, FileUp, Download } from "lucide-react";
 
 interface HeroImage {
   id: number;
