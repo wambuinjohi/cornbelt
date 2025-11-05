@@ -68,21 +68,29 @@ export default function AdminLogin() {
           // If the response indicates the generic php emulation 'missing table' or similar, try next
           const serverErr = result?.error || responseText || null;
           if (!response.ok) {
-            const serverErrLower = typeof serverErr === 'string' ? serverErr.toLowerCase() : '';
-            const looksLikeTableError = serverErrLower.includes('table') || serverErrLower.includes('table name') || serverErrLower.includes('missing');
+            const serverErrLower =
+              typeof serverErr === "string" ? serverErr.toLowerCase() : "";
+            const looksLikeTableError =
+              serverErrLower.includes("table") ||
+              serverErrLower.includes("table name") ||
+              serverErrLower.includes("missing");
 
             // If this was the Node endpoint (not the PHP fallback) and it looks like the request was routed to the generic API handler, try the next endpoint
-            if (!ep.usePhpFallback && (response.status === 404 || looksLikeTableError)) {
+            if (
+              !ep.usePhpFallback &&
+              (response.status === 404 || looksLikeTableError)
+            ) {
               lastError = { status: response.status, message: serverErr };
               continue; // try next endpoint
             }
 
             // Otherwise treat as permanent error
-            const errMsg = result && typeof result === "object" && "error" in result
-              ? result.error
-              : responseText
-                ? responseText
-                : `Login failed (status ${response.status})`;
+            const errMsg =
+              result && typeof result === "object" && "error" in result
+                ? result.error
+                : responseText
+                  ? responseText
+                  : `Login failed (status ${response.status})`;
             throw new Error(errMsg);
           }
 
