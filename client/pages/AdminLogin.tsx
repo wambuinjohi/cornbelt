@@ -33,7 +33,7 @@ export default function AdminLogin() {
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true);
     try {
-      const response = await fetch("/api/admin/login", {
+      const response = await fetch("/api.php?action=admin_login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

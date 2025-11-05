@@ -32,6 +32,71 @@ if ($conn->connect_error) {
     exit;
 }
 
+// Admin login endpoint using php api.php?action=admin_login
+// Expects POST { email, password }
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['action']) && $_GET['action'] === 'admin_login') {
+    $input = json_decode(file_get_contents('php://input'), true) ?: [];
+    $email = isset($input['email']) ? $conn->real_escape_string($input['email']) : '';
+    $password = isset($input['password']) ? $input['password'] : '';
+
+    if (!$email || !$password) {
+        http_response_code(400);
+        echo json_encode(["error" => "Email and password are required"]);
+        $conn->close();
+        exit;
+    }
+
+    // Find admin user
+    $sql = "SELECT * FROM `admin_users` WHERE `email`='" . $conn->real_escape_string($email) . "' LIMIT 1";
+    $res = $conn->query($sql);
+    if (!$res || $res->num_rows === 0) {
+        http_response_code(401);
+        echo json_encode(["error" => "Invalid credentials"]);
+        $conn->close();
+        exit;
+    }
+
+    $user = $res->fetch_assoc();
+    $hashed = hash('sha256', $password);
+    if (!isset($user['password']) || $user['password'] !== $hashed) {
+        http_response_code(401);
+        echo json_encode(["error" => "Invalid credentials"]);
+        $conn->close();
+        exit;
+    }
+
+    // JWT helpers
+    function base64url_encode($data) {
+        return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
+    }
+
+    $jwt_secret = getenv('JWT_SECRET') ?: 'secret-key';
+    $header = base64url_encode(json_encode(["alg" => "HS256", "typ" => "JWT"]));
+    $payloadArr = [
+        "id" => isset($user['id']) ? (int)$user['id'] : 0,
+        "iat" => time(),
+        "exp" => time() + 7 * 24 * 60 * 60
+    ];
+    $payload = base64url_encode(json_encode($payloadArr));
+    $signature = base64url_encode(hash_hmac('sha256', $header . "." . $payload, $jwt_secret, true));
+    $token = $header . "." . $payload . "." . $signature;
+
+    $response = [
+        "success" => true,
+        "token" => $token,
+        "user" => [
+            "id" => isset($user['id']) ? (int)$user['id'] : null,
+            "email" => $user['email'] ?? null,
+            "fullName" => $user['fullName'] ?? null,
+            "createdAt" => $user['createdAt'] ?? null
+        ]
+    ];
+
+    echo json_encode($response);
+    $conn->close();
+    exit;
+}
+
 $method = $_SERVER['REQUEST_METHOD'];
 $input = json_decode(file_get_contents('php://input'), true) ?: [];
 $table = isset($_GET['table']) ? $_GET['table'] : (isset($input['table']) ? $input['table'] : null);

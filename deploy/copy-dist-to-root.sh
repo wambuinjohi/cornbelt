@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Usage: sudo ./copy-dist-to-root.sh /path/to/project/dist /var/www/cornbelt
+# Usage: ./copy-dist-to-root.sh /path/to/dist /var/www/cornbelt
 SRC=${1:-./dist}
 DEST=${2:-/var/www/cornbelt}
 
@@ -10,27 +10,17 @@ if [ ! -d "$SRC" ]; then
   exit 2
 fi
 
-sudo mkdir -p "$DEST"
-sudo rsync -a --delete "$SRC/" "$DEST/"
-# Ensure api.php (legacy PHP) is present at webroot if you rely on it
+mkdir -p "$DEST"
+rsync -a --delete "$SRC/" "$DEST/"
+# Copy api.php if present (legacy PHP backend)
 if [ -f "./api.php" ]; then
-  sudo cp ./api.php "$DEST/api.php"
+  cp ./api.php "$DEST/api.php"
 fi
-sudo chown -R www-data:www-data "$DEST"
 
+# Ensure permissions (adjust user as needed)
+chown -R www-data:www-data "$DEST" || true
+
+# Hint: enable Apache site and reload
 echo "Copied $SRC -> $DEST"
-
-# Reload systemd (if service was installed) and restart the Node service
-if systemctl --version >/dev/null 2>&1; then
-  echo "Reloading systemd and restarting cornbelt service (if present)"
-  sudo systemctl daemon-reload || true
-  sudo systemctl restart cornbelt.service || true
-fi
-
-# Suggest nginx reload
-if nginx -v >/dev/null 2>&1; then
-  echo "Reloading nginx"
-  sudo nginx -s reload || true
-fi
-
-echo "Deployment step complete. Verify site at your domain."
+echo "Remember to enable the Apache site config (deploy/apache.cornbelt.conf) and reload Apache:"
+echo "  sudo a2ensite apache.cornbelt.conf && sudo systemctl reload apache2"
