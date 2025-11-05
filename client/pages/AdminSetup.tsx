@@ -64,7 +64,8 @@ export default function AdminSetup() {
 
     setIsLoading(true);
     try {
-      const response = await fetch("/api/admin/setup", {
+      const adminFetch = (await import('@/lib/adminApi')).default;
+      const response = await adminFetch("/api/admin/setup", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -76,9 +77,9 @@ export default function AdminSetup() {
         }),
       });
 
-      const result = await response.json();
+      const result = response ? await response.json() : { error: 'No response' };
 
-      if (!response.ok) {
+      if (!response || !response.ok) {
         throw new Error(result.error || "Setup failed");
       }
 
