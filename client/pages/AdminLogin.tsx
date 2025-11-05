@@ -34,9 +34,10 @@ export default function AdminLogin() {
     setIsLoading(true);
     try {
       // Try Node/Express endpoint first (used in dev). If it fails with a 'Missing \"table\"' error or 404, fall back to PHP endpoint.
+      // Try PHP endpoint first (typical for Apache deployments), then Node endpoint as fallback
       const tryEndpoints = [
-        { url: "/api/admin/login", usePhpFallback: false },
         { url: "/api.php?action=admin_login", usePhpFallback: true },
+        { url: "/api/admin/login", usePhpFallback: false },
       ];
 
       let lastError: any = null;
