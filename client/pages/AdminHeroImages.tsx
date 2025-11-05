@@ -61,7 +61,11 @@ export default function AdminHeroImages() {
   const fetchImages = async () => {
     try {
       const token = localStorage.getItem("adminToken");
-      const response = await (await import('@/lib/adminApi')).default("/api/admin/hero-images", { headers: { Authorization: `Bearer ${token}` } });
+      const response = await (
+        await import("@/lib/adminApi")
+      ).default("/api/admin/hero-images", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       if (!response || !response.ok) {
         throw new Error("Failed to fetch images");
       }
@@ -111,7 +115,7 @@ export default function AdminHeroImages() {
           const base64Data = (reader.result as string).split(",")[1];
 
           const token = localStorage.getItem("adminToken");
-          const adminFetch = (await import('@/lib/adminApi')).default;
+          const adminFetch = (await import("@/lib/adminApi")).default;
           const response = await adminFetch("/api/admin/upload", {
             method: "POST",
             headers: {
@@ -162,7 +166,7 @@ export default function AdminHeroImages() {
 
       // Save image metadata
       const token = localStorage.getItem("adminToken");
-      const adminFetch = (await import('@/lib/adminApi')).default;
+      const adminFetch = (await import("@/lib/adminApi")).default;
       const response = await adminFetch("/api/admin/hero-images", {
         method: "POST",
         headers: {
@@ -205,7 +209,7 @@ export default function AdminHeroImages() {
 
     try {
       const token = localStorage.getItem("adminToken");
-      const adminFetch = (await import('@/lib/adminApi')).default;
+      const adminFetch = (await import("@/lib/adminApi")).default;
       const response = await adminFetch(`/api/admin/hero-images/${id}`, {
         method: "DELETE",
         headers: {
@@ -228,7 +232,7 @@ export default function AdminHeroImages() {
   const handleUpdateOrder = async (id: number, newOrder: number) => {
     try {
       const token = localStorage.getItem("adminToken");
-      const adminFetch = (await import('@/lib/adminApi')).default;
+      const adminFetch = (await import("@/lib/adminApi")).default;
       const response = await adminFetch(`/api/admin/hero-images/${id}`, {
         method: "PUT",
         headers: {
@@ -260,7 +264,7 @@ export default function AdminHeroImages() {
       }
 
       const token = localStorage.getItem("adminToken");
-      const adminFetch = (await import('@/lib/adminApi')).default;
+      const adminFetch = (await import("@/lib/adminApi")).default;
       const response = await adminFetch(`/api/admin/hero-images/${id}`, {
         method: "PUT",
         headers: {

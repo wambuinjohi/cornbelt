@@ -75,8 +75,10 @@ export default function AdminOrders() {
 
   const fetchOrders = async () => {
     try {
-      const adminFetch = (await import('@/lib/adminApi')).default;
-      const response = await adminFetch("/api/admin/orders", { headers: { Authorization: `Bearer ${token}` } });
+      const adminFetch = (await import("@/lib/adminApi")).default;
+      const response = await adminFetch("/api/admin/orders", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       if (!response || !response.ok) {
         if (response && response.status === 401) {
@@ -103,7 +105,7 @@ export default function AdminOrders() {
     }
 
     try {
-      const adminFetch = (await import('@/lib/adminApi')).default;
+      const adminFetch = (await import("@/lib/adminApi")).default;
       const response = await adminFetch(`/api/admin/orders/${orderId}`, {
         method: "PUT",
         headers: {
@@ -188,7 +190,7 @@ export default function AdminOrders() {
     if (!deleteOrderId) return;
 
     try {
-      const adminFetch = (await import('@/lib/adminApi')).default;
+      const adminFetch = (await import("@/lib/adminApi")).default;
       const response = await adminFetch(`/api/admin/orders/${deleteOrderId}`, {
         method: "DELETE",
         headers: {

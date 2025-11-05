@@ -190,7 +190,7 @@ export const useVisitorTracking = () => {
 
 const sendVisitorData = async (data: VisitorData) => {
   try {
-    const adminFetch = (await import('@/lib/adminApi')).default;
+    const adminFetch = (await import("@/lib/adminApi")).default;
 
     // Sanitize data: convert null values to empty strings and ensure all values are strings or numbers
     const sanitizedData: Record<string, string | number> = {};
@@ -210,41 +210,48 @@ const sendVisitorData = async (data: VisitorData) => {
     }
 
     // Send via adminFetch which will try /api/admin then fallback to /api.php
-    const res = await adminFetch('/api/admin/visitor-tracking', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    const res = await adminFetch("/api/admin/visitor-tracking", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(sanitizedData),
     });
 
     if (!res || !res.ok) {
       const json = res ? await res.json().catch(() => ({})) : {};
-      const errorMsg = json?.error || `Status ${res ? res.status : 'network'}`;
+      const errorMsg = json?.error || `Status ${res ? res.status : "network"}`;
 
       // Suppress noisy 500 responses from the legacy API when DB credentials are missing or server errors.
       const suppress =
         (res && res.status === 500) ||
-        (typeof errorMsg === 'string' && errorMsg.toLowerCase().includes('database credentials'));
+        (typeof errorMsg === "string" &&
+          errorMsg.toLowerCase().includes("database credentials"));
 
       if (suppress) {
-        console.debug('Visitor tracking suppressed:', errorMsg);
+        console.debug("Visitor tracking suppressed:", errorMsg);
       } else {
-        console.error('Failed to track visitor:', errorMsg);
+        console.error("Failed to track visitor:", errorMsg);
       }
 
-      console.debug('Data sent:', sanitizedData);
+      console.debug("Data sent:", sanitizedData);
       return;
     }
 
     const responseData = await res.json().catch(() => null);
     if (responseData?.error) {
       const msg = responseData.error;
-      if (typeof msg === 'string' && msg.toLowerCase().includes('database credentials')) {
-        console.debug('Visitor tracking API error suppressed:', msg);
+      if (
+        typeof msg === "string" &&
+        msg.toLowerCase().includes("database credentials")
+      ) {
+        console.debug("Visitor tracking API error suppressed:", msg);
       } else {
-        console.error('API Error:', msg);
+        console.error("API Error:", msg);
       }
     }
   } catch (error) {
-    console.error('Error tracking visitor:', error instanceof Error ? error.message : String(error));
+    console.error(
+      "Error tracking visitor:",
+      error instanceof Error ? error.message : String(error),
+    );
   }
 };

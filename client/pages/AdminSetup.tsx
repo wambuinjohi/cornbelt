@@ -39,7 +39,9 @@ export default function AdminSetup() {
   useEffect(() => {
     const checkInitialization = async () => {
       try {
-        const res = await (await import('@/lib/adminApi')).default("/api/admin/check-initialized");
+        const res = await (
+          await import("@/lib/adminApi")
+        ).default("/api/admin/check-initialized");
         if (res && res.ok) {
           const data = await res.json();
           setIsInitialized(data.initialized);
@@ -64,7 +66,7 @@ export default function AdminSetup() {
 
     setIsLoading(true);
     try {
-      const adminFetch = (await import('@/lib/adminApi')).default;
+      const adminFetch = (await import("@/lib/adminApi")).default;
       const response = await adminFetch("/api/admin/setup", {
         method: "POST",
         headers: {
@@ -77,7 +79,9 @@ export default function AdminSetup() {
         }),
       });
 
-      const result = response ? await response.json() : { error: 'No response' };
+      const result = response
+        ? await response.json()
+        : { error: "No response" };
 
       if (!response || !response.ok) {
         throw new Error(result.error || "Setup failed");

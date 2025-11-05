@@ -66,11 +66,13 @@ export default function AdminVisitorTracking() {
   const fetchVisitorData = async () => {
     setIsLoading(true);
     try {
-      const adminFetch = (await import('@/lib/adminApi')).default;
-      const res = await adminFetch('/api/admin/visitor-tracking', { method: 'GET' });
+      const adminFetch = (await import("@/lib/adminApi")).default;
+      const res = await adminFetch("/api/admin/visitor-tracking", {
+        method: "GET",
+      });
       if (!res || !res.ok) {
         const json = res ? await res.json().catch(() => ({})) : {};
-        const msg = json?.error || `Status ${res ? res.status : 'network'}`;
+        const msg = json?.error || `Status ${res ? res.status : "network"}`;
         throw new Error(msg);
       }
       const data = await res.json();
@@ -78,7 +80,7 @@ export default function AdminVisitorTracking() {
         throw new Error(data.error);
       }
       setVisitors(Array.isArray(data) ? data : []);
-      toast.success('Visitor data loaded successfully');
+      toast.success("Visitor data loaded successfully");
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
       console.error("Error fetching visitor data:", errorMsg);

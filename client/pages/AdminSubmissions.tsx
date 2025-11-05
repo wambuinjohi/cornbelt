@@ -31,7 +31,11 @@ export default function AdminSubmissions() {
   const fetchSubmissions = async () => {
     try {
       const token = localStorage.getItem("adminToken");
-      const res = await (await import('@/lib/adminApi')).default("/api/admin/contact-submissions", { headers: { Authorization: `Bearer ${token}` } });
+      const res = await (
+        await import("@/lib/adminApi")
+      ).default("/api/admin/contact-submissions", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       if (!res || !res.ok) throw new Error("Failed to fetch submissions");
       const data = await res.json();
       setSubmissions(Array.isArray(data) ? data : []);
