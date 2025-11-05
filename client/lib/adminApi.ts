@@ -35,38 +35,66 @@ export default async function adminFetch(
       ? path
       : `/api/admin/${path.replace(/^\/+/, "")}`;
 
-    // First try /api/ping (node) then /api.php?action=ping (php) to determine which backend to prefer
+    // Use cached backend preference if available (short TTL)
     try {
-      const nodePing = await fetch("/api/ping", { method: "GET" });
-      if (nodePing.ok) {
-        // Node is active; try node admin first
-        try {
-          const res = await fetch(adminUrl, init);
-          if (res.ok)
-            return {
-              ok: true,
-              status: res.status,
-              json: async () => res.json(),
-            };
-        } catch (err) {
-          // fallthrough to php fallback
+      const cached = sessionStorage.getItem("adminPreferredBackend");
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        const age = Date.now() - (parsed.ts || 0);
+        const TTL = 60 * 1000; // 60s
+        if (age >= 0 && age < TTL && parsed.backend) {
+          if (parsed.backend === "node") {
+            try {
+              const res = await fetch(adminUrl, init);
+              if (res.ok) return { ok: true, status: res.status, json: async () => res.json() };
+            } catch (e) {
+              // try php fallback below
+            }
+          } else if (parsed.backend === "php") {
+            // prefer php fallback - skip node check
+            // continue to fallback handling below
+          }
         }
       }
     } catch (e) {
-      // node ping failed, try php ping
+      // ignore cache errors
+    }
+
+    // Probe backends to determine which to prefer and cache result
+    let preferred: "node" | "php" | null = null;
+    try {
+      const nodePing = await fetch("/api/ping", { method: "GET" });
+      if (nodePing.ok) {
+        preferred = "node";
+      }
+    } catch (e) {
+      // node ping failed
+    }
+
+    if (!preferred) {
+      try {
+        const phpPing = await fetch("/api.php?action=ping", { method: "GET" });
+        if (phpPing.ok) preferred = "php";
+      } catch (e) {
+        // both failed
+      }
     }
 
     try {
-      const phpPingRes = await fetch("/api.php?action=ping", { method: "GET" });
-      if (phpPingRes.ok) {
-        // PHP backend active, prefer php fallback
-        // continue to fallback handling below
+      if (preferred) sessionStorage.setItem("adminPreferredBackend", JSON.stringify({ backend: preferred, ts: Date.now() }));
+    } catch (e) {}
+
+    // If node is preferred, try it first
+    if (preferred === "node") {
+      try {
+        const res = await fetch(adminUrl, init);
+        if (res.ok) return { ok: true, status: res.status, json: async () => res.json() };
+      } catch (e) {
+        // fallthrough to php
       }
-    } catch (e) {
-      // no php ping
     }
 
-    // Fallback to php api
+    // Otherwise fall through to php
     // parse resource and id
     const p = adminUrl.replace(/^\/api\/admin\/?/, "");
     const segs = p.split("/").filter(Boolean);
