@@ -111,7 +111,8 @@ export default function AdminHeroImages() {
           const base64Data = (reader.result as string).split(",")[1];
 
           const token = localStorage.getItem("adminToken");
-          const response = await fetch("/api/admin/upload", {
+          const adminFetch = (await import('@/lib/adminApi')).default;
+          const response = await adminFetch("/api/admin/upload", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -123,7 +124,7 @@ export default function AdminHeroImages() {
             }),
           });
 
-          if (!response.ok) {
+          if (!response || !response.ok) {
             throw new Error("Failed to upload file");
           }
 
