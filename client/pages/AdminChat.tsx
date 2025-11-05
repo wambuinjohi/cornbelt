@@ -147,7 +147,8 @@ export default function AdminChat() {
     }
 
     try {
-      const res = await fetch("/api/admin/bot-responses", {
+      const adminFetch = (await import('@/lib/adminApi')).default;
+      const res = await adminFetch("/api/admin/bot-responses", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -159,7 +160,7 @@ export default function AdminChat() {
         }),
       });
 
-      if (!res.ok) throw new Error("Failed to create response");
+      if (!res || !res.ok) throw new Error("Failed to create response");
 
       toast.success("Bot response created successfully");
       setKeyword("");
