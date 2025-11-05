@@ -56,6 +56,12 @@ function load_dotenv_if_needed($path = __DIR__ . '/.env') {
 
 load_dotenv_if_needed();
 
+// Quick ping endpoint so clients can detect this PHP backend is active
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['action'] === 'ping') {
+    echo json_encode(["backend" => "php", "message" => "pong"]);
+    exit;
+}
+
 $DB_HOST = getenv('DB_HOST');
 $DB_USER = getenv('DB_USER');
 $DB_PASS = getenv('DB_PASS');
