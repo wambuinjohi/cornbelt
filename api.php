@@ -83,6 +83,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['action']) && $_GET['ac
     $password = isset($input['password']) ? $input['password'] : '';
 
     if (!$email || !$password) {
+        // Log the raw request body for debugging (do not enable in production)
+        $raw = file_get_contents('php://input');
+        error_log("admin_login failed - missing fields. Raw input: " . $raw);
+
         http_response_code(400);
         echo json_encode(["error" => "Email and password are required"]);
         $conn->close();
