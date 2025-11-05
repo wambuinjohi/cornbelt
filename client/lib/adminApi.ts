@@ -125,14 +125,25 @@ export default async function adminFetch(
       try {
         bodyObj = init.body ? JSON.parse(init.body as string) : null;
       } catch {}
-      const phpRes = await fetch("/api.php?action=upload", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(init.headers || {}),
-        },
-        body: bodyObj ? JSON.stringify(bodyObj) : init.body,
-      });
+      // try upload across bases
+      let phpRes: Response | null = null;
+      for (const b of [window.location.origin, "https://cornbelt.co.ke"]) {
+        try {
+          const url = b + "/api.php?action=upload";
+          phpRes = await fetch(url, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              ...(init.headers || {}),
+            },
+            body: bodyObj ? JSON.stringify(bodyObj) : init.body,
+          });
+          if (phpRes) break;
+        } catch (e) {
+          phpRes = null;
+        }
+      }
+      if (!phpRes) return { ok: false, status: 0, json: async () => ({ error: 'Network error' }) };
       const json = await (phpRes.ok
         ? phpRes.json()
         : phpRes.text().then((t) => {
