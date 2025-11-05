@@ -14,8 +14,8 @@ const distPath = path.resolve(__dirname, "..");
 app.use(express.static(distPath));
 
 // Serve project-level assets folder (e.g., /assets/*)
-const assetsPath = path.resolve(distPath, '..', 'assets');
-app.use('/assets', express.static(assetsPath));
+const assetsPath = path.resolve(distPath, "..", "assets");
+app.use("/assets", express.static(assetsPath));
 
 // Handle React Router - serve index.html for all non-API routes
 // Express 5 uses path-to-regexp v8 which doesn't accept "*" as a path.

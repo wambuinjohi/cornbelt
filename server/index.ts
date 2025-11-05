@@ -7,7 +7,9 @@ import { handleDemo } from "./routes/demo";
 import fs from "fs";
 import path from "path";
 
-const API_BASE_URL = process.env.API_BASE_URL ?? (process.env.NODE_ENV === 'production' ? 'https://cornbelt.co.ke' : "");
+const API_BASE_URL =
+  process.env.API_BASE_URL ??
+  (process.env.NODE_ENV === "production" ? "https://cornbelt.co.ke" : "");
 
 // Initialize database tables
 async function initializeAdminTable() {
@@ -501,10 +503,10 @@ export function createServer() {
 
   // Serve project-level assets in dev/production at /assets/*
   try {
-    const assetsDir = path.join(process.cwd(), 'assets');
-    app.use('/assets', express.static(assetsDir));
+    const assetsDir = path.join(process.cwd(), "assets");
+    app.use("/assets", express.static(assetsDir));
   } catch (e) {
-    console.warn('Failed to set up assets static middleware:', e);
+    console.warn("Failed to set up assets static middleware:", e);
   }
 
   // Initialize admin table on startup
@@ -678,32 +680,37 @@ Disallow: /api/`;
   });
 
   // Development-only debug endpoints to inspect and seed admin_users
-  if (process.env.NODE_ENV !== 'production') {
-    app.get('/api/debug/admin-users', async (_req, res) => {
+  if (process.env.NODE_ENV !== "production") {
+    app.get("/api/debug/admin-users", async (_req, res) => {
       try {
-        const users = await apiCall('GET', 'admin_users');
+        const users = await apiCall("GET", "admin_users");
         res.json(Array.isArray(users) ? users : []);
       } catch (err) {
-        console.error('Debug: fetch admin_users failed', err);
-        res.status(500).json({ error: 'Failed to fetch admin_users' });
+        console.error("Debug: fetch admin_users failed", err);
+        res.status(500).json({ error: "Failed to fetch admin_users" });
       }
     });
 
-    app.post('/api/debug/seed-admin', async (req, res) => {
+    app.post("/api/debug/seed-admin", async (req, res) => {
       try {
         const { email, password, fullName } = req.body;
         if (!email || !password || !fullName) {
-          return res.status(400).json({ error: 'email, password, fullName required' });
+          return res
+            .status(400)
+            .json({ error: "email, password, fullName required" });
         }
 
         // Check existing
-        const existing = await apiCall('GET', 'admin_users');
-        if (Array.isArray(existing) && existing.some((u: any) => u.email === email)) {
-          return res.status(400).json({ error: 'Admin already exists' });
+        const existing = await apiCall("GET", "admin_users");
+        if (
+          Array.isArray(existing) &&
+          existing.some((u: any) => u.email === email)
+        ) {
+          return res.status(400).json({ error: "Admin already exists" });
         }
 
         const hashed = hashPassword(password);
-        const result = await apiCall('POST', 'admin_users', {
+        const result = await apiCall("POST", "admin_users", {
           email,
           password: hashed,
           fullName,
@@ -712,8 +719,8 @@ Disallow: /api/`;
 
         res.json(result);
       } catch (err) {
-        console.error('Debug seed admin failed', err);
-        res.status(500).json({ error: 'Failed to seed admin' });
+        console.error("Debug seed admin failed", err);
+        res.status(500).json({ error: "Failed to seed admin" });
       }
     });
   }
@@ -815,7 +822,8 @@ Disallow: /api/`;
       const updates: any = {};
       if (altText !== undefined) updates.altText = altText;
       if (displayOrder !== undefined) updates.displayOrder = displayOrder;
-      const setActive = req.body.isActive !== undefined ? req.body.isActive : undefined;
+      const setActive =
+        req.body.isActive !== undefined ? req.body.isActive : undefined;
       if (setActive !== undefined) updates.isActive = setActive;
 
       if (Object.keys(updates).length === 0) {
@@ -828,8 +836,18 @@ Disallow: /api/`;
           const allImages = await apiCall("GET", "hero_slider_images");
           if (Array.isArray(allImages)) {
             for (const img of allImages) {
-              if (Number(img.id) !== Number(id) && (img.isActive === true || img.isActive === 1 || img.isActive === '1')) {
-                await apiCall("PUT", "hero_slider_images", { isActive: false }, Number(img.id));
+              if (
+                Number(img.id) !== Number(id) &&
+                (img.isActive === true ||
+                  img.isActive === 1 ||
+                  img.isActive === "1")
+              ) {
+                await apiCall(
+                  "PUT",
+                  "hero_slider_images",
+                  { isActive: false },
+                  Number(img.id),
+                );
               }
             }
           }
@@ -919,10 +937,14 @@ Disallow: /api/`;
       const safeExt = ext.replace(/[^a-zA-Z0-9.]/g, "") || ".jpg";
 
       // Build filename
-      const filename = `hero-${Date.now()}-${Math.random().toString(36).slice(2,9)}${safeExt}`;
+      const filename = `hero-${Date.now()}-${Math.random().toString(36).slice(2, 9)}${safeExt}`;
 
       // Ensure assets folder exists at project root: /assets/hero_slider_images
-      const assetsDir = path.join(process.cwd(), "assets", "hero_slider_images");
+      const assetsDir = path.join(
+        process.cwd(),
+        "assets",
+        "hero_slider_images",
+      );
       fs.mkdirSync(assetsDir, { recursive: true });
 
       const filePath = path.join(assetsDir, filename);
@@ -962,10 +984,15 @@ Disallow: /api/`;
       let arr = Array.isArray(images) ? images : [];
 
       // Prefer images explicitly marked active. If none are active, return all.
-      const active = arr.filter((i: any) => i.isActive === true || i.isActive === 1 || i.isActive === '1');
+      const active = arr.filter(
+        (i: any) =>
+          i.isActive === true || i.isActive === 1 || i.isActive === "1",
+      );
       const toReturn = active.length > 0 ? active : arr;
 
-      const sortedImages = toReturn.sort((a: any, b: any) => (a.displayOrder || 0) - (b.displayOrder || 0));
+      const sortedImages = toReturn.sort(
+        (a: any, b: any) => (a.displayOrder || 0) - (b.displayOrder || 0),
+      );
       res.json(sortedImages);
     } catch (error) {
       console.error("Error fetching hero images:", error);
@@ -974,32 +1001,46 @@ Disallow: /api/`;
   });
 
   // Development: ensure at least one active hero image — admin can call this
-  app.post('/api/admin/reseed-hero-active', async (req, res) => {
-    const token = req.headers.authorization?.split(' ')[1];
+  app.post("/api/admin/reseed-hero-active", async (req, res) => {
+    const token = req.headers.authorization?.split(" ")[1];
     if (!token || !verifyToken(token)) {
-      return res.status(401).json({ error: 'Unauthorized' });
+      return res.status(401).json({ error: "Unauthorized" });
     }
 
     try {
-      const images = await apiCall('GET', 'hero_slider_images');
+      const images = await apiCall("GET", "hero_slider_images");
       if (!Array.isArray(images) || images.length === 0) {
-        return res.json({ success: true, message: 'No images to update' });
+        return res.json({ success: true, message: "No images to update" });
       }
 
-      const active = images.filter((i: any) => i.isActive === true || i.isActive === 1 || i.isActive === '1');
+      const active = images.filter(
+        (i: any) =>
+          i.isActive === true || i.isActive === 1 || i.isActive === "1",
+      );
       if (active.length > 0) {
-        return res.json({ success: true, message: 'Active images present' });
+        return res.json({ success: true, message: "Active images present" });
       }
 
       // find lowest displayOrder or first and set it active
-      const sorted = images.sort((a: any, b: any) => (a.displayOrder || 0) - (b.displayOrder || 0));
+      const sorted = images.sort(
+        (a: any, b: any) => (a.displayOrder || 0) - (b.displayOrder || 0),
+      );
       const first = sorted[0];
-      await apiCall('PUT', 'hero_slider_images', { isActive: true }, Number(first.id));
+      await apiCall(
+        "PUT",
+        "hero_slider_images",
+        { isActive: true },
+        Number(first.id),
+      );
 
-      res.json({ success: true, message: 'Set first image active', id: first.id });
+      res.json({
+        success: true,
+        message: "Set first image active",
+        id: first.id,
+      });
     } catch (err) {
-      console.error('Failed to reseed hero active:', err);
-      res.status(500).json({ error: 'Failed to reseed hero active' });
+      console.error("Failed to reseed hero active:", err);
+      res.status(500).json({ error: "Failed to reseed hero active" });
     }
   });
 

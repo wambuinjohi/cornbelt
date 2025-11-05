@@ -255,7 +255,9 @@ export default function AdminHeroImages() {
   const handleToggleActive = async (id: number, newActive: boolean) => {
     try {
       if (newActive) {
-        const ok = confirm('Marking this image active will unset other active images. Continue?');
+        const ok = confirm(
+          "Marking this image active will unset other active images. Continue?",
+        );
         if (!ok) return;
       }
 
@@ -538,10 +540,14 @@ export default function AdminHeroImages() {
                           <input
                             type="checkbox"
                             checked={!!image.isActive}
-                            onChange={() => handleToggleActive(image.id, !image.isActive)}
+                            onChange={() =>
+                              handleToggleActive(image.id, !image.isActive)
+                            }
                             className="w-4 h-4"
                           />
-                          <span className="text-xs text-muted-foreground">Active</span>
+                          <span className="text-xs text-muted-foreground">
+                            Active
+                          </span>
                         </label>
                       </div>
                     </div>

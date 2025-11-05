@@ -53,9 +53,10 @@ export default function AdminLogin() {
       }
 
       if (!response.ok) {
-        const errMsg = result && typeof result === 'object' && 'error' in result
-          ? (result.error || `Login failed (status ${response.status})`)
-          : `Login failed (status ${response.status})`;
+        const errMsg =
+          result && typeof result === "object" && "error" in result
+            ? result.error || `Login failed (status ${response.status})`
+            : `Login failed (status ${response.status})`;
         throw new Error(errMsg);
       }
 
