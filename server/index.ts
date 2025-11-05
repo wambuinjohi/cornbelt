@@ -139,7 +139,7 @@ async function initializeAdminTable() {
       console.log("Default bot responses seeded");
     }
 
-    // Create hero_slider_images table
+    // Create hero_slider_images table (include isActive column)
     const heroTableData = {
       create_table: true,
       columns: {
@@ -148,6 +148,7 @@ async function initializeAdminTable() {
         imageUrl: "VARCHAR(500) NOT NULL",
         altText: "VARCHAR(255)",
         displayOrder: "INT DEFAULT 0",
+        isActive: "BOOLEAN DEFAULT true",
         createdAt: "DATETIME DEFAULT CURRENT_TIMESTAMP",
         updatedAt:
           "DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
@@ -158,6 +159,18 @@ async function initializeAdminTable() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(heroTableData),
+    });
+
+    // Ensure isActive column exists (in case table already existed without it)
+    await fetch(`${baseUrl}/api.php?table=hero_slider_images`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        alter_table: true,
+        actions: [
+          { type: "ADD", name: "isActive", definition: "BOOLEAN DEFAULT true" },
+        ],
+      }),
     });
 
     console.log("Hero slider images table initialized");
