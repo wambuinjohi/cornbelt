@@ -190,13 +190,19 @@ export default async function adminFetch(
 
     // For chat/:sessionId -> fetch chats and filter
     if (resource === "chat" && resourceId && method === "GET") {
-      const phpRes = await fetch(buildPhpUrlForResource("chat", resourceId));
-      if (!phpRes.ok)
-        return {
-          ok: false,
-          status: phpRes.status,
-          json: async () => await phpRes.json(),
-        };
+      // try fetch across bases for chat session
+      let phpRes: Response | null = null;
+      for (const b of [window.location.origin, "https://cornbelt.co.ke"]) {
+        try {
+          const url = b + buildPhpUrlForResource("chat", resourceId).replace(/^[.\/]+/, '/');
+          phpRes = await fetch(url);
+          if (phpRes) break;
+        } catch (e) {
+          phpRes = null;
+        }
+      }
+      if (!phpRes) return { ok: false, status: 0, json: async () => [] };
+      if (!phpRes.ok) return { ok: false, status: phpRes.status, json: async () => await phpRes.json() };
       const messages = await phpRes.json();
       return { ok: true, status: 200, json: async () => messages };
     }
@@ -206,19 +212,31 @@ export default async function adminFetch(
     const headers: any = { ...(init.headers || {}) };
     if (!headers["Content-Type"] && init.body)
       headers["Content-Type"] = "application/json";
-    const phpRes = await fetch(phpUrl, { method, headers, body: init.body });
-    const contentType = phpRes.headers.get("content-type") || "";
+
+    // try across bases
+    let finalPhpRes: Response | null = null;
+    for (const b of [window.location.origin, "https://cornbelt.co.ke"]) {
+      try {
+        const url = b + phpUrl.replace(/^[.\/]+/, '/');
+        finalPhpRes = await fetch(url, { method, headers, body: init.body });
+        if (finalPhpRes) break;
+      } catch (e) {
+        finalPhpRes = null;
+      }
+    }
+    if (!finalPhpRes) return { ok: false, status: 0, json: async () => ({ error: 'Network error' }) };
+    const contentType = finalPhpRes.headers.get("content-type") || "";
     let parsed: any;
-    if (contentType.includes("application/json")) parsed = await phpRes.json();
+    if (contentType.includes("application/json")) parsed = await finalPhpRes.json();
     else
-      parsed = await phpRes.text().then((t) => {
+      parsed = await finalPhpRes.text().then((t) => {
         try {
           return JSON.parse(t);
         } catch {
           return t;
         }
       });
-    return { ok: phpRes.ok, status: phpRes.status, json: async () => parsed };
+    return { ok: finalPhpRes.ok, status: finalPhpRes.status, json: async () => parsed };
   } catch (err) {
     console.error("adminFetch error", err);
     return null;
