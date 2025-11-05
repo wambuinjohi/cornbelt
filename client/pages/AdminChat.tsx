@@ -115,10 +115,9 @@ export default function AdminChat() {
 
   const fetchSessions = async () => {
     try {
-      const res = await fetch("/api/admin/chat-sessions", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error("Failed to fetch sessions");
+      const adminFetch = (await import('@/lib/adminApi')).default;
+      const res = await adminFetch("/api/admin/chat-sessions", { headers: { Authorization: `Bearer ${token}` } });
+      if (!res || !res.ok) throw new Error("Failed to fetch sessions");
       const data = await res.json();
       setSessions(Array.isArray(data) ? data : []);
     } catch (e) {
