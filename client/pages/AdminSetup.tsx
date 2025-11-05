@@ -39,9 +39,9 @@ export default function AdminSetup() {
   useEffect(() => {
     const checkInitialization = async () => {
       try {
-        const response = await fetch("/api/admin/check-initialized");
-        if (response.ok) {
-          const data = await response.json();
+        const res = await (await import('@/lib/adminApi')).default("/api/admin/check-initialized");
+        if (res && res.ok) {
+          const data = await res.json();
           setIsInitialized(data.initialized);
           if (data.initialized) {
             toast.info("Admin already initialized. Redirecting to login...");
