@@ -13,6 +13,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
+// Try to load environment variables from a .env file in the same directory if any required vars are missing
+function load_dotenv_if_needed($path = __DIR__ . '/.env') {
+    if (!file_exists($path)) return;
+    $lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    foreach ($lines as $line) {
+        if (strpos(trim($line), '#') === 0) continue;
+        $parts = explode('=', $line, 2);
+        if (count($parts) !== 2) continue;
+        $k = trim($parts[0]);
+        $v = trim($parts[1]);
+        // strip optional surrounding quotes
+        if ((substr($v,0,1) === '"' && substr($v,-1) === '"') || (substr($v,0,1) === "'" && substr($v,-1) === "'")) {
+            $v = substr($v,1,-1);
+        }
+        if (getenv($k) === false) putenv("$k=$v");
+        if (!isset($_ENV[$k])) $_ENV[$k] = $v;
+        if (!isset($_SERVER[$k])) $_SERVER[$k] = $v;
+    }
+}
+
+load_dotenv_if_needed();
+
 $DB_HOST = getenv('DB_HOST');
 $DB_USER = getenv('DB_USER');
 $DB_PASS = getenv('DB_PASS');
@@ -20,7 +42,7 @@ $DB_NAME = getenv('DB_NAME');
 
 if (!$DB_HOST || !$DB_USER || $DB_PASS === false || !$DB_NAME) {
     http_response_code(500);
-    echo json_encode(["error" => "Database credentials not configured. Please set DB_HOST, DB_USER, DB_PASS and DB_NAME environment variables."]);
+    echo json_encode(["error" => "Database credentials not configured. Please set DB_HOST, DB_USER, DB_PASS and DB_NAME environment variables (or provide a .env file)."]);
     exit;
 }
 
