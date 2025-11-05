@@ -252,6 +252,30 @@ export default function AdminHeroImages() {
     }
   };
 
+  const handleToggleActive = async (id: number, newActive: boolean) => {
+    try {
+      const token = localStorage.getItem("adminToken");
+      const response = await fetch(`/api/admin/hero-images/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ isActive: newActive }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to toggle active");
+      }
+
+      toast.success("Updated");
+      fetchImages();
+    } catch (error) {
+      console.error("Error toggling active:", error);
+      toast.error("Failed to update");
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
