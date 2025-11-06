@@ -85,7 +85,13 @@ export default function AdminLogin() {
           if (!response.ok) {
             // If this looks like a routing/mapping error (404) or the response is HTML (served index.html) or a generic table error,
             // treat it as a miss and continue to the next endpoint (try both php and node in order)
-            if (response.status === 404 || looksLikeTableError || looksLikeHtml || contentType.includes("text/html")) {
+            if (
+              response.status === 404 ||
+              response.status === 502 ||
+              looksLikeTableError ||
+              looksLikeHtml ||
+              contentType.includes("text/html")
+            ) {
               lastError = { status: response.status, message: serverErr };
               continue; // try next endpoint
             }
