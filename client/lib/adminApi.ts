@@ -46,12 +46,14 @@ export default async function adminFetch(
           if (parsed.backend === "node") {
             try {
               const res = await fetch(adminUrl, init);
-              if (res.ok)
+              const ct = res.headers.get("content-type") || "";
+              if (res.ok && ct.includes("application/json"))
                 return {
                   ok: true,
                   status: res.status,
                   json: async () => res.json(),
                 };
+              // If non-JSON came back (e.g. HTML/doctype), treat as a miss and fall back
             } catch (e) {
               // try php fallback below
             }
