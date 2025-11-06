@@ -28,7 +28,11 @@ export default function ChatWidget() {
           const filtered = Array.isArray(data)
             ? data
                 .filter((m: any) => m.sessionId === sessionId)
-                .map((m: any) => ({ sender: m.sender, message: m.message, createdAt: m.createdAt }))
+                .map((m: any) => ({
+                  sender: m.sender,
+                  message: m.message,
+                  createdAt: m.createdAt,
+                }))
             : [];
           setMessages(filtered);
         }
@@ -56,7 +60,12 @@ export default function ChatWidget() {
       await fetch(`/api.php?table=chats`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId, sender: "user", message: text, createdAt: new Date().toISOString() }),
+        body: JSON.stringify({
+          sessionId,
+          sender: "user",
+          message: text,
+          createdAt: new Date().toISOString(),
+        }),
       });
 
       // Fetch bot responses from PHP and compute reply on client
@@ -78,20 +87,30 @@ export default function ChatWidget() {
       }
 
       if (!botReply) {
-        botReply = "Thanks for your message! Our team will get back to you shortly. You can also visit the Contact page for more ways to reach us.";
+        botReply =
+          "Thanks for your message! Our team will get back to you shortly. You can also visit the Contact page for more ways to reach us.";
       }
 
       // Save bot reply
       await fetch(`/api.php?table=chats`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId, sender: "bot", message: botReply, createdAt: new Date().toISOString() }),
+        body: JSON.stringify({
+          sessionId,
+          sender: "bot",
+          message: botReply,
+          createdAt: new Date().toISOString(),
+        }),
       });
 
       // Append bot reply to UI
       setMessages((m) => [
         ...m,
-        { sender: "bot", message: botReply!, createdAt: new Date().toISOString() },
+        {
+          sender: "bot",
+          message: botReply!,
+          createdAt: new Date().toISOString(),
+        },
       ]);
     } catch (e) {
       console.error("Chat send error:", e);
