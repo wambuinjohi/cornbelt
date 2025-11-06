@@ -96,18 +96,35 @@ export default function AdminLogin() {
               continue; // try next endpoint
             }
 
-            // Otherwise treat as permanent error
-            const errMsg =
-              result && typeof result === "object" && "error" in result
-                ? result.error
-                : responseText
-                ? responseText
-                : `Login failed (status ${response.status})`;
-            throw new Error(errMsg);
+            // Otherwise treat as permanent error — normalize to string
+            let errMsgStr = `Login failed (status ${response.status})`;
+            if (result && typeof result === "object" && "error" in result) {
+              if (typeof result.error === "string") errMsgStr = result.error;
+              else errMsgStr = JSON.stringify(result.error);
+            } else if (responseText) {
+              errMsgStr = responseText;
+            }
+            throw new Error(errMsgStr);
           }
 
-          // success
-          successResult = result ?? (responseText ? JSON.parse(responseText) : null);
+          // success — ensure we parse JSON result if possible
+          let successObj: any = null;
+          if (result) successObj = result;
+          else if (responseText) {
+            try {
+              successObj = JSON.parse(responseText);
+            } catch {
+              successObj = null;
+            }
+          }
+
+          // If the success response does not look like a token payload, treat as failure
+          if (!successObj || !successObj.token) {
+            lastError = { status: response.status, message: successObj || responseText };
+            continue;
+          }
+
+          successResult = successObj;
           break;
         } catch (err) {
           lastError = err;
