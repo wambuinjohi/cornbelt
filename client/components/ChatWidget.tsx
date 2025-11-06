@@ -19,24 +19,21 @@ export default function ChatWidget() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // load history
+    // load history from PHP api.php (public CRUD endpoint)
     const load = async () => {
       try {
-        const res = await fetch(
-          `/api/chat/history?sessionId=${encodeURIComponent(sessionId)}`,
-        );
+        const res = await fetch(`/api.php?table=chats`);
         if (res.ok) {
           const data = await res.json();
-          setMessages(
-            data.map((m: any) => ({
-              sender: m.sender,
-              message: m.message,
-              createdAt: m.createdAt,
-            })),
-          );
+          const filtered = Array.isArray(data)
+            ? data
+                .filter((m: any) => m.sessionId === sessionId)
+                .map((m: any) => ({ sender: m.sender, message: m.message, createdAt: m.createdAt }))
+            : [];
+          setMessages(filtered);
         }
       } catch (e) {
-        console.error(e);
+        console.error("Failed to load chat history:", e);
       }
     };
     load();
@@ -45,33 +42,59 @@ export default function ChatWidget() {
   const sendMessage = async () => {
     if (!input.trim()) return;
     const text = input.trim();
+
+    // optimistic UI: show user message immediately
     setMessages((m) => [
       ...m,
       { sender: "user", message: text, createdAt: new Date().toISOString() },
     ]);
     setInput("");
     setLoading(true);
+
     try {
-      const res = await fetch("/api/chat/message", {
+      // Save user message to PHP endpoint
+      await fetch(`/api.php?table=chats`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId, name: "Guest", message: text }),
+        body: JSON.stringify({ sessionId, sender: "user", message: text, createdAt: new Date().toISOString() }),
       });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.reply) {
-          setMessages((m) => [
-            ...m,
-            {
-              sender: "bot",
-              message: data.reply,
-              createdAt: new Date().toISOString(),
-            },
-          ]);
+
+      // Fetch bot responses from PHP and compute reply on client
+      const resp = await fetch(`/api.php?table=bot_responses`);
+      let botReply: string | null = null;
+      if (resp.ok) {
+        const responses = await resp.json();
+        if (Array.isArray(responses)) {
+          const lower = text.toLowerCase();
+          for (const r of responses) {
+            const keyword = (r.keyword || "").toLowerCase();
+            if (!keyword) continue;
+            if (lower.includes(keyword)) {
+              botReply = r.answer;
+              break;
+            }
+          }
         }
       }
+
+      if (!botReply) {
+        botReply = "Thanks for your message! Our team will get back to you shortly. You can also visit the Contact page for more ways to reach us.";
+      }
+
+      // Save bot reply
+      await fetch(`/api.php?table=chats`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId, sender: "bot", message: botReply, createdAt: new Date().toISOString() }),
+      });
+
+      // Append bot reply to UI
+      setMessages((m) => [
+        ...m,
+        { sender: "bot", message: botReply!, createdAt: new Date().toISOString() },
+      ]);
     } catch (e) {
-      console.error(e);
+      console.error("Chat send error:", e);
     } finally {
       setLoading(false);
     }
