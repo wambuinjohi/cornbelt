@@ -134,7 +134,17 @@ export default function AdminLogin() {
       }
 
       if (!successResult) {
-        throw lastError || new Error("Login failed");
+        // Normalize lastError into a readable message
+        let msg = "Login failed";
+        try {
+          if (!lastError) msg = "Login failed";
+          else if (typeof lastError === "string") msg = lastError;
+          else if (lastError instanceof Error) msg = lastError.message;
+          else if (lastError && typeof lastError === "object") msg = JSON.stringify(lastError);
+        } catch (e) {
+          msg = "Login failed";
+        }
+        throw new Error(msg);
       }
 
       // Store token in localStorage
@@ -145,7 +155,19 @@ export default function AdminLogin() {
       navigate("/admin/dashboard");
     } catch (error) {
       console.error("Login error:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to login");
+      // Build readable message for toast
+      let msg = "Failed to login";
+      if (error instanceof Error) msg = error.message;
+      else if (error && typeof error === "object") {
+        try {
+          msg = JSON.stringify(error);
+        } catch {
+          msg = String(error);
+        }
+      } else if (typeof error === "string") msg = error;
+      // Truncate very long messages
+      if (msg && msg.length > 1000) msg = msg.slice(0, 1000) + "...";
+      toast.error(msg || "Failed to login");
     } finally {
       setIsLoading(false);
     }
