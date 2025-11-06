@@ -78,10 +78,13 @@ export default function AdminVisitorTracking() {
         throw new Error(msg);
       }
       const data = await res.json();
-      if (data.error) {
-        throw new Error(data.error);
+      if (data && typeof data === "object" && "error" in data) {
+        throw new Error((data as any).error || "Unknown error");
       }
-      setVisitors(Array.isArray(data) ? data : []);
+      if (!Array.isArray(data)) {
+        throw new Error("Invalid response from server");
+      }
+      setVisitors(data);
       toast.success("Visitor data loaded successfully");
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);

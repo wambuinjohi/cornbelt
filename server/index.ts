@@ -490,8 +490,14 @@ async function apiCall(
   id?: number,
 ): Promise<any> {
   const baseUrl = API_BASE_URL;
-  let url = `${baseUrl}/api.php?table=${table}`;
-  if (id) url += `&id=${id}`;
+
+  // Build list of candidate bases to try. Prefer configured baseUrl, then canonical host.
+  const candidates: string[] = [];
+  if (baseUrl) candidates.push(baseUrl.replace(/\/$/, ""));
+  // Always try the known canonical host as a fallback
+  candidates.push("https://cornbelt.co.ke");
+  // In development try localhost as a fallback
+  if (process.env.NODE_ENV !== "production") candidates.push("http://localhost:8080");
 
   const options: any = {
     method,
@@ -504,37 +510,49 @@ async function apiCall(
     options.body = JSON.stringify(data);
   }
 
-  const response = await fetch(url, options);
-  const contentType = response.headers.get("content-type") || "";
-  const status = response.status;
-
-  // If response is JSON, parse and return it. If not, include the raw text in a helpful error object.
-  if (contentType.includes("application/json")) {
+  // Try each candidate base until one succeeds
+  const errors: any[] = [];
+  for (const base of candidates) {
     try {
-      const json = await response.json();
-      if (!response.ok) {
-        return { error: "External API returned an error", status, body: json };
+      const url = `${base}/api.php?table=${encodeURIComponent(table)}` + (id ? `&id=${encodeURIComponent(String(id))}` : "");
+      const response = await fetch(url, options);
+      const contentType = response.headers.get("content-type") || "";
+      const status = response.status;
+
+      // If response is JSON, parse and return it. If not, include the raw text in a helpful error object.
+      if (contentType.includes("application/json")) {
+        try {
+          const json = await response.json();
+          if (!response.ok) {
+            errors.push({ base, status, error: "External API returned an error", body: json });
+            continue; // try next base
+          }
+          return json;
+        } catch (parseErr) {
+          // Failed to parse JSON despite content-type claiming JSON �� include raw text for debugging
+          const text = await response.text();
+          errors.push({ base, status, error: "Invalid JSON response from external API", contentType, body: text });
+          continue;
+        }
+      } else {
+        const text = await response.text();
+        errors.push({ base, status, error: "Non-JSON response from external API", contentType, body: text });
+        continue;
       }
-      return json;
-    } catch (parseErr) {
-      // Failed to parse JSON despite content-type claiming JSON — include raw text for debugging
-      const text = await response.text();
-      return {
-        error: "Invalid JSON response from external API",
-        status,
-        contentType,
-        body: text,
-      };
+    } catch (fetchErr) {
+      // Network or other fetch failure — record and try next base
+      errors.push({ base, error: "Network error while calling external API", message: fetchErr instanceof Error ? fetchErr.message : String(fetchErr) });
+      continue;
     }
-  } else {
-    const text = await response.text();
-    return {
-      error: "Non-JSON response from external API",
-      status,
-      contentType,
-      body: text,
-    };
   }
+
+  // If we reach here, all candidates failed — return structured error with collected diagnostics
+  return {
+    error: "All external API backends failed",
+    candidates,
+    attempts: errors,
+    status: 502,
+  };
 }
 
 export function createServer() {
@@ -693,6 +711,12 @@ Disallow: /api/`;
     try {
       // Fetch all admin users and find by email
       const users = await apiCall("GET", "admin_users");
+      if (users && typeof users === "object" && "error" in users) {
+        // External API error — surface with 502 Bad Gateway for clarity
+        console.error("External API error fetching admin_users:", users);
+        return res.status(502).json({ error: users.error || "External API failure", details: users });
+      }
+
       if (!Array.isArray(users)) {
         return res.status(401).json({ error: "Invalid credentials" });
       }

@@ -53,10 +53,16 @@ export default function AdminLogin() {
             body: JSON.stringify(data),
           });
 
+          const contentType = response.headers.get("content-type") || "";
+
           let result: any = null;
           let responseText: string | null = null;
           try {
-            result = await response.clone().json();
+            if (contentType.includes("application/json")) {
+              result = await response.clone().json();
+            } else {
+              responseText = await response.clone().text();
+            }
           } catch (e) {
             try {
               responseText = await response.clone().text();
@@ -65,37 +71,60 @@ export default function AdminLogin() {
             }
           }
 
-          // If the response indicates the generic php emulation 'missing table' or similar, try next
+          // If the response indicates the generic php emulation 'missing table' or similar, or returned HTML/404, try next
           const serverErr = result?.error || responseText || null;
-          if (!response.ok) {
-            const serverErrLower =
-              typeof serverErr === "string" ? serverErr.toLowerCase() : "";
-            const looksLikeTableError =
-              serverErrLower.includes("table") ||
-              serverErrLower.includes("table name") ||
-              serverErrLower.includes("missing");
+          const serverErrLower =
+            typeof serverErr === "string" ? serverErr.toLowerCase() : "";
+          const looksLikeTableError =
+            serverErrLower.includes("table") ||
+            serverErrLower.includes("table name") ||
+            serverErrLower.includes("missing");
+          const looksLikeHtml =
+            typeof responseText === "string" && responseText.trim().startsWith("<");
 
-            // If this was the Node endpoint (not the PHP fallback) and it looks like the request was routed to the generic API handler, try the next endpoint
+          if (!response.ok) {
+            // If this looks like a routing/mapping error (404) or the response is HTML (served index.html) or a generic table error,
+            // treat it as a miss and continue to the next endpoint (try both php and node in order)
             if (
-              !ep.usePhpFallback &&
-              (response.status === 404 || looksLikeTableError)
+              response.status === 404 ||
+              response.status === 502 ||
+              looksLikeTableError ||
+              looksLikeHtml ||
+              contentType.includes("text/html")
             ) {
               lastError = { status: response.status, message: serverErr };
               continue; // try next endpoint
             }
 
-            // Otherwise treat as permanent error
-            const errMsg =
-              result && typeof result === "object" && "error" in result
-                ? result.error
-                : responseText
-                  ? responseText
-                  : `Login failed (status ${response.status})`;
-            throw new Error(errMsg);
+            // Otherwise treat as permanent error — normalize to string
+            let errMsgStr = `Login failed (status ${response.status})`;
+            if (result && typeof result === "object" && "error" in result) {
+              if (typeof result.error === "string") errMsgStr = result.error;
+              else errMsgStr = JSON.stringify(result.error);
+            } else if (responseText) {
+              errMsgStr = responseText;
+            }
+            throw new Error(errMsgStr);
           }
 
-          // success
-          successResult = result;
+          // success — ensure we parse JSON result if possible
+          let successObj: any = null;
+          if (result) successObj = result;
+          else if (responseText) {
+            try {
+              successObj = JSON.parse(responseText);
+            } catch {
+              successObj = null;
+            }
+          }
+
+          // If the success response does not look like a token payload, treat as failure
+          if (!successObj || !successObj.token) {
+            lastError = { status: response.status, message: successObj || responseText };
+            continue;
+          }
+
+          successResult = successObj;
           break;
         } catch (err) {
           lastError = err;
@@ -105,7 +134,17 @@ export default function AdminLogin() {
       }
 
       if (!successResult) {
-        throw lastError || new Error("Login failed");
+        // Normalize lastError into a readable message
+        let msg = "Login failed";
+        try {
+          if (!lastError) msg = "Login failed";
+          else if (typeof lastError === "string") msg = lastError;
+          else if (lastError instanceof Error) msg = lastError.message;
+          else if (lastError && typeof lastError === "object") msg = JSON.stringify(lastError);
+        } catch (e) {
+          msg = "Login failed";
+        }
+        throw new Error(msg);
       }
 
       // Store token in localStorage
@@ -116,7 +155,19 @@ export default function AdminLogin() {
       navigate("/admin/dashboard");
     } catch (error) {
       console.error("Login error:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to login");
+      // Build readable message for toast
+      let msg = "Failed to login";
+      if (error instanceof Error) msg = error.message;
+      else if (error && typeof error === "object") {
+        try {
+          msg = JSON.stringify(error);
+        } catch {
+          msg = String(error);
+        }
+      } else if (typeof error === "string") msg = error;
+      // Truncate very long messages
+      if (msg && msg.length > 1000) msg = msg.slice(0, 1000) + "...";
+      toast.error(msg || "Failed to login");
     } finally {
       setIsLoading(false);
     }
