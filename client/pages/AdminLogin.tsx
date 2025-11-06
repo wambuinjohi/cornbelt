@@ -53,10 +53,16 @@ export default function AdminLogin() {
             body: JSON.stringify(data),
           });
 
+          const contentType = response.headers.get("content-type") || "";
+
           let result: any = null;
           let responseText: string | null = null;
           try {
-            result = await response.clone().json();
+            if (contentType.includes("application/json")) {
+              result = await response.clone().json();
+            } else {
+              responseText = await response.clone().text();
+            }
           } catch (e) {
             try {
               responseText = await response.clone().text();
@@ -65,21 +71,21 @@ export default function AdminLogin() {
             }
           }
 
-          // If the response indicates the generic php emulation 'missing table' or similar, try next
+          // If the response indicates the generic php emulation 'missing table' or similar, or returned HTML/404, try next
           const serverErr = result?.error || responseText || null;
-          if (!response.ok) {
-            const serverErrLower =
-              typeof serverErr === "string" ? serverErr.toLowerCase() : "";
-            const looksLikeTableError =
-              serverErrLower.includes("table") ||
-              serverErrLower.includes("table name") ||
-              serverErrLower.includes("missing");
+          const serverErrLower =
+            typeof serverErr === "string" ? serverErr.toLowerCase() : "";
+          const looksLikeTableError =
+            serverErrLower.includes("table") ||
+            serverErrLower.includes("table name") ||
+            serverErrLower.includes("missing");
+          const looksLikeHtml =
+            typeof responseText === "string" && responseText.trim().startsWith("<");
 
-            // If this was the Node endpoint (not the PHP fallback) and it looks like the request was routed to the generic API handler, try the next endpoint
-            if (
-              !ep.usePhpFallback &&
-              (response.status === 404 || looksLikeTableError)
-            ) {
+          if (!response.ok) {
+            // If this looks like a routing/mapping error (404) or the response is HTML (served index.html) or a generic table error,
+            // treat it as a miss and continue to the next endpoint (try both php and node in order)
+            if (response.status === 404 || looksLikeTableError || looksLikeHtml || contentType.includes("text/html")) {
               lastError = { status: response.status, message: serverErr };
               continue; // try next endpoint
             }
@@ -89,13 +95,13 @@ export default function AdminLogin() {
               result && typeof result === "object" && "error" in result
                 ? result.error
                 : responseText
-                  ? responseText
-                  : `Login failed (status ${response.status})`;
+                ? responseText
+                : `Login failed (status ${response.status})`;
             throw new Error(errMsg);
           }
 
           // success
-          successResult = result;
+          successResult = result ?? (responseText ? JSON.parse(responseText) : null);
           break;
         } catch (err) {
           lastError = err;
