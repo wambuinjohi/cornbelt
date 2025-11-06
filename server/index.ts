@@ -504,35 +504,45 @@ async function apiCall(
     options.body = JSON.stringify(data);
   }
 
-  const response = await fetch(url, options);
-  const contentType = response.headers.get("content-type") || "";
-  const status = response.status;
+  try {
+    const response = await fetch(url, options);
+    const contentType = response.headers.get("content-type") || "";
+    const status = response.status;
 
-  // If response is JSON, parse and return it. If not, include the raw text in a helpful error object.
-  if (contentType.includes("application/json")) {
-    try {
-      const json = await response.json();
-      if (!response.ok) {
-        return { error: "External API returned an error", status, body: json };
+    // If response is JSON, parse and return it. If not, include the raw text in a helpful error object.
+    if (contentType.includes("application/json")) {
+      try {
+        const json = await response.json();
+        if (!response.ok) {
+          return { error: "External API returned an error", status, body: json };
+        }
+        return json;
+      } catch (parseErr) {
+        // Failed to parse JSON despite content-type claiming JSON — include raw text for debugging
+        const text = await response.text();
+        return {
+          error: "Invalid JSON response from external API",
+          status,
+          contentType,
+          body: text,
+        };
       }
-      return json;
-    } catch (parseErr) {
-      // Failed to parse JSON despite content-type claiming JSON — include raw text for debugging
+    } else {
       const text = await response.text();
       return {
-        error: "Invalid JSON response from external API",
+        error: "Non-JSON response from external API",
         status,
         contentType,
         body: text,
       };
     }
-  } else {
-    const text = await response.text();
+  } catch (fetchErr) {
+    // Network or other fetch failure — surface as structured error
     return {
-      error: "Non-JSON response from external API",
-      status,
-      contentType,
-      body: text,
+      error: "Network error while calling external API",
+      message: fetchErr instanceof Error ? fetchErr.message : String(fetchErr),
+      status: 0,
+      body: null,
     };
   }
 }
