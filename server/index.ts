@@ -490,6 +490,17 @@ async function apiCall(
   id?: number,
 ): Promise<any> {
   const baseUrl = API_BASE_URL;
+
+  if (!baseUrl) {
+    return {
+      error: "API_BASE_URL not configured",
+      message:
+        "API_BASE_URL environment variable is not set on the Node server. Configure API_BASE_URL to point to the PHP backend (e.g. https://cornbelt.co.ke) or set it to the PHP host.",
+      status: 0,
+      body: null,
+    };
+  }
+
   let url = `${baseUrl}/api.php?table=${table}`;
   if (id) url += `&id=${id}`;
 
