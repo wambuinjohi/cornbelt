@@ -446,6 +446,41 @@ if (strpos($uri, '/api/admin') !== false) {
         exit;
     }
 
+    // Allow unauthenticated visitor tracking inserts from client-side tracking
+    if ($resource === 'visitor-tracking' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        // Insert visitor tracking record without requiring JWT auth
+        $payload = $input;
+        // remove control keys
+        unset($payload['create_table'], $payload['alter_table'], $payload['drop_table'], $payload['table']);
+
+        $keys = [];
+        $escaped = [];
+        foreach ($payload as $k => $v) {
+            if (!valid_identifier($k)) continue;
+            $keys[] = $k;
+            $s = (string)$v;
+            if (mb_strlen($s, 'UTF-8') > 1024) $s = mb_substr($s, 0, 1024, 'UTF-8');
+            $escaped[] = $conn->real_escape_string($s);
+        }
+
+        if (count($keys) === 0) {
+            echo json_encode(["error" => "No valid fields to insert"]);
+            $conn->close();
+            exit;
+        }
+
+        $sql = "INSERT INTO `visitor_tracking` (`" . implode('`, `', array_map(function($k) use ($conn) { return $conn->real_escape_string($k); }, $keys)) . "`) VALUES ('" . implode("', '", $escaped) . "')";
+        if ($conn->query($sql) === TRUE) {
+            echo json_encode(["success" => true, "id" => $conn->insert_id]);
+        } else {
+            http_response_code(500);
+            error_log("Visitor tracking insert error: " . $conn->error . " SQL: " . $sql);
+            echo json_encode(["error" => $conn->error]);
+        }
+        $conn->close();
+        exit;
+    }
+
     // For other admin resources, map resource to a table and require JWT auth
     if ($resource && isset($map[$resource])) {
         // Authenticate
