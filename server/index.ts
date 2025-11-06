@@ -703,6 +703,12 @@ Disallow: /api/`;
     try {
       // Fetch all admin users and find by email
       const users = await apiCall("GET", "admin_users");
+      if (users && typeof users === "object" && "error" in users) {
+        // External API error — surface with 502 Bad Gateway for clarity
+        console.error("External API error fetching admin_users:", users);
+        return res.status(502).json({ error: users.error || "External API failure", details: users });
+      }
+
       if (!Array.isArray(users)) {
         return res.status(401).json({ error: "Invalid credentials" });
       }
