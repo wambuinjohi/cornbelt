@@ -67,8 +67,10 @@ export default function AdminVisitorTracking() {
     setIsLoading(true);
     try {
       const adminFetch = (await import("@/lib/adminApi")).default;
+      const token = localStorage.getItem("adminToken");
       const res = await adminFetch("/api/admin/visitor-tracking", {
         method: "GET",
+        headers: { Authorization: `Bearer ${token}` },
       });
       if (!res || !res.ok) {
         const json = res ? await res.json().catch(() => ({})) : {};
