@@ -227,6 +227,50 @@ async function initializeAdminTable() {
 
     console.log("Testimonials table initialized");
 
+    // Create visitor_tracking table
+    const visitorTableData = {
+      create_table: true,
+      columns: {
+        id: "INT AUTO_INCREMENT PRIMARY KEY",
+        page_url: "VARCHAR(500)",
+        previous_page: "VARCHAR(500)",
+        timestamp: "DATETIME",
+        user_agent: "TEXT",
+        device_type: "VARCHAR(50)",
+        screen_resolution: "VARCHAR(50)",
+        screen_width: "INT",
+        screen_height: "INT",
+        browser_language: "VARCHAR(20)",
+        timezone: "VARCHAR(100)",
+        timezone_offset: "INT",
+        referrer: "TEXT",
+        connection_type: "VARCHAR(50)",
+        memory: "VARCHAR(20)",
+        processor_cores: "INT",
+        platform: "VARCHAR(100)",
+        session_id: "VARCHAR(255)",
+        geolocation_latitude: "DOUBLE",
+        geolocation_longitude: "DOUBLE",
+        geolocation_accuracy: "DOUBLE",
+        viewport_width: "INT",
+        viewport_height: "INT",
+        color_depth: "INT",
+        pixel_depth: "INT",
+        do_not_track: "VARCHAR(10)",
+        local_time: "VARCHAR(64)",
+        ip_address: "VARCHAR(64)",
+        createdAt: "DATETIME DEFAULT CURRENT_TIMESTAMP",
+      },
+    } as const;
+
+    await fetch(`${baseUrl}/api.php?table=visitor_tracking`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(visitorTableData),
+    });
+
+    console.log("Visitor tracking table initialized");
+
     // Seed sample testimonials if table is empty
     const existingTestimonials = await apiCall("GET", "testimonials");
     if (
@@ -1881,6 +1925,45 @@ Disallow: /api/`;
     } catch (error) {
       console.error("Error fetching chat history:", error);
       res.json([]);
+    }
+  });
+
+  // Visitor tracking endpoints
+  // Public insert endpoint used by the client hook (no auth required)
+  app.post("/api/admin/visitor-tracking", async (req, res) => {
+    try {
+      const payload = { ...(req.body || {}) } as Record<string, any>;
+      const result = await apiCall("POST", "visitor_tracking", payload);
+      if (result && (result as any).error) {
+        return res
+          .status(500)
+          .json({ error: (result as any).error, ...(result as any) });
+      }
+      return res.json(result);
+    } catch (err) {
+      console.error("Visitor tracking insert error:", err);
+      return res.status(500).json({ error: "Failed to record visitor" });
+    }
+  });
+
+  // Authenticated read endpoint for admin UI
+  app.get("/api/admin/visitor-tracking", async (req, res) => {
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token || !verifyToken(token)) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+    try {
+      const rows = await apiCall("GET", "visitor_tracking");
+      const list = Array.isArray(rows) ? rows : [];
+      list.sort((a: any, b: any) => {
+        const at = new Date(a.timestamp || a.createdAt || 0).getTime();
+        const bt = new Date(b.timestamp || b.createdAt || 0).getTime();
+        return bt - at;
+      });
+      return res.json(list);
+    } catch (err) {
+      console.error("Visitor tracking fetch error:", err);
+      return res.json([]);
     }
   });
 
