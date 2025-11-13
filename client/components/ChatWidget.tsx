@@ -155,6 +155,7 @@ export default function ChatWidget() {
   const sendMessage = async () => {
     if (!input.trim()) return;
     const text = input.trim();
+    console.log("Sending message:", text);
 
     // optimistic UI: show user message immediately
     setMessages((m) => [
@@ -166,7 +167,8 @@ export default function ChatWidget() {
 
     try {
       // Save user message to PHP endpoint
-      await fetch(`/api.php?table=chats`, {
+      console.log("Saving user message...");
+      const saveRes = await fetch(`/api.php?table=chats`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -176,48 +178,43 @@ export default function ChatWidget() {
           createdAt: new Date().toISOString(),
         }),
       });
-
-      // Ensure bot_responses table exists
-      await fetch(`/api.php`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          table: "bot_responses",
-          create_table: true,
-          columns: {
-            id: "INT AUTO_INCREMENT PRIMARY KEY",
-            keyword: "VARCHAR(255) NOT NULL",
-            answer: "TEXT NOT NULL",
-            createdAt: "DATETIME DEFAULT CURRENT_TIMESTAMP",
-          },
-        }),
-      }).catch(() => null);
+      console.log("User message saved:", saveRes.ok);
 
       // Fetch bot responses from PHP and compute reply on client
+      console.log("Fetching bot responses...");
       const resp = await fetch(`/api.php?table=bot_responses`);
+      console.log("Bot responses fetch status:", resp.status);
+
       let botReply: string | null = null;
       if (resp.ok) {
         const responses = await resp.json();
-        if (Array.isArray(responses)) {
+        console.log("Available bot responses:", responses);
+        if (Array.isArray(responses) && responses.length > 0) {
           const lower = text.toLowerCase();
           for (const r of responses) {
             const keyword = (r.keyword || "").toLowerCase();
             if (!keyword) continue;
             if (lower.includes(keyword)) {
               botReply = r.answer;
+              console.log("Matched keyword:", keyword);
               break;
             }
           }
         }
+      } else {
+        console.warn("Failed to fetch bot responses");
       }
 
       if (!botReply) {
+        console.log("No keyword match, using default response");
         botReply =
           "Thanks for your message! Our team will get back to you shortly. You can also visit the Contact page for more ways to reach us.";
       }
 
+      console.log("Bot reply:", botReply);
+
       // Save bot reply
-      await fetch(`/api.php?table=chats`, {
+      const botSaveRes = await fetch(`/api.php?table=chats`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -227,6 +224,7 @@ export default function ChatWidget() {
           createdAt: new Date().toISOString(),
         }),
       });
+      console.log("Bot message saved:", botSaveRes.ok);
 
       // Append bot reply to UI
       setMessages((m) => [
