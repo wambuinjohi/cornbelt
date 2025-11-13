@@ -32,8 +32,8 @@ export default function Footer() {
 
         // Try multiple endpoints with fallback strategy
         const endpoints = [
+          "/api.php?action=get-footer-settings",
           "/api/footer-settings",
-          "/api.php?table=footer_settings",
         ];
 
         for (const url of endpoints) {
