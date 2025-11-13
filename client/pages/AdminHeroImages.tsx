@@ -90,9 +90,9 @@ const FALLBACK_IMAGES: HeroImage[] = [
 // Compress image before upload to avoid "request entity too large" errors
 async function compressImage(
   file: File,
-  maxWidth: number = 1920,
-  maxHeight: number = 1080,
-  quality: number = 0.8,
+  maxWidth: number = 1200,
+  maxHeight: number = 800,
+  quality: number = 0.75,
 ): Promise<Blob> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -128,17 +128,29 @@ async function compressImage(
 
         ctx.drawImage(img, 0, 0, width, height);
 
-        canvas.toBlob(
-          (blob) => {
-            if (blob) {
-              resolve(blob);
-            } else {
-              reject(new Error("Failed to compress image"));
-            }
-          },
-          "image/jpeg",
-          quality,
-        );
+        // Use progressive compression with blob size check
+        const compressAndCheck = (q: number) => {
+          canvas.toBlob(
+            (blob) => {
+              if (!blob) {
+                reject(new Error("Failed to compress image"));
+                return;
+              }
+
+              // If blob is still too large (> 2MB), try lower quality
+              if (blob.size > 2 * 1024 * 1024 && q > 0.3) {
+                console.warn(`Image too large (${(blob.size / 1024 / 1024).toFixed(2)}MB), retrying with lower quality`);
+                compressAndCheck(q - 0.1);
+              } else {
+                resolve(blob);
+              }
+            },
+            "image/jpeg",
+            q,
+          );
+        };
+
+        compressAndCheck(quality);
       };
 
       img.onerror = () => {
