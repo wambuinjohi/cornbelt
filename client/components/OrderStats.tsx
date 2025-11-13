@@ -1,7 +1,7 @@
 interface Order {
   id: number;
   status: string;
-  totalPrice: number;
+  totalPrice: number | string;
 }
 
 interface OrderStatsProps {
