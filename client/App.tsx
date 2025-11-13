@@ -20,6 +20,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import AdminHeroImages from "./pages/AdminHeroImages";
 import AdminSubmissions from "./pages/AdminSubmissions";
 import AdminTestimonials from "./pages/AdminTestimonials";
+import AdminFooter from "./pages/AdminFooter";
 import AdminChat from "./pages/AdminChat";
 import AdminOrders from "./pages/AdminOrders";
 import AdminVisitorTracking from "./pages/AdminVisitorTracking";
