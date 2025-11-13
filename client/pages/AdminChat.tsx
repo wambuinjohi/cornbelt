@@ -103,9 +103,15 @@ export default function AdminChat() {
   const fetchResponses = async () => {
     try {
       const adminFetch = (await import("@/lib/adminApi")).default;
-      const res = await adminFetch("/api/admin/bot-responses", {
+      let res = await adminFetch("/api/admin/bot-responses", {
         headers: { Authorization: `Bearer ${token}` },
       });
+
+      // If Node endpoint fails, try PHP endpoint
+      if (!res || !res.ok) {
+        res = await fetch("/api.php?table=bot_responses");
+      }
+
       if (!res || !res.ok) throw new Error("Failed to fetch responses");
       const data = await res.json();
       setResponses(Array.isArray(data) ? data : []);
