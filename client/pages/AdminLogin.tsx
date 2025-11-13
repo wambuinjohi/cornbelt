@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/form";
 import { toast } from "sonner";
 import { LogIn } from "lucide-react";
+import { useAuth } from "@/lib/authContext";
 
 interface LoginFormData {
   email: string;
@@ -21,6 +22,7 @@ interface LoginFormData {
 
 export default function AdminLogin() {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<LoginFormData>({
@@ -147,10 +149,7 @@ export default function AdminLogin() {
         throw new Error(msg);
       }
 
-      // Store token in localStorage
-      localStorage.setItem("adminToken", successResult?.token);
-      localStorage.setItem("adminUser", JSON.stringify(successResult?.user));
-
+      login(successResult?.token, successResult?.user);
       toast.success("Login successful!");
       navigate("/admin/dashboard");
     } catch (error) {
