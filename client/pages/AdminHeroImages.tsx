@@ -179,6 +179,10 @@ export default function AdminHeroImages() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isFallback, setIsFallback] = useState(false);
+  const [removedFallbackIds, setRemovedFallbackIds] = useState<Set<number>>(() => {
+    const saved = localStorage.getItem("removedFallbackIds");
+    return saved ? new Set(JSON.parse(saved)) : new Set();
+  });
 
   const form = useForm<FormData>({
     defaultValues: {
