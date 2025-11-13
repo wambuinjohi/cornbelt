@@ -548,6 +548,14 @@ if (strpos($uri, '/api/admin') !== false) {
                 $conn->close();
                 exit;
             }
+            if ($resource === 'newsletter-requests') {
+                $q = $conn->query("SELECT * FROM `newsletter_requests` ORDER BY createdAt DESC");
+                $out = [];
+                if ($q) while ($r = $q->fetch_assoc()) $out[] = $r;
+                echo json_encode($out);
+                $conn->close();
+                exit;
+            }
             // default falls through to generic CRUD below
         }
         // continue to generic CRUD handler
