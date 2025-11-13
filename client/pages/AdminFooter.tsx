@@ -215,9 +215,7 @@ export default function AdminFooter() {
       setSuccess("");
 
       if (!formData.phone || !formData.email || !formData.location) {
-        setError(
-          "Phone, email, and location are required fields."
-        );
+        setError("Phone, email, and location are required fields.");
         setIsSaving(false);
         return;
       }
@@ -225,7 +223,18 @@ export default function AdminFooter() {
       const token = localStorage.getItem("adminToken");
       const adminFetch = (await import("@/lib/adminApi")).default;
 
+      // Prepare the body
+      const body = JSON.stringify({
+        phone: formData.phone,
+        email: formData.email,
+        location: formData.location,
+        facebookUrl: formData.facebookUrl || "",
+        instagramUrl: formData.instagramUrl || "",
+        twitterUrl: formData.twitterUrl || "",
+      });
+
       if (footerData?.id) {
+        // Update existing
         const response = await adminFetch(
           `/api/admin/footer-settings?id=${footerData.id}`,
           {
@@ -234,38 +243,56 @@ export default function AdminFooter() {
               "Content-Type": "application/json",
               Authorization: `Bearer ${token}`,
             },
-            body: JSON.stringify(formData),
+            body: body,
           }
         );
 
-        if (!response || !response.ok) {
-          throw new Error("Failed to update footer settings");
+        if (!response) {
+          throw new Error("Network request failed");
+        }
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(
+            errorData.error || `HTTP ${response.status}: Failed to update`
+          );
         }
 
         setSuccess("Footer settings updated successfully!");
         toast.success("Footer settings updated successfully");
-        fetchFooterSettings();
+        await fetchFooterSettings();
       } else {
+        // Create new
         const response = await adminFetch("/api/admin/footer-settings", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify(formData),
+          body: body,
         });
 
-        if (!response || !response.ok) {
-          throw new Error("Failed to create footer settings");
+        if (!response) {
+          throw new Error("Network request failed");
+        }
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(
+            errorData.error || `HTTP ${response.status}: Failed to create`
+          );
         }
 
         setSuccess("Footer settings created successfully!");
         toast.success("Footer settings created successfully");
-        fetchFooterSettings();
+        await fetchFooterSettings();
       }
     } catch (err) {
       console.error("Error saving footer settings:", err);
-      const errorMsg = "Failed to save footer settings";
+      const errorMsg =
+        err instanceof Error
+          ? `Failed to save: ${err.message}`
+          : "Failed to save footer settings";
       setError(errorMsg);
       toast.error(errorMsg);
     } finally {
