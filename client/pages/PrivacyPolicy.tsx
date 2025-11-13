@@ -1,4 +1,22 @@
+import { useEffect } from "react";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+import { useUpdateMetaTags, pageMetadata } from "@/lib/seo";
+
 export default function PrivacyPolicy() {
+  useEffect(() => {
+    useUpdateMetaTags({
+      title: pageMetadata.privacy.title,
+      description: pageMetadata.privacy.description,
+      keywords: pageMetadata.privacy.keywords,
+      ogTitle: pageMetadata.privacy.title,
+      ogDescription: pageMetadata.privacy.description,
+      ogUrl: "https://cornbelt.co.ke/privacy-policy",
+      canonicalUrl: "https://cornbelt.co.ke/privacy-policy",
+      twitterCard: "summary",
+    });
+  }, []);
+
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 md:px-6 py-12 md:py-16">
