@@ -8,6 +8,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import PageLoadingBar from "./components/PageLoadingBar";
 import { useVisitorTracking } from "./hooks/use-visitor-tracking";
+import { AuthProvider, useAuth } from "./lib/authContext";
+import ProtectedRoute from "./components/ProtectedRoute";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Products from "./pages/Products";
@@ -30,7 +32,19 @@ import AdminVisitorTracking from "./pages/AdminVisitorTracking";
 const queryClient = new QueryClient();
 
 const AppContent = () => {
+  const { isLoading: authLoading } = useAuth();
   useVisitorTracking();
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <Routes>
@@ -43,16 +57,69 @@ const AppContent = () => {
       <Route path="/terms-of-service" element={<TermsOfService />} />
       <Route path="/admin/setup" element={<AdminSetup />} />
       <Route path="/admin/login" element={<AdminLogin />} />
-      <Route path="/admin/dashboard" element={<AdminDashboard />} />
-      <Route path="/admin/hero-images" element={<AdminHeroImages />} />
-      <Route path="/admin/submissions" element={<AdminSubmissions />} />
-      <Route path="/admin/testimonials" element={<AdminTestimonials />} />
-      <Route path="/admin/footer" element={<AdminFooter />} />
-      <Route path="/admin/chat" element={<AdminChat />} />
-      <Route path="/admin/orders" element={<AdminOrders />} />
+      <Route
+        path="/admin/dashboard"
+        element={
+          <ProtectedRoute>
+            <AdminDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/hero-images"
+        element={
+          <ProtectedRoute>
+            <AdminHeroImages />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/submissions"
+        element={
+          <ProtectedRoute>
+            <AdminSubmissions />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/testimonials"
+        element={
+          <ProtectedRoute>
+            <AdminTestimonials />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/footer"
+        element={
+          <ProtectedRoute>
+            <AdminFooter />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/chat"
+        element={
+          <ProtectedRoute>
+            <AdminChat />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/orders"
+        element={
+          <ProtectedRoute>
+            <AdminOrders />
+          </ProtectedRoute>
+        }
+      />
       <Route
         path="/admin/visitor-tracking"
-        element={<AdminVisitorTracking />}
+        element={
+          <ProtectedRoute>
+            <AdminVisitorTracking />
+          </ProtectedRoute>
+        }
       />
       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
       <Route path="*" element={<NotFound />} />
@@ -62,14 +129,16 @@ const AppContent = () => {
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <PageLoadingBar />
-        <AppContent />
-      </BrowserRouter>
-    </TooltipProvider>
+    <AuthProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <PageLoadingBar />
+          <AppContent />
+        </BrowserRouter>
+      </TooltipProvider>
+    </AuthProvider>
   </QueryClientProvider>
 );
 

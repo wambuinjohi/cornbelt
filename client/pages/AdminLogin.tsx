@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/form";
 import { toast } from "sonner";
 import { LogIn } from "lucide-react";
+import { useAuth } from "@/lib/authContext";
 
 interface LoginFormData {
   email: string;
@@ -21,6 +22,7 @@ interface LoginFormData {
 
 export default function AdminLogin() {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<LoginFormData>({
@@ -80,7 +82,8 @@ export default function AdminLogin() {
             serverErrLower.includes("table name") ||
             serverErrLower.includes("missing");
           const looksLikeHtml =
-            typeof responseText === "string" && responseText.trim().startsWith("<");
+            typeof responseText === "string" &&
+            responseText.trim().startsWith("<");
 
           if (!response.ok) {
             // If this looks like a routing/mapping error (404) or the response is HTML (served index.html) or a generic table error,
@@ -120,7 +123,10 @@ export default function AdminLogin() {
 
           // If the success response does not look like a token payload, treat as failure
           if (!successObj || !successObj.token) {
-            lastError = { status: response.status, message: successObj || responseText };
+            lastError = {
+              status: response.status,
+              message: successObj || responseText,
+            };
             continue;
           }
 
@@ -140,17 +146,15 @@ export default function AdminLogin() {
           if (!lastError) msg = "Login failed";
           else if (typeof lastError === "string") msg = lastError;
           else if (lastError instanceof Error) msg = lastError.message;
-          else if (lastError && typeof lastError === "object") msg = JSON.stringify(lastError);
+          else if (lastError && typeof lastError === "object")
+            msg = JSON.stringify(lastError);
         } catch (e) {
           msg = "Login failed";
         }
         throw new Error(msg);
       }
 
-      // Store token in localStorage
-      localStorage.setItem("adminToken", successResult?.token);
-      localStorage.setItem("adminUser", JSON.stringify(successResult?.user));
-
+      login(successResult?.token, successResult?.user);
       toast.success("Login successful!");
       navigate("/admin/dashboard");
     } catch (error) {

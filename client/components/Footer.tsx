@@ -50,9 +50,9 @@ export default function Footer() {
           <div>
             <div className="flex items-center gap-3 mb-4">
               <img
-                src="https://cdn.builder.io/api/v1/image/assets%2Fbf7a511dd4454ae88c7c49627a9a0f54%2F80b3bed3a8e14bf3ae5cc941d2cfab50?format=webp&width=100"
+                src="https://cdn.builder.io/api/v1/image/assets%2Fbf7a511dd4454ae88c7c49627a9a0f54%2Fd8583999ed7547f6a7bc07d8b36fb205?format=webp&width=800"
                 alt="Cornbelt Logo"
-                className="w-12 h-12 object-contain"
+                className="w-20 h-20 object-contain"
               />
               <div>
                 <div className="font-bold text-lg">CORNBELT</div>
