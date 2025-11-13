@@ -143,8 +143,15 @@ export default function AdminFooter() {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      if (!response || !response.ok) {
-        throw new Error("Failed to fetch footer settings");
+      if (!response) {
+        throw new Error("Network request failed");
+      }
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(
+          errorData.error || `HTTP ${response.status}: Failed to fetch footer settings`
+        );
       }
 
       const data = await response.json();
@@ -161,15 +168,33 @@ export default function AdminFooter() {
           twitterUrl: settings.twitterUrl || "",
         });
       } else {
+        // No data yet, provide empty form for creation
+        setFormData({
+          phone: "",
+          email: "",
+          location: "",
+          facebookUrl: "",
+          instagramUrl: "",
+          twitterUrl: "",
+        });
         setError(
-          "No footer settings found. Click 'Initialize Footer Table' to create default settings."
+          "No footer settings found. Fill in the form and click 'Save Changes' to create them."
         );
       }
     } catch (err) {
       console.error("Error fetching footer settings:", err);
       setError(
-        "Failed to load footer settings. Click 'Initialize Footer Table' to create the table."
+        `Failed to load footer settings: ${err instanceof Error ? err.message : 'Unknown error'}`
       );
+      // Provide empty form anyway
+      setFormData({
+        phone: "",
+        email: "",
+        location: "",
+        facebookUrl: "",
+        instagramUrl: "",
+        twitterUrl: "",
+      });
     } finally {
       setIsLoading(false);
     }
