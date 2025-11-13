@@ -450,6 +450,12 @@ export default function AdminVisitorTracking() {
                   <th className="px-6 py-3 text-left font-semibold text-foreground">
                     IP Address
                   </th>
+                  <th className="px-6 py-3 text-left font-semibold text-foreground">
+                    Country
+                  </th>
+                  <th className="px-6 py-3 text-left font-semibold text-foreground">
+                    City
+                  </th>
                   <th className="px-6 py-3 text-left">
                     <button
                       onClick={() => handleSort("browser_language")}
