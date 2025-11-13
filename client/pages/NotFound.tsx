@@ -18,7 +18,7 @@ const NotFound = () => {
       title: pageMetadata.notfound.title,
       description: pageMetadata.notfound.description,
       keywords: pageMetadata.notfound.keywords,
-      canonicalUrl: `https://cornbeltmill.com${location.pathname}`,
+      canonicalUrl: `https://cornbelt.co.ke${location.pathname}`,
     });
   }, [location.pathname]);
 
