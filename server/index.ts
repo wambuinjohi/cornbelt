@@ -680,6 +680,8 @@ export function createServer() {
 
   app.get("/api/demo", handleDemo);
 
+  app.get("/api/test-orders-update", handleTestOrdersUpdate);
+
   // Sitemap
   app.get("/sitemap.xml", (_req, res) => {
     res.header("Content-Type", "application/xml");
