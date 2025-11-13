@@ -16,6 +16,7 @@ const map: Record<string, string> = {
   "visitor-tracking": "visitor_tracking",
   "support-chat": "support_chat",
   "admin-users": "admin_users",
+  "footer-settings": "footer_settings",
 };
 
 function buildPhpUrlForResource(resource: string, id?: string | number) {
