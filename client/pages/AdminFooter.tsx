@@ -140,11 +140,16 @@ export default function AdminFooter() {
       setIsLoading(true);
       setError("");
       const token = localStorage.getItem("adminToken");
-      const response = await (
-        await import("@/lib/adminApi")
-      ).default("/api/admin/footer-settings", {
+      const adminFetch = (await import("@/lib/adminApi")).default;
+
+      let response = await adminFetch("/api/admin/footer-settings", {
         headers: { Authorization: `Bearer ${token}` },
       });
+
+      // If Node endpoint fails, try PHP endpoint
+      if (!response || !response.ok) {
+        response = await fetch("/api.php?table=footer_settings");
+      }
 
       if (!response) {
         throw new Error("Network request failed");
