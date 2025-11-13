@@ -787,29 +787,7 @@ export default function Index() {
         </section>
 
         {/* Newsletter Section */}
-        <section className="py-16 bg-background border-t border-border">
-          <div className="container mx-auto px-4 md:px-6">
-            <div className="max-w-2xl mx-auto text-center space-y-6">
-              <h3 className="text-2xl font-bold text-foreground">
-                Stay Updated
-              </h3>
-              <p className="text-muted-foreground">
-                Get news about new products, recipes, and nutrition tips from
-                Cornbelt Flour Mill
-              </p>
-              <div className="flex gap-3">
-                <input
-                  type="email"
-                  placeholder="Your email address"
-                  className="flex-1 px-4 py-3 rounded-lg border border-border bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                />
-                <button className="px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-semibold">
-                  Subscribe
-                </button>
-              </div>
-            </div>
-          </div>
-        </section>
+        <NewsletterSection />
       </main>
 
       <Footer />
