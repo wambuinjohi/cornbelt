@@ -2,15 +2,12 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AdminLayout from "@/components/AdminLayout";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
+import { Download, Plus } from "lucide-react";
+import { toast } from "sonner";
+import OrderStats from "@/components/OrderStats";
+import OrdersTable from "@/components/OrdersTable";
+import EditOrderModal from "@/components/EditOrderModal";
+import CreateOrderModal from "@/components/CreateOrderModal";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,8 +16,6 @@ import {
   AlertDialogDescription,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Trash2, Edit2, Download, ChevronDown, X, Plus } from "lucide-react";
-import { toast } from "sonner";
 
 interface Order {
   id: number;
@@ -34,9 +29,21 @@ interface Order {
   deliveryDate: string;
   notes: string;
   status: string;
-  totalPrice: number;
+  totalPrice: number | string;
   createdAt: string;
   updatedAt: string;
+}
+
+interface CreateFormData {
+  fullName: string;
+  email: string;
+  phone: string;
+  location: string;
+  product: string;
+  size: string;
+  quantity: number;
+  deliveryDate: string;
+  notes: string;
 }
 
 export default function AdminOrders() {
@@ -51,7 +58,7 @@ export default function AdminOrders() {
   const [expandedOrderId, setExpandedOrderId] = useState<number | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [isCreatingOrder, setIsCreatingOrder] = useState(false);
-  const [createFormData, setCreateFormData] = useState({
+  const [createFormData, setCreateFormData] = useState<CreateFormData>({
     fullName: "",
     email: "",
     phone: "",
@@ -212,23 +219,6 @@ export default function AdminOrders() {
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "pending":
-        return "bg-yellow-100 text-yellow-800";
-      case "confirmed":
-        return "bg-blue-100 text-blue-800";
-      case "shipped":
-        return "bg-purple-100 text-purple-800";
-      case "delivered":
-        return "bg-green-100 text-green-800";
-      case "cancelled":
-        return "bg-red-100 text-red-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
   const exportToCSV = () => {
     const headers = [
       "ID",
@@ -312,275 +302,40 @@ export default function AdminOrders() {
           </div>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-white p-4 rounded-lg border border-primary/10">
-            <p className="text-sm text-muted-foreground mb-1">Total Orders</p>
-            <p className="text-3xl font-bold text-primary">{orders.length}</p>
-          </div>
-          <div className="bg-white p-4 rounded-lg border border-primary/10">
-            <p className="text-sm text-muted-foreground mb-1">Pending</p>
-            <p className="text-3xl font-bold text-yellow-600">
-              {orders.filter((o) => o.status === "pending").length}
-            </p>
-          </div>
-          <div className="bg-white p-4 rounded-lg border border-primary/10">
-            <p className="text-sm text-muted-foreground mb-1">Confirmed</p>
-            <p className="text-3xl font-bold text-blue-600">
-              {orders.filter((o) => o.status === "confirmed").length}
-            </p>
-          </div>
-          <div className="bg-white p-4 rounded-lg border border-primary/10">
-            <p className="text-sm text-muted-foreground mb-1">Total Revenue</p>
-            <p className="text-3xl font-bold text-green-600">
-              KES{" "}
-              {orders
-                .reduce((sum, o) => sum + (o.totalPrice || 0), 0)
-                .toLocaleString()}
-            </p>
-          </div>
-        </div>
+        {/* Stats Component */}
+        <OrderStats orders={orders} />
 
-        {/* Orders Table */}
-        {orders.length === 0 ? (
-          <div className="bg-white rounded-lg border border-primary/10 p-8 text-center">
-            <p className="text-muted-foreground">No orders yet</p>
-          </div>
-        ) : (
-          <div className="bg-white rounded-lg border border-primary/10 overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-primary/5 border-b border-primary/10">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">
-                      Customer
-                    </th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">
-                      Product
-                    </th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">
-                      Qty/Size
-                    </th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">
-                      Price
-                    </th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">
-                      Status
-                    </th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-foreground">
-                      Date
-                    </th>
-                    <th className="px-4 py-3 text-center text-sm font-semibold text-foreground">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-primary/10">
-                  {orders.map((order) => (
-                    <tr
-                      key={order.id}
-                      className="hover:bg-primary/5 transition-colors"
-                    >
-                      <td className="px-4 py-3">
-                        <div>
-                          <p className="font-medium text-foreground">
-                            {order.fullName}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            {order.email}
-                          </p>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-sm text-foreground">
-                        {order.product}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-foreground">
-                        {order.quantity} x {order.size}
-                      </td>
-                      <td className="px-4 py-3 text-sm font-semibold text-primary">
-                        KES {order.totalPrice?.toLocaleString() || "-"}
-                      </td>
-                      <td className="px-4 py-3">
-                        <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(
-                            order.status,
-                          )}`}
-                        >
-                          {order.status.charAt(0).toUpperCase() +
-                            order.status.slice(1)}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-sm text-muted-foreground">
-                        {new Date(order.createdAt).toLocaleDateString()}
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex gap-2 justify-center">
-                          <button
-                            onClick={() => {
-                              setSelectedOrder(order);
-                              setEditingStatus(order.status);
-                              setEditingNotes(order.notes || "");
-                            }}
-                            title="Edit order"
-                            className="p-1.5 text-primary hover:bg-primary/10 rounded-lg transition-colors"
-                          >
-                            <Edit2 className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => {
-                              setDeleteOrderId(order.id);
-                              setShowDeleteDialog(true);
-                            }}
-                            title="Delete order"
-                            className="p-1.5 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => {
-                              setExpandedOrderId(
-                                expandedOrderId === order.id ? null : order.id,
-                              );
-                            }}
-                            title="View details"
-                            className="p-1.5 text-primary hover:bg-primary/10 rounded-lg transition-colors"
-                          >
-                            <ChevronDown className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Expanded Details Row */}
-            {expandedOrderId && (
-              <div className="border-t border-primary/10 bg-primary/5 p-4">
-                {orders.find((o) => o.id === expandedOrderId) && (
-                  <div className="max-w-2xl">
-                    <h3 className="font-semibold text-foreground mb-3">
-                      Order Details
-                    </h3>
-                    <div className="grid grid-cols-2 gap-3 text-sm">
-                      <div>
-                        <p className="text-muted-foreground">Phone</p>
-                        <p className="font-medium">
-                          {orders.find((o) => o.id === expandedOrderId)?.phone}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground">Location</p>
-                        <p className="font-medium">
-                          {
-                            orders.find((o) => o.id === expandedOrderId)
-                              ?.location
-                          }
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground">
-                          Preferred Delivery Date
-                        </p>
-                        <p className="font-medium">
-                          {orders.find((o) => o.id === expandedOrderId)
-                            ?.deliveryDate || "-"}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground">Notes</p>
-                        <p className="font-medium">
-                          {orders.find((o) => o.id === expandedOrderId)
-                            ?.notes || "-"}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        )}
+        {/* Table Component */}
+        <OrdersTable
+          orders={orders}
+          expandedOrderId={expandedOrderId}
+          onExpandOrder={setExpandedOrderId}
+          onEditOrder={(order) => {
+            setSelectedOrder(order);
+            setEditingStatus(order.status);
+            setEditingNotes(order.notes || "");
+          }}
+          onDeleteOrder={(orderId) => {
+            setDeleteOrderId(orderId);
+            setShowDeleteDialog(true);
+          }}
+        />
 
         {/* Edit Order Modal */}
         {selectedOrder && (
-          <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full">
-              {/* Header */}
-              <div className="flex items-center justify-between p-6 border-b border-primary/10">
-                <h2 className="text-2xl font-bold text-foreground">
-                  Edit Order #{selectedOrder.id}
-                </h2>
-                <button
-                  onClick={() => {
-                    setSelectedOrder(null);
-                    setEditingStatus("");
-                    setEditingNotes("");
-                  }}
-                  className="text-muted-foreground hover:text-foreground"
-                >
-                  <X className="w-6 h-6" />
-                </button>
-              </div>
-
-              {/* Content */}
-              <div className="p-6 space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">
-                    Status
-                  </label>
-                  <Select
-                    value={editingStatus}
-                    onValueChange={setEditingStatus}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="confirmed">Confirmed</SelectItem>
-                      <SelectItem value="shipped">Shipped</SelectItem>
-                      <SelectItem value="delivered">Delivered</SelectItem>
-                      <SelectItem value="cancelled">Cancelled</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">
-                    Notes
-                  </label>
-                  <Textarea
-                    value={editingNotes}
-                    onChange={(e) => setEditingNotes(e.target.value)}
-                    placeholder="Add any notes about this order..."
-                    className="min-h-24"
-                  />
-                </div>
-              </div>
-
-              {/* Footer */}
-              <div className="flex gap-3 p-6 border-t border-primary/10 bg-primary/5">
-                <button
-                  onClick={() => {
-                    setSelectedOrder(null);
-                    setEditingStatus("");
-                    setEditingNotes("");
-                  }}
-                  className="flex-1 px-4 py-2 border border-primary text-primary rounded-lg hover:bg-primary/5 transition-colors font-medium"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={() => handleStatusUpdate(selectedOrder.id)}
-                  className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium"
-                >
-                  Save Changes
-                </button>
-              </div>
-            </div>
-          </div>
+          <EditOrderModal
+            order={selectedOrder}
+            status={editingStatus}
+            notes={editingNotes}
+            onStatusChange={setEditingStatus}
+            onNotesChange={setEditingNotes}
+            onClose={() => {
+              setSelectedOrder(null);
+              setEditingStatus("");
+              setEditingNotes("");
+            }}
+            onSave={() => handleStatusUpdate(selectedOrder.id)}
+          />
         )}
 
         {/* Delete Confirmation Dialog */}
@@ -605,245 +360,26 @@ export default function AdminOrders() {
 
         {/* Create Order Modal */}
         {showCreateModal && (
-          <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-              {/* Header */}
-              <div className="flex items-center justify-between p-6 border-b border-primary/10">
-                <h2 className="text-2xl font-bold text-foreground">
-                  Create New Order
-                </h2>
-                <button
-                  onClick={() => {
-                    setShowCreateModal(false);
-                    setCreateFormData({
-                      fullName: "",
-                      email: "",
-                      phone: "",
-                      location: "",
-                      product: "Jirani Maize Meal",
-                      size: "2kg",
-                      quantity: 1,
-                      deliveryDate: "",
-                      notes: "",
-                    });
-                  }}
-                  className="text-muted-foreground hover:text-foreground"
-                >
-                  <X className="w-6 h-6" />
-                </button>
-              </div>
-
-              {/* Content */}
-              <div className="p-6 space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-2">
-                      Full Name *
-                    </label>
-                    <Input
-                      type="text"
-                      value={createFormData.fullName}
-                      onChange={(e) =>
-                        setCreateFormData({
-                          ...createFormData,
-                          fullName: e.target.value,
-                        })
-                      }
-                      placeholder="Customer name"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-2">
-                      Email *
-                    </label>
-                    <Input
-                      type="email"
-                      value={createFormData.email}
-                      onChange={(e) =>
-                        setCreateFormData({
-                          ...createFormData,
-                          email: e.target.value,
-                        })
-                      }
-                      placeholder="customer@example.com"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-2">
-                      Phone *
-                    </label>
-                    <Input
-                      type="tel"
-                      value={createFormData.phone}
-                      onChange={(e) =>
-                        setCreateFormData({
-                          ...createFormData,
-                          phone: e.target.value,
-                        })
-                      }
-                      placeholder="+254712345678"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-2">
-                      Location
-                    </label>
-                    <Input
-                      type="text"
-                      value={createFormData.location}
-                      onChange={(e) =>
-                        setCreateFormData({
-                          ...createFormData,
-                          location: e.target.value,
-                        })
-                      }
-                      placeholder="City, Country"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-2">
-                      Product *
-                    </label>
-                    <Select
-                      value={createFormData.product}
-                      onValueChange={(value) =>
-                        setCreateFormData({
-                          ...createFormData,
-                          product: value,
-                        })
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Jirani Maize Meal">
-                          Jirani Maize Meal
-                        </SelectItem>
-                        <SelectItem value="Tabasamu Maize Meal">
-                          Tabasamu Maize Meal
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-2">
-                      Size *
-                    </label>
-                    <Select
-                      value={createFormData.size}
-                      onValueChange={(value) =>
-                        setCreateFormData({
-                          ...createFormData,
-                          size: value,
-                        })
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="2kg">2kg</SelectItem>
-                        <SelectItem value="10kg">10kg</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-2">
-                      Quantity *
-                    </label>
-                    <Input
-                      type="number"
-                      value={createFormData.quantity}
-                      onChange={(e) =>
-                        setCreateFormData({
-                          ...createFormData,
-                          quantity: Math.max(1, parseInt(e.target.value) || 1),
-                        })
-                      }
-                      placeholder="1"
-                      min="1"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-2">
-                      Preferred Delivery Date
-                    </label>
-                    <Input
-                      type="date"
-                      value={createFormData.deliveryDate}
-                      onChange={(e) =>
-                        setCreateFormData({
-                          ...createFormData,
-                          deliveryDate: e.target.value,
-                        })
-                      }
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">
-                    Notes
-                  </label>
-                  <Textarea
-                    value={createFormData.notes}
-                    onChange={(e) =>
-                      setCreateFormData({
-                        ...createFormData,
-                        notes: e.target.value,
-                      })
-                    }
-                    placeholder="Add any special instructions or notes..."
-                    className="min-h-20"
-                  />
-                </div>
-              </div>
-
-              {/* Footer */}
-              <div className="flex gap-3 p-6 border-t border-primary/10 bg-primary/5">
-                <button
-                  onClick={() => {
-                    setShowCreateModal(false);
-                    setCreateFormData({
-                      fullName: "",
-                      email: "",
-                      phone: "",
-                      location: "",
-                      product: "Jirani Maize Meal",
-                      size: "2kg",
-                      quantity: 1,
-                      deliveryDate: "",
-                      notes: "",
-                    });
-                  }}
-                  className="flex-1 px-4 py-2 border border-primary text-primary rounded-lg hover:bg-primary/5 transition-colors font-medium"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleCreateOrder}
-                  disabled={isCreatingOrder}
-                  className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium disabled:opacity-50"
-                >
-                  {isCreatingOrder ? "Creating..." : "Create Order"}
-                </button>
-              </div>
-            </div>
-          </div>
+          <CreateOrderModal
+            formData={createFormData}
+            isLoading={isCreatingOrder}
+            onFormChange={setCreateFormData}
+            onClose={() => {
+              setShowCreateModal(false);
+              setCreateFormData({
+                fullName: "",
+                email: "",
+                phone: "",
+                location: "",
+                product: "Jirani Maize Meal",
+                size: "2kg",
+                quantity: 1,
+                deliveryDate: "",
+                notes: "",
+              });
+            }}
+            onSubmit={handleCreateOrder}
+          />
         )}
       </div>
     </AdminLayout>

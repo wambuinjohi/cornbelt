@@ -22,12 +22,136 @@ interface HeroImage {
   altText: string;
   displayOrder: number;
   createdAt: string;
+  isActive?: boolean;
 }
 
 interface FormData {
   imageUrl?: string;
   altText: string;
   displayOrder: number;
+}
+
+// Fallback images when database is empty
+const FALLBACK_IMAGES: HeroImage[] = [
+  {
+    id: -1,
+    filename: "fallback-1.jpg",
+    imageUrl:
+      "https://cdn.builder.io/api/v1/image/assets%2Fffba8e3c2b3042bab528316b71e4306e%2Ff21188f906c3408783bc64a9665d33e0?format=webp&width=1200",
+    altText: "Cornbelt Flour Mill exterior",
+    displayOrder: 0,
+    createdAt: new Date().toISOString(),
+    isActive: true,
+  },
+  {
+    id: -2,
+    filename: "fallback-2.jpg",
+    imageUrl:
+      "https://cdn.builder.io/api/v1/image/assets%2F1ffce8bff4d5493bafecc479d3963466%2F0d117e54429f404bb6e71a4b18a98876?format=webp&width=800",
+    altText: "Cornbelt products display",
+    displayOrder: 1,
+    createdAt: new Date().toISOString(),
+    isActive: false,
+  },
+  {
+    id: -3,
+    filename: "fallback-3.jpg",
+    imageUrl:
+      "https://cdn.builder.io/api/v1/image/assets%2F1ffce8bff4d5493bafecc479d3963466%2F9e37a8d9c5764cbe9c1a6a45fb44d6b8?format=webp&width=800",
+    altText: "Cornbelt facility and signage",
+    displayOrder: 2,
+    createdAt: new Date().toISOString(),
+    isActive: false,
+  },
+  {
+    id: -4,
+    filename: "fallback-4.jpg",
+    imageUrl:
+      "https://cdn.builder.io/api/v1/image/assets%2F1ffce8bff4d5493bafecc479d3963466%2F85026c8a3cf94c89a4204f2ddfec1703?format=webp&width=800",
+    altText: "Cornbelt marketing campaign",
+    displayOrder: 3,
+    createdAt: new Date().toISOString(),
+    isActive: false,
+  },
+  {
+    id: -5,
+    filename: "fallback-5.jpg",
+    imageUrl:
+      "https://cdn.builder.io/api/v1/image/assets%2F1ffce8bff4d5493bafecc479d3963466%2Fa2d86d9f4ad945de88fded66d899beed?format=webp&width=800",
+    altText: "Jirani maize meal promotion",
+    displayOrder: 4,
+    createdAt: new Date().toISOString(),
+    isActive: false,
+  },
+];
+
+// Compress image before upload to avoid "request entity too large" errors
+async function compressImage(
+  file: File,
+  maxWidth: number = 1920,
+  maxHeight: number = 1080,
+  quality: number = 0.8,
+): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        let width = img.width;
+        let height = img.height;
+
+        // Calculate new dimensions while maintaining aspect ratio
+        if (width > height) {
+          if (width > maxWidth) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          }
+        } else {
+          if (height > maxHeight) {
+            width = Math.round((width * maxHeight) / height);
+            height = maxHeight;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          reject(new Error("Failed to get canvas context"));
+          return;
+        }
+
+        ctx.drawImage(img, 0, 0, width, height);
+
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              resolve(blob);
+            } else {
+              reject(new Error("Failed to compress image"));
+            }
+          },
+          "image/jpeg",
+          quality,
+        );
+      };
+
+      img.onerror = () => {
+        reject(new Error("Failed to load image"));
+      };
+
+      img.src = e.target?.result as string;
+    };
+
+    reader.onerror = () => {
+      reject(new Error("Failed to read file"));
+    };
+
+    reader.readAsDataURL(file);
+  });
 }
 
 export default function AdminHeroImages() {
@@ -39,6 +163,7 @@ export default function AdminHeroImages() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [isFallback, setIsFallback] = useState(false);
 
   const form = useForm<FormData>({
     defaultValues: {
@@ -66,14 +191,51 @@ export default function AdminHeroImages() {
       ).default("/api/admin/hero-images", {
         headers: { Authorization: `Bearer ${token}` },
       });
+
       if (!response || !response.ok) {
         throw new Error("Failed to fetch images");
       }
+
       const data = await response.json();
-      setImages(Array.isArray(data) ? data : []);
+      const imageList = Array.isArray(data) ? data : [];
+
+      // Use fallback images if database is empty
+      if (imageList.length === 0) {
+        console.log("[Hero Images] Database empty, using fallback images");
+        setImages(FALLBACK_IMAGES);
+        setIsFallback(true);
+        // Cache fallback images in localStorage
+        localStorage.setItem(
+          "heroImagesCache",
+          JSON.stringify(FALLBACK_IMAGES),
+        );
+      } else {
+        setImages(imageList);
+        setIsFallback(false);
+        // Cache fetched images in localStorage for offline access
+        localStorage.setItem("heroImagesCache", JSON.stringify(imageList));
+      }
     } catch (error) {
       console.error("Error fetching images:", error);
-      toast.error("Failed to load images");
+      // Try to load from localStorage cache on error
+      const cached = localStorage.getItem("heroImagesCache");
+      if (cached) {
+        try {
+          const cachedImages = JSON.parse(cached);
+          console.log("[Hero Images] Loaded from cache due to error");
+          setImages(cachedImages);
+          setIsFallback(cachedImages.some((img: HeroImage) => img.id < 0));
+          toast.warning("Showing cached images. Server may be unavailable.");
+        } catch {
+          setImages(FALLBACK_IMAGES);
+          setIsFallback(true);
+          toast.error("Failed to load images. Showing defaults.");
+        }
+      } else {
+        setImages(FALLBACK_IMAGES);
+        setIsFallback(true);
+        toast.error("Failed to load images. Showing defaults.");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -106,44 +268,64 @@ export default function AdminHeroImages() {
   };
 
   const uploadFile = async (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
+    return new Promise(async (resolve, reject) => {
+      try {
+        // Compress the image to reduce payload size
+        setUploadProgress(25);
+        const compressedBlob = await compressImage(file);
+        setUploadProgress(50);
 
-      reader.onload = async () => {
-        try {
-          // Extract base64 data
-          const base64Data = (reader.result as string).split(",")[1];
+        // Convert compressed blob to base64
+        const reader = new FileReader();
+        reader.onload = async () => {
+          try {
+            const base64Data = (reader.result as string).split(",")[1];
 
-          const token = localStorage.getItem("adminToken");
-          const adminFetch = (await import("@/lib/adminApi")).default;
-          const response = await adminFetch("/api/admin/upload", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({
-              fileData: base64Data,
-              fileName: file.name,
-            }),
-          });
+            const token = localStorage.getItem("adminToken");
+            const adminFetch = (await import("@/lib/adminApi")).default;
+            const response = await adminFetch("/api/admin/upload", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({
+                fileData: base64Data,
+                fileName: file.name,
+              }),
+            });
 
-          if (!response || !response.ok) {
-            throw new Error("Failed to upload file");
+            setUploadProgress(75);
+
+            if (!response || !response.ok) {
+              const errorData = await response?.text().catch(() => null);
+              console.error("Upload error response:", errorData);
+
+              if (response?.status === 413) {
+                throw new Error(
+                  "Image file is too large. Please use a smaller image or compress it.",
+                );
+              }
+
+              throw new Error("Failed to upload file");
+            }
+
+            const result = await response.json();
+            setUploadProgress(90);
+            resolve(result.imageUrl);
+          } catch (error) {
+            reject(error);
           }
+        };
 
-          const result = await response.json();
-          resolve(result.imageUrl);
-        } catch (error) {
-          reject(error);
-        }
-      };
+        reader.onerror = () => {
+          reject(new Error("Failed to read compressed file"));
+        };
 
-      reader.onerror = () => {
-        reject(new Error("Failed to read file"));
-      };
-
-      reader.readAsDataURL(file);
+        reader.readAsDataURL(compressedBlob);
+      } catch (error) {
+        reject(error);
+      }
     });
   };
 
@@ -159,7 +341,7 @@ export default function AdminHeroImages() {
 
       // Upload file if selected
       if (selectedFile) {
-        setUploadProgress(50);
+        setUploadProgress(25);
         imageUrl = await uploadFile(selectedFile);
         setUploadProgress(100);
       }
@@ -203,6 +385,12 @@ export default function AdminHeroImages() {
   };
 
   const handleDeleteImage = async (id: number) => {
+    // Don't allow deleting fallback images
+    if (id < 0) {
+      toast.error("Cannot delete fallback images. Add a real image first.");
+      return;
+    }
+
     if (!confirm("Are you sure you want to delete this image?")) {
       return;
     }
@@ -230,6 +418,12 @@ export default function AdminHeroImages() {
   };
 
   const handleUpdateOrder = async (id: number, newOrder: number) => {
+    // Don't allow updating fallback images
+    if (id < 0) {
+      toast.error("Cannot modify fallback images. Add a real image first.");
+      return;
+    }
+
     try {
       const token = localStorage.getItem("adminToken");
       const adminFetch = (await import("@/lib/adminApi")).default;
@@ -255,14 +449,13 @@ export default function AdminHeroImages() {
   };
 
   const handleToggleActive = async (id: number, newActive: boolean) => {
-    try {
-      if (newActive) {
-        const ok = confirm(
-          "Marking this image active will unset other active images. Continue?",
-        );
-        if (!ok) return;
-      }
+    // Don't allow toggling fallback images
+    if (id < 0) {
+      toast.error("Cannot modify fallback images. Add a real image first.");
+      return;
+    }
 
+    try {
       const token = localStorage.getItem("adminToken");
       const adminFetch = (await import("@/lib/adminApi")).default;
       const response = await adminFetch(`/api/admin/hero-images/${id}`, {
@@ -275,14 +468,16 @@ export default function AdminHeroImages() {
       });
 
       if (!response || !response.ok) {
-        throw new Error("Failed to toggle active");
+        throw new Error("Failed to update visibility");
       }
 
-      toast.success("Updated");
+      toast.success(
+        newActive ? "Image shown in slider" : "Image hidden from slider",
+      );
       fetchImages();
     } catch (error) {
-      console.error("Error toggling active:", error);
-      toast.error("Failed to update");
+      console.error("Error updating visibility:", error);
+      toast.error("Failed to update visibility");
     }
   };
 
@@ -306,7 +501,17 @@ export default function AdminHeroImages() {
         <p className="text-muted-foreground mt-2">
           Add, edit, and organize hero slider images
         </p>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+        {isFallback && (
+          <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <p className="text-sm text-yellow-800">
+              ℹ️ <strong>No custom images found.</strong> Showing default
+              fallback images. Add your own images using the form below.
+            </p>
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
           {/* Add Image Form */}
           <div className="bg-primary/5 p-8 rounded-lg border border-primary/10">
             <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center gap-2">
@@ -354,6 +559,7 @@ export default function AdminHeroImages() {
                       )}
                       <p className="text-xs text-muted-foreground">
                         Supported formats: JPG, PNG, WebP, SVG. Max size: 5MB
+                        (will be automatically compressed)
                       </p>
                     </div>
                   </FormControl>
@@ -498,8 +704,18 @@ export default function AdminHeroImages() {
                 {images.map((image) => (
                   <div
                     key={image.id}
-                    className="bg-background p-4 rounded-lg border border-primary/10"
+                    className={`bg-background p-4 rounded-lg border ${
+                      image.id < 0
+                        ? "border-yellow-200 bg-yellow-50/50"
+                        : "border-primary/10"
+                    }`}
                   >
+                    {image.id < 0 && (
+                      <div className="mb-2 text-xs font-medium text-yellow-800 bg-yellow-100 px-2 py-1 rounded w-fit">
+                        Fallback Image
+                      </div>
+                    )}
+
                     {/* Image Thumbnail */}
                     <div className="relative w-full h-24 bg-black rounded mb-3 overflow-hidden">
                       <img
@@ -533,58 +749,88 @@ export default function AdminHeroImages() {
                                 parseInt(e.target.value) || 0,
                               )
                             }
-                            className="w-16 px-2 py-1 border border-primary/10 rounded text-sm"
+                            disabled={image.id < 0}
+                            className="w-16 px-2 py-1 border border-primary/10 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                           />
                         </div>
                       </div>
 
                       <div>
-                        <label className="flex items-center gap-2 text-sm">
-                          <input
-                            type="checkbox"
-                            checked={!!image.isActive}
-                            onChange={() =>
-                              handleToggleActive(image.id, !image.isActive)
-                            }
-                            className="w-4 h-4"
-                          />
-                          <span className="text-xs text-muted-foreground">
-                            Active
-                          </span>
-                        </label>
+                        <p className="text-xs text-muted-foreground mb-2">
+                          Visibility:
+                        </p>
+                        <span
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            image.isActive
+                              ? "bg-green-100 text-green-800"
+                              : "bg-gray-100 text-gray-800"
+                          }`}
+                        >
+                          {image.isActive ? "Visible" : "Hidden"}
+                        </span>
                       </div>
                     </div>
 
-                    {/* Actions: View / Download / Delete */}
-                    <div className="flex gap-2">
-                      <a
-                        href={image.imageUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 border rounded bg-white/5 hover:bg-white/10 text-sm"
-                      >
-                        <Eye className="w-4 h-4" />
-                        View
-                      </a>
+                    {/* Actions */}
+                    <div className="space-y-2">
+                      {/* Visibility Controls */}
+                      <div className="flex gap-2">
+                        {image.isActive ? (
+                          <Button
+                            onClick={() => handleToggleActive(image.id, false)}
+                            variant="outline"
+                            size="sm"
+                            className="flex-1 gap-2"
+                            disabled={image.id < 0}
+                          >
+                            Hide from Slider
+                          </Button>
+                        ) : (
+                          <Button
+                            onClick={() => handleToggleActive(image.id, true)}
+                            variant="outline"
+                            size="sm"
+                            className="flex-1 gap-2"
+                            disabled={image.id < 0}
+                          >
+                            Show in Slider
+                          </Button>
+                        )}
+                      </div>
 
-                      <a
-                        href={image.imageUrl}
-                        download
-                        className="inline-flex items-center justify-center gap-2 px-3 py-2 border rounded bg-white/5 hover:bg-white/10 text-sm"
-                      >
-                        <Download className="w-4 h-4" />
-                        Download
-                      </a>
+                      {/* View/Download/Delete */}
+                      <div className="flex gap-2">
+                        <a
+                          href={image.imageUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 border rounded bg-white/5 hover:bg-white/10 text-sm"
+                        >
+                          <Eye className="w-4 h-4" />
+                          View
+                        </a>
 
-                      <Button
-                        onClick={() => handleDeleteImage(image.id)}
-                        variant="destructive"
-                        size="sm"
-                        className="gap-2"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                        Delete
-                      </Button>
+                        <a
+                          href={image.imageUrl}
+                          download
+                          className="inline-flex items-center justify-center gap-2 px-3 py-2 border rounded bg-white/5 hover:bg-white/10 text-sm"
+                        >
+                          <Download className="w-4 h-4" />
+                          Download
+                        </a>
+
+                        {image.id >= 0 && (
+                          <Button
+                            onClick={() => handleDeleteImage(image.id)}
+                            variant="destructive"
+                            size="sm"
+                            className="gap-2"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            Delete
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}
