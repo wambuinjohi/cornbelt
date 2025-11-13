@@ -506,12 +506,15 @@ export default function AdminHeroImages() {
       return;
     }
 
-    if (!confirm("Are you sure you want to remove this fallback image? You can restore it later by refreshing the page or clearing your browser cache.")) {
-      return;
-    }
+    setImageToRemove(id);
+    setRemovalConfirmOpen(true);
+  };
+
+  const confirmRemoveFallbackImage = () => {
+    if (imageToRemove === null) return;
 
     const newRemovedIds = new Set(removedFallbackIds);
-    newRemovedIds.add(id);
+    newRemovedIds.add(imageToRemove);
     setRemovedFallbackIds(newRemovedIds);
 
     // Persist to localStorage
@@ -521,8 +524,12 @@ export default function AdminHeroImages() {
     );
 
     // Update images display
-    setImages((prevImages) => prevImages.filter((img) => img.id !== id));
+    setImages((prevImages) => prevImages.filter((img) => img.id !== imageToRemove));
     toast.success("Fallback image removed!");
+
+    // Close modal
+    setRemovalConfirmOpen(false);
+    setImageToRemove(null);
   };
 
   const handleRestoreFallbackImage = (id: number) => {
