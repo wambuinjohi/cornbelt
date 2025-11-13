@@ -21,9 +21,7 @@ const alterConfig = {
 };
 
 async function addArchiveField() {
-  console.log(
-    `🔄 Adding isArchived field to table: ${TABLE_NAME}...`,
-  );
+  console.log(`🔄 Adding isArchived field to table: ${TABLE_NAME}...`);
   console.log(`📍 API URL: ${API_URL}\n`);
 
   try {

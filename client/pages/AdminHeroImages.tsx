@@ -23,7 +23,16 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { ArrowLeft, Upload, Trash2, Eye, FileUp, Download, Archive, RotateCcw } from "lucide-react";
+import {
+  ArrowLeft,
+  Upload,
+  Trash2,
+  Eye,
+  FileUp,
+  Download,
+  Archive,
+  RotateCcw,
+} from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface HeroImage {
@@ -149,7 +158,9 @@ async function compressImage(
 
               // If blob is still too large (> 2MB), try lower quality
               if (blob.size > 2 * 1024 * 1024 && q > 0.3) {
-                console.warn(`Image too large (${(blob.size / 1024 / 1024).toFixed(2)}MB), retrying with lower quality`);
+                console.warn(
+                  `Image too large (${(blob.size / 1024 / 1024).toFixed(2)}MB), retrying with lower quality`,
+                );
                 compressAndCheck(q - 0.1);
               } else {
                 resolve(blob);
@@ -189,10 +200,12 @@ export default function AdminHeroImages() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isFallback, setIsFallback] = useState(false);
-  const [removedFallbackIds, setRemovedFallbackIds] = useState<Set<number>>(() => {
-    const saved = localStorage.getItem("removedFallbackIds");
-    return saved ? new Set(JSON.parse(saved)) : new Set();
-  });
+  const [removedFallbackIds, setRemovedFallbackIds] = useState<Set<number>>(
+    () => {
+      const saved = localStorage.getItem("removedFallbackIds");
+      return saved ? new Set(JSON.parse(saved)) : new Set();
+    },
+  );
   const [removalConfirmOpen, setRemovalConfirmOpen] = useState(false);
   const [imageToRemove, setImageToRemove] = useState<number | null>(null);
 
@@ -231,7 +244,9 @@ export default function AdminHeroImages() {
       const imageList = Array.isArray(data) ? data : [];
 
       // Separate active and archived images
-      const activeImages = imageList.filter((img: HeroImage) => !img.isArchived);
+      const activeImages = imageList.filter(
+        (img: HeroImage) => !img.isArchived,
+      );
       const archived = imageList.filter((img: HeroImage) => img.isArchived);
 
       // Use fallback images if database is empty
@@ -239,7 +254,7 @@ export default function AdminHeroImages() {
         console.log("[Hero Images] Database empty, using fallback images");
         // Filter out removed fallback images
         const filteredFallbacks = FALLBACK_IMAGES.filter(
-          (img) => !removedFallbackIds.has(img.id)
+          (img) => !removedFallbackIds.has(img.id),
         );
         setImages(filteredFallbacks);
         setIsFallback(true);
@@ -269,7 +284,7 @@ export default function AdminHeroImages() {
           toast.warning("Showing cached images. Server may be unavailable.");
         } catch {
           const filteredFallbacks = FALLBACK_IMAGES.filter(
-            (img) => !removedFallbackIds.has(img.id)
+            (img) => !removedFallbackIds.has(img.id),
           );
           setImages(filteredFallbacks);
           setIsFallback(true);
@@ -277,7 +292,7 @@ export default function AdminHeroImages() {
         }
       } else {
         const filteredFallbacks = FALLBACK_IMAGES.filter(
-          (img) => !removedFallbackIds.has(img.id)
+          (img) => !removedFallbackIds.has(img.id),
         );
         setImages(filteredFallbacks);
         setIsFallback(true);
@@ -354,9 +369,7 @@ export default function AdminHeroImages() {
                 );
               }
 
-              throw new Error(
-                errorData?.error || "Failed to upload file"
-              );
+              throw new Error(errorData?.error || "Failed to upload file");
             }
 
             const result = await response.json();
@@ -440,7 +453,11 @@ export default function AdminHeroImages() {
       return;
     }
 
-    if (!confirm("Are you sure you want to archive this image? You can recover it later from the Archive tab.")) {
+    if (
+      !confirm(
+        "Are you sure you want to archive this image? You can recover it later from the Archive tab.",
+      )
+    ) {
       return;
     }
 
@@ -460,7 +477,9 @@ export default function AdminHeroImages() {
         throw new Error("Failed to archive image");
       }
 
-      toast.success("Image archived successfully! You can restore it from the Archive tab.");
+      toast.success(
+        "Image archived successfully! You can restore it from the Archive tab.",
+      );
       fetchImages();
     } catch (error) {
       console.error("Error archiving image:", error);
@@ -520,11 +539,13 @@ export default function AdminHeroImages() {
     // Persist to localStorage
     localStorage.setItem(
       "removedFallbackIds",
-      JSON.stringify(Array.from(newRemovedIds))
+      JSON.stringify(Array.from(newRemovedIds)),
     );
 
     // Update images display
-    setImages((prevImages) => prevImages.filter((img) => img.id !== imageToRemove));
+    setImages((prevImages) =>
+      prevImages.filter((img) => img.id !== imageToRemove),
+    );
     toast.success("Fallback image removed!");
 
     // Close modal
@@ -546,7 +567,7 @@ export default function AdminHeroImages() {
     // Persist to localStorage
     localStorage.setItem(
       "removedFallbackIds",
-      JSON.stringify(Array.from(newRemovedIds))
+      JSON.stringify(Array.from(newRemovedIds)),
     );
 
     // Re-fetch to show the restored image
@@ -636,7 +657,8 @@ export default function AdminHeroImages() {
           Manage Hero Slider Images
         </h1>
         <p className="text-muted-foreground mt-2">
-          Add, edit, and organize hero slider images. Deleted images can be recovered from the Archive.
+          Add, edit, and organize hero slider images. Deleted images can be
+          recovered from the Archive.
         </p>
 
         {isFallback && (
@@ -831,7 +853,10 @@ export default function AdminHeroImages() {
                   <Eye className="w-4 h-4" />
                   Active ({images.length})
                 </TabsTrigger>
-                <TabsTrigger value="archived" className="flex items-center gap-2">
+                <TabsTrigger
+                  value="archived"
+                  className="flex items-center gap-2"
+                >
                   <Archive className="w-4 h-4" />
                   Archive ({archivedImages.length})
                 </TabsTrigger>
@@ -946,7 +971,9 @@ export default function AdminHeroImages() {
                             <div className="flex gap-2">
                               {image.isActive ? (
                                 <Button
-                                  onClick={() => handleToggleActive(image.id, false)}
+                                  onClick={() =>
+                                    handleToggleActive(image.id, false)
+                                  }
                                   variant="outline"
                                   size="sm"
                                   className="flex-1 gap-2"
@@ -955,7 +982,9 @@ export default function AdminHeroImages() {
                                 </Button>
                               ) : (
                                 <Button
-                                  onClick={() => handleToggleActive(image.id, true)}
+                                  onClick={() =>
+                                    handleToggleActive(image.id, true)
+                                  }
                                   variant="outline"
                                   size="sm"
                                   className="flex-1 gap-2"
@@ -999,7 +1028,9 @@ export default function AdminHeroImages() {
                               </Button>
                             ) : (
                               <Button
-                                onClick={() => handleRemoveFallbackImage(image.id)}
+                                onClick={() =>
+                                  handleRemoveFallbackImage(image.id)
+                                }
                                 variant="destructive"
                                 size="sm"
                                 className="gap-2"
@@ -1111,17 +1142,24 @@ export default function AdminHeroImages() {
       </div>
 
       {/* Removal Confirmation Modal */}
-      <AlertDialog open={removalConfirmOpen} onOpenChange={setRemovalConfirmOpen}>
+      <AlertDialog
+        open={removalConfirmOpen}
+        onOpenChange={setRemovalConfirmOpen}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Remove Fallback Image?</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to remove this fallback image? You can restore it anytime by clicking the "Restore Fallbacks" button.
+              Are you sure you want to remove this fallback image? You can
+              restore it anytime by clicking the "Restore Fallbacks" button.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmRemoveFallbackImage} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+            <AlertDialogAction
+              onClick={confirmRemoveFallbackImage}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
               Remove
             </AlertDialogAction>
           </AlertDialogFooter>
