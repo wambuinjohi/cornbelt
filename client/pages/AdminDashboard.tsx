@@ -16,10 +16,12 @@ export default function AdminDashboard() {
   const { user, token } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [contactSubmissions, setContactSubmissions] = useState<any[]>([]);
+  const [newsletterRequests, setNewsletterRequests] = useState<any[]>([]);
 
   useEffect(() => {
     if (user) {
       fetchContactSubmissions();
+      fetchNewsletterRequests();
     }
     setIsLoading(false);
   }, [user]);
@@ -41,6 +43,26 @@ export default function AdminDashboard() {
     } catch (error) {
       console.error("Error fetching submissions:", error);
       toast.error("Failed to load contact submissions");
+    }
+  };
+
+  const fetchNewsletterRequests = async () => {
+    try {
+      const response = await (
+        await import("@/lib/adminApi")
+      ).default("/api/admin/newsletter-requests", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!response || !response.ok) {
+        throw new Error("Failed to fetch newsletter requests");
+      }
+
+      const data = await response.json();
+      setNewsletterRequests(data);
+    } catch (error) {
+      console.error("Error fetching newsletter requests:", error);
+      toast.error("Failed to load newsletter requests");
     }
   };
 
