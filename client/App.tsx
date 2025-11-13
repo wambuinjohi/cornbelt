@@ -8,7 +8,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import PageLoadingBar from "./components/PageLoadingBar";
 import { useVisitorTracking } from "./hooks/use-visitor-tracking";
-import { AuthProvider } from "./lib/authContext";
+import { AuthProvider, useAuth } from "./lib/authContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
@@ -32,7 +32,19 @@ import AdminVisitorTracking from "./pages/AdminVisitorTracking";
 const queryClient = new QueryClient();
 
 const AppContent = () => {
+  const { isLoading: authLoading } = useAuth();
   useVisitorTracking();
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <Routes>
