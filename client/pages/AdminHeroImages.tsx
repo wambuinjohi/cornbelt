@@ -393,14 +393,14 @@ export default function AdminHeroImages() {
     }
   };
 
-  const handleDeleteImage = async (id: number) => {
-    // Don't allow deleting fallback images
+  const handleArchiveImage = async (id: number) => {
+    // Don't allow archiving fallback images
     if (id < 0) {
-      toast.error("Cannot delete fallback images. Add a real image first.");
+      toast.error("Cannot archive fallback images. Add a real image first.");
       return;
     }
 
-    if (!confirm("Are you sure you want to delete this image?")) {
+    if (!confirm("Are you sure you want to archive this image? You can recover it later from the Archive tab.")) {
       return;
     }
 
@@ -408,21 +408,54 @@ export default function AdminHeroImages() {
       const token = localStorage.getItem("adminToken");
       const adminFetch = (await import("@/lib/adminApi")).default;
       const response = await adminFetch(`/api/admin/hero-images/${id}`, {
-        method: "DELETE",
+        method: "PUT",
         headers: {
+          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
+        body: JSON.stringify({ isArchived: true }),
       });
 
       if (!response || !response.ok) {
-        throw new Error("Failed to delete image");
+        throw new Error("Failed to archive image");
       }
 
-      toast.success("Image deleted successfully!");
+      toast.success("Image archived successfully! You can restore it from the Archive tab.");
       fetchImages();
     } catch (error) {
-      console.error("Error deleting image:", error);
-      toast.error("Failed to delete image");
+      console.error("Error archiving image:", error);
+      toast.error("Failed to archive image");
+    }
+  };
+
+  const handleRestoreImage = async (id: number) => {
+    // Don't allow restoring fallback images
+    if (id < 0) {
+      toast.error("Cannot restore fallback images.");
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("adminToken");
+      const adminFetch = (await import("@/lib/adminApi")).default;
+      const response = await adminFetch(`/api/admin/hero-images/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ isArchived: false }),
+      });
+
+      if (!response || !response.ok) {
+        throw new Error("Failed to restore image");
+      }
+
+      toast.success("Image restored successfully!");
+      fetchImages();
+    } catch (error) {
+      console.error("Error restoring image:", error);
+      toast.error("Failed to restore image");
     }
   };
 
