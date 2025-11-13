@@ -124,7 +124,11 @@ export default async function adminFetch(
       try {
         // Convert body to string to avoid stream consumption
         const nodeBody = typeof init.body === "string" ? init.body : undefined;
-        const res = await fetch(adminUrl, { ...init, body: nodeBody });
+        const res = await fetch(adminUrl, {
+          method: init.method,
+          headers: init.headers,
+          body: nodeBody,
+        });
         const ct = res.headers.get("content-type") || "";
         if (res.ok && ct.includes("application/json"))
           return { ok: true, status: res.status, json: async () => res.json() };
