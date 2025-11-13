@@ -22,6 +22,28 @@ export default function ChatWidget() {
     // load history from PHP api.php (public CRUD endpoint)
     const load = async () => {
       try {
+        // First ensure the chats table exists
+        const createRes = await fetch(`/api.php`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            table: "chats",
+            create_table: true,
+            columns: {
+              id: "INT AUTO_INCREMENT PRIMARY KEY",
+              sessionId: "VARCHAR(255) NOT NULL",
+              sender: "VARCHAR(50) NOT NULL",
+              message: "TEXT NOT NULL",
+              createdAt: "DATETIME DEFAULT CURRENT_TIMESTAMP",
+            },
+          }),
+        }).catch(() => null);
+
+        if (createRes && createRes.ok) {
+          console.log("Chats table initialized");
+        }
+
+        // Now fetch messages
         const res = await fetch(`/api.php?table=chats`);
         if (res.ok) {
           const data = await res.json();
