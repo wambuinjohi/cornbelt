@@ -111,7 +111,12 @@ export default function OrdersTable({
                   {order.quantity} x {order.size}
                 </td>
                 <td className="px-4 py-3 text-sm font-semibold text-primary">
-                  KES {order.totalPrice?.toFixed(2).toLocaleString() || "-"}
+                  KES{" "}
+                  {order.totalPrice
+                    ? typeof order.totalPrice === "string"
+                      ? parseFloat(order.totalPrice).toFixed(2).toLocaleString()
+                      : order.totalPrice.toFixed(2).toLocaleString()
+                    : "-"}
                 </td>
                 <td className="px-4 py-3">
                   <span
