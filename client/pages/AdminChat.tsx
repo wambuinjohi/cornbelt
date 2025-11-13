@@ -124,12 +124,33 @@ export default function AdminChat() {
   const fetchSessions = async () => {
     try {
       const adminFetch = (await import("@/lib/adminApi")).default;
-      const res = await adminFetch("/api/admin/chat-sessions", {
+      let res = await adminFetch("/api/admin/chat-sessions", {
         headers: { Authorization: `Bearer ${token}` },
       });
+
+      // If Node endpoint fails, fetch from PHP and process
+      if (!res || !res.ok) {
+        res = await fetch("/api.php?table=chats");
+      }
+
       if (!res || !res.ok) throw new Error("Failed to fetch sessions");
       const data = await res.json();
-      setSessions(Array.isArray(data) ? data : []);
+
+      // If we got an array of chat messages, convert to sessions format
+      if (Array.isArray(data)) {
+        const sessions: Record<string, any> = {};
+        for (const msg of data) {
+          const sid = msg.sessionId || msg.sessionId;
+          if (!sessions[sid]) {
+            sessions[sid] = { sessionId: sid, lastMessageAt: msg.createdAt, messages: [] };
+          }
+          sessions[sid].messages.push(msg);
+          sessions[sid].lastMessageAt = msg.createdAt;
+        }
+        setSessions(Object.values(sessions));
+      } else {
+        setSessions(Array.isArray(data) ? data : []);
+      }
     } catch (e) {
       console.error(e);
       toast.error("Failed to load chat sessions");
