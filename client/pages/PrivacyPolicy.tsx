@@ -63,7 +63,9 @@ export default function PrivacyPolicy() {
                 <li>To process and fulfill your orders</li>
                 <li>To send you promotional emails and marketing materials</li>
                 <li>To improve our website and services</li>
-                <li>To respond to your inquiries and customer support requests</li>
+                <li>
+                  To respond to your inquiries and customer support requests
+                </li>
                 <li>To analyze website traffic and user behavior</li>
                 <li>To comply with legal obligations</li>
                 <li>To prevent fraud and enhance security</li>
@@ -77,11 +79,11 @@ export default function PrivacyPolicy() {
               <p className="text-muted-foreground leading-relaxed">
                 We may disclose your information when required by law or when we
                 believe in good faith that such disclosure is necessary to:
-                protect our rights, your safety, or the safety of others; enforce
-                our Terms of Service; or prevent fraud. We do not sell, trade, or
-                transfer your personally identifiable information to outside
-                parties without your consent, except as necessary to process your
-                transactions or as required by law.
+                protect our rights, your safety, or the safety of others;
+                enforce our Terms of Service; or prevent fraud. We do not sell,
+                trade, or transfer your personally identifiable information to
+                outside parties without your consent, except as necessary to
+                process your transactions or as required by law.
               </p>
             </section>
 
@@ -90,13 +92,13 @@ export default function PrivacyPolicy() {
                 5. Security of Your Information
               </h2>
               <p className="text-muted-foreground leading-relaxed">
-                We implement appropriate technical and organizational measures to
-                protect your personal information against unauthorized access,
-                alteration, disclosure, or destruction. However, no method of
-                transmission over the Internet or electronic storage is 100%
-                secure. While we strive to use commercially acceptable means to
-                protect your personal information, we cannot guarantee its
-                absolute security.
+                We implement appropriate technical and organizational measures
+                to protect your personal information against unauthorized
+                access, alteration, disclosure, or destruction. However, no
+                method of transmission over the Internet or electronic storage
+                is 100% secure. While we strive to use commercially acceptable
+                means to protect your personal information, we cannot guarantee
+                its absolute security.
               </p>
             </section>
 
@@ -107,9 +109,9 @@ export default function PrivacyPolicy() {
               <p className="text-muted-foreground leading-relaxed">
                 Our website may use cookies and similar tracking technologies to
                 enhance your experience. These technologies help us understand
-                how you use our website and improve our services. You can control
-                cookie settings through your browser, but disabling cookies may
-                affect website functionality.
+                how you use our website and improve our services. You can
+                control cookie settings through your browser, but disabling
+                cookies may affect website functionality.
               </p>
             </section>
 
@@ -118,10 +120,11 @@ export default function PrivacyPolicy() {
                 7. Third-Party Links
               </h2>
               <p className="text-muted-foreground leading-relaxed">
-                Our website may contain links to third-party websites. We are not
-                responsible for the privacy practices or content of these external
-                sites. We encourage you to review the privacy policies of any
-                third-party websites before providing your personal information.
+                Our website may contain links to third-party websites. We are
+                not responsible for the privacy practices or content of these
+                external sites. We encourage you to review the privacy policies
+                of any third-party websites before providing your personal
+                information.
               </p>
             </section>
 
@@ -130,8 +133,8 @@ export default function PrivacyPolicy() {
                 8. Your Rights and Choices
               </h2>
               <p className="text-muted-foreground leading-relaxed mb-3">
-                Depending on your location, you may have certain rights regarding
-                your personal information:
+                Depending on your location, you may have certain rights
+                regarding your personal information:
               </p>
               <ul className="list-disc list-inside space-y-2 text-muted-foreground">
                 <li>Right to access your personal information</li>
@@ -148,10 +151,10 @@ export default function PrivacyPolicy() {
               </h2>
               <p className="text-muted-foreground leading-relaxed">
                 Our website is not intended for children under the age of 13. We
-                do not knowingly collect personal information from children under
-                13. If we become aware that we have collected information from a
-                child under 13, we will take steps to delete such information
-                promptly.
+                do not knowingly collect personal information from children
+                under 13. If we become aware that we have collected information
+                from a child under 13, we will take steps to delete such
+                information promptly.
               </p>
             </section>
 
@@ -162,10 +165,10 @@ export default function PrivacyPolicy() {
               <p className="text-muted-foreground leading-relaxed">
                 We may update this Privacy Policy from time to time. We will
                 notify you of any changes by posting the updated Privacy Policy
-                on our website and updating the "Last updated" date at the top of
-                this page. Your continued use of the website following the posting
-                of revised Privacy Policy means that you accept and agree to the
-                changes.
+                on our website and updating the "Last updated" date at the top
+                of this page. Your continued use of the website following the
+                posting of revised Privacy Policy means that you accept and
+                agree to the changes.
               </p>
             </section>
 
@@ -184,9 +187,7 @@ export default function PrivacyPolicy() {
                 <p className="text-muted-foreground">
                   Email: info@cornbelt.co.ke
                 </p>
-                <p className="text-muted-foreground">
-                  Location: Kenya
-                </p>
+                <p className="text-muted-foreground">Location: Kenya</p>
               </div>
             </section>
           </div>

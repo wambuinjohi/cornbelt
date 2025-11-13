@@ -569,7 +569,8 @@ async function apiCall(
   // Always try the known canonical host as a fallback
   candidates.push("https://cornbelt.co.ke");
   // In development try localhost as a fallback
-  if (process.env.NODE_ENV !== "production") candidates.push("http://localhost:8080");
+  if (process.env.NODE_ENV !== "production")
+    candidates.push("http://localhost:8080");
 
   const options: any = {
     method,
@@ -586,7 +587,9 @@ async function apiCall(
   const errors: any[] = [];
   for (const base of candidates) {
     try {
-      const url = `${base}/api.php?table=${encodeURIComponent(table)}` + (id ? `&id=${encodeURIComponent(String(id))}` : "");
+      const url =
+        `${base}/api.php?table=${encodeURIComponent(table)}` +
+        (id ? `&id=${encodeURIComponent(String(id))}` : "");
       const response = await fetch(url, options);
       const contentType = response.headers.get("content-type") || "";
       const status = response.status;
@@ -596,24 +599,46 @@ async function apiCall(
         try {
           const json = await response.json();
           if (!response.ok) {
-            errors.push({ base, status, error: "External API returned an error", body: json });
+            errors.push({
+              base,
+              status,
+              error: "External API returned an error",
+              body: json,
+            });
             continue; // try next base
           }
           return json;
         } catch (parseErr) {
           // Failed to parse JSON despite content-type claiming JSON �� include raw text for debugging
           const text = await response.text();
-          errors.push({ base, status, error: "Invalid JSON response from external API", contentType, body: text });
+          errors.push({
+            base,
+            status,
+            error: "Invalid JSON response from external API",
+            contentType,
+            body: text,
+          });
           continue;
         }
       } else {
         const text = await response.text();
-        errors.push({ base, status, error: "Non-JSON response from external API", contentType, body: text });
+        errors.push({
+          base,
+          status,
+          error: "Non-JSON response from external API",
+          contentType,
+          body: text,
+        });
         continue;
       }
     } catch (fetchErr) {
       // Network or other fetch failure — record and try next base
-      errors.push({ base, error: "Network error while calling external API", message: fetchErr instanceof Error ? fetchErr.message : String(fetchErr) });
+      errors.push({
+        base,
+        error: "Network error while calling external API",
+        message:
+          fetchErr instanceof Error ? fetchErr.message : String(fetchErr),
+      });
       continue;
     }
   }
@@ -786,7 +811,12 @@ Disallow: /api/`;
       if (users && typeof users === "object" && "error" in users) {
         // External API error — surface with 502 Bad Gateway for clarity
         console.error("External API error fetching admin_users:", users);
-        return res.status(502).json({ error: users.error || "External API failure", details: users });
+        return res
+          .status(502)
+          .json({
+            error: users.error || "External API failure",
+            details: users,
+          });
       }
 
       if (!Array.isArray(users)) {
@@ -1248,7 +1278,11 @@ Disallow: /api/`;
           twitterUrl: "https://twitter.com",
         };
 
-        const insertResult = await apiCall("POST", "footer_settings", defaultSettings);
+        const insertResult = await apiCall(
+          "POST",
+          "footer_settings",
+          defaultSettings,
+        );
         if (!insertResult.error && insertResult.id) {
           arr = [{ id: insertResult.id, ...defaultSettings }];
         }
