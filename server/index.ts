@@ -14,10 +14,43 @@ const API_BASE_URL =
 // Initialize database tables
 async function initializeAdminTable() {
   try {
+    // Always initialize footer_settings table in development
     if (!API_BASE_URL) {
       console.log(
-        "API_BASE_URL not set — skipping external API table initialization",
+        "API_BASE_URL not set — initializing local footer_settings table",
       );
+      // Initialize footer_settings table via local /api.php endpoint
+      try {
+        const footerTableData = {
+          create_table: true,
+          columns: {
+            id: "INT AUTO_INCREMENT PRIMARY KEY",
+            phone: "VARCHAR(255) NOT NULL",
+            email: "VARCHAR(255) NOT NULL",
+            location: "VARCHAR(255) NOT NULL",
+            facebookUrl: "VARCHAR(255)",
+            instagramUrl: "VARCHAR(255)",
+            twitterUrl: "VARCHAR(255)",
+            updatedAt:
+              "DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
+          },
+        };
+
+        await fetch("http://localhost:8080/api.php", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            table: "footer_settings",
+            ...footerTableData,
+          }),
+        }).catch(() => {
+          // Silently fail if api.php is not available yet
+        });
+
+        console.log("Footer settings table initialized in development");
+      } catch (e) {
+        console.warn("Could not initialize footer_settings in dev:", e);
+      }
       return;
     }
     const baseUrl = API_BASE_URL;
