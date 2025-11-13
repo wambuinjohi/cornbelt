@@ -482,12 +482,12 @@ async function initializeAdminTable() {
     const existingFooter = await apiCall("GET", "footer_settings");
     if (!Array.isArray(existingFooter) || existingFooter.length === 0) {
       await apiCall("POST", "footer_settings", {
-        phone: "+254 (0) XXX XXX XXX",
+        phone: "+254 123 456 789",
         email: "info@cornbelt.co.ke",
         location: "Kenya",
-        facebookUrl: "https://facebook.com",
-        instagramUrl: "https://instagram.com",
-        twitterUrl: "https://twitter.com",
+        facebookUrl: "https://facebook.com/cornbelt",
+        instagramUrl: "https://instagram.com/cornbelt",
+        twitterUrl: "https://twitter.com/cornbelt",
       });
 
       console.log("Default footer settings seeded");
