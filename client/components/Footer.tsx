@@ -57,6 +57,7 @@ export default function Footer() {
         }
       } catch (error) {
         console.error("Error fetching footer settings:", error);
+        console.log("Falling back to default footer settings");
       } finally {
         setIsLoading(false);
       }
