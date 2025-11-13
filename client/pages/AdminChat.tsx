@@ -279,10 +279,18 @@ export default function AdminChat() {
   const deleteResponse = async (id: number) => {
     try {
       const adminFetch = (await import("@/lib/adminApi")).default;
-      const res = await adminFetch(`/api/admin/bot-responses/${id}`, {
+      let res = await adminFetch(`/api/admin/bot-responses/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
+
+      // If Node endpoint fails, try PHP endpoint
+      if (!res || !res.ok) {
+        res = await fetch(`/api.php?table=bot_responses&id=${id}`, {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+        });
+      }
 
       if (!res || !res.ok) throw new Error("Failed to delete response");
 
