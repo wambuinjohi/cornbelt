@@ -90,6 +90,22 @@ export default function ChatWidget() {
         }),
       });
 
+      // Ensure bot_responses table exists
+      await fetch(`/api.php`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          table: "bot_responses",
+          create_table: true,
+          columns: {
+            id: "INT AUTO_INCREMENT PRIMARY KEY",
+            keyword: "VARCHAR(255) NOT NULL",
+            answer: "TEXT NOT NULL",
+            createdAt: "DATETIME DEFAULT CURRENT_TIMESTAMP",
+          },
+        }),
+      }).catch(() => null);
+
       // Fetch bot responses from PHP and compute reply on client
       const resp = await fetch(`/api.php?table=bot_responses`);
       let botReply: string | null = null;
