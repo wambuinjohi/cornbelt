@@ -103,9 +103,15 @@ export default function AdminChat() {
   const fetchResponses = async () => {
     try {
       const adminFetch = (await import("@/lib/adminApi")).default;
-      const res = await adminFetch("/api/admin/bot-responses", {
+      let res = await adminFetch("/api/admin/bot-responses", {
         headers: { Authorization: `Bearer ${token}` },
       });
+
+      // If Node endpoint fails, try PHP endpoint
+      if (!res || !res.ok) {
+        res = await fetch("/api.php?table=bot_responses");
+      }
+
       if (!res || !res.ok) throw new Error("Failed to fetch responses");
       const data = await res.json();
       setResponses(Array.isArray(data) ? data : []);
@@ -118,12 +124,37 @@ export default function AdminChat() {
   const fetchSessions = async () => {
     try {
       const adminFetch = (await import("@/lib/adminApi")).default;
-      const res = await adminFetch("/api/admin/chat-sessions", {
+      let res = await adminFetch("/api/admin/chat-sessions", {
         headers: { Authorization: `Bearer ${token}` },
       });
+
+      // If Node endpoint fails, fetch from PHP and process
+      if (!res || !res.ok) {
+        res = await fetch("/api.php?table=chats");
+      }
+
       if (!res || !res.ok) throw new Error("Failed to fetch sessions");
       const data = await res.json();
-      setSessions(Array.isArray(data) ? data : []);
+
+      // If we got an array of chat messages, convert to sessions format
+      if (Array.isArray(data)) {
+        const sessions: Record<string, any> = {};
+        for (const msg of data) {
+          const sid = msg.sessionId || msg.sessionId;
+          if (!sessions[sid]) {
+            sessions[sid] = {
+              sessionId: sid,
+              lastMessageAt: msg.createdAt,
+              messages: [],
+            };
+          }
+          sessions[sid].messages.push(msg);
+          sessions[sid].lastMessageAt = msg.createdAt;
+        }
+        setSessions(Object.values(sessions));
+      } else {
+        setSessions(Array.isArray(data) ? data : []);
+      }
     } catch (e) {
       console.error(e);
       toast.error("Failed to load chat sessions");
@@ -133,13 +164,26 @@ export default function AdminChat() {
   const fetchSessionMessages = async (sessionId: string) => {
     try {
       const adminFetch = (await import("@/lib/adminApi")).default;
-      const res = await adminFetch(
+      let res = await adminFetch(
         `/api/admin/chat/${encodeURIComponent(sessionId)}`,
         { headers: { Authorization: `Bearer ${token}` } },
       );
+
+      // If Node endpoint fails, fetch from PHP and filter
+      if (!res || !res.ok) {
+        res = await fetch("/api.php?table=chats");
+      }
+
       if (!res || !res.ok) throw new Error("Failed to fetch messages");
       const data = await res.json();
-      setMessages(Array.isArray(data) ? data : []);
+
+      // If we got all chats, filter by sessionId
+      if (Array.isArray(data)) {
+        const filtered = data.filter((m: any) => m.sessionId === sessionId);
+        setMessages(filtered);
+      } else {
+        setMessages(Array.isArray(data) ? data : []);
+      }
       setSelectedSession(sessionId);
     } catch (e) {
       console.error(e);
@@ -155,17 +199,28 @@ export default function AdminChat() {
 
     try {
       const adminFetch = (await import("@/lib/adminApi")).default;
-      const res = await adminFetch("/api/admin/bot-responses", {
+      const payload = {
+        keyword: keyword.trim(),
+        answer: answer.trim(),
+      };
+
+      let res = await adminFetch("/api/admin/bot-responses", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          keyword: keyword.trim(),
-          answer: answer.trim(),
-        }),
+        body: JSON.stringify(payload),
       });
+
+      // If Node endpoint fails, try PHP endpoint
+      if (!res || !res.ok) {
+        res = await fetch("/api.php?table=bot_responses", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      }
 
       if (!res || !res.ok) throw new Error("Failed to create response");
 
@@ -188,17 +243,28 @@ export default function AdminChat() {
 
     try {
       const adminFetch = (await import("@/lib/adminApi")).default;
-      const res = await adminFetch(`/api/admin/bot-responses/${id}`, {
+      const payload = {
+        keyword: keyword.trim(),
+        answer: answer.trim(),
+      };
+
+      let res = await adminFetch(`/api/admin/bot-responses/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          keyword: keyword.trim(),
-          answer: answer.trim(),
-        }),
+        body: JSON.stringify(payload),
       });
+
+      // If Node endpoint fails, try PHP endpoint
+      if (!res || !res.ok) {
+        res = await fetch(`/api.php?table=bot_responses&id=${id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id, ...payload }),
+        });
+      }
 
       if (!res || !res.ok) throw new Error("Failed to update response");
 
@@ -217,10 +283,18 @@ export default function AdminChat() {
   const deleteResponse = async (id: number) => {
     try {
       const adminFetch = (await import("@/lib/adminApi")).default;
-      const res = await adminFetch(`/api/admin/bot-responses/${id}`, {
+      let res = await adminFetch(`/api/admin/bot-responses/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
+
+      // If Node endpoint fails, try PHP endpoint
+      if (!res || !res.ok) {
+        res = await fetch(`/api.php?table=bot_responses&id=${id}`, {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+        });
+      }
 
       if (!res || !res.ok) throw new Error("Failed to delete response");
 
@@ -235,15 +309,61 @@ export default function AdminChat() {
   const reseedDefaultResponses = async () => {
     try {
       const adminFetch = (await import("@/lib/adminApi")).default;
-      const res = await adminFetch("/api/admin/reseed-bot-responses", {
+      let res = await adminFetch("/api/admin/reseed-bot-responses", {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
       });
 
+      // If Node endpoint fails, seed default responses via PHP
+      if (!res || !res.ok) {
+        const defaultResponses = [
+          {
+            keyword: "hours",
+            answer:
+              "Our business hours are Monday - Friday: 8:00 AM - 5:00 PM, Saturday: 9:00 AM - 2:00 PM, Sunday: Closed.",
+          },
+          {
+            keyword: "location",
+            answer:
+              "We are located at Cornbelt Flour Mill Limited, National Cereals & Produce Board Land, Kenya.",
+          },
+          {
+            keyword: "contact",
+            answer:
+              "You can reach us via email at info@cornbeltmill.com or support@cornbeltmill.com, or use the contact form on our website.",
+          },
+          {
+            keyword: "products",
+            answer:
+              "We offer a range of fortified maize meal and other products. Visit our Products page for more details.",
+          },
+          {
+            keyword: "shipping",
+            answer:
+              "For shipping inquiries, please contact our support team via email and provide your location so we can advise on availability and rates.",
+          },
+        ];
+
+        let count = 0;
+        for (const resp of defaultResponses) {
+          const r = await fetch("/api.php?table=bot_responses", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(resp),
+          });
+          if (r && r.ok) count++;
+        }
+        toast.success(`Default responses loaded (${count} responses)`);
+        await fetchResponses();
+        return;
+      }
+
       if (!res || !res.ok) throw new Error("Failed to reseed responses");
 
       const data = await res.json();
-      toast.success(`Default responses loaded (${data.count} responses)`);
+      toast.success(
+        `Default responses loaded (${data.count || data.count || 5} responses)`,
+      );
       await fetchResponses();
     } catch (e) {
       console.error(e);

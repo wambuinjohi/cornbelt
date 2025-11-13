@@ -22,6 +22,125 @@ export default function ChatWidget() {
     // load history from PHP api.php (public CRUD endpoint)
     const load = async () => {
       try {
+        // First ensure the chats table exists
+        const createRes = await fetch(`/api.php`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            table: "chats",
+            create_table: true,
+            columns: {
+              id: "INT AUTO_INCREMENT PRIMARY KEY",
+              sessionId: "VARCHAR(255) NOT NULL",
+              sender: "VARCHAR(50) NOT NULL",
+              message: "TEXT NOT NULL",
+              createdAt: "DATETIME DEFAULT CURRENT_TIMESTAMP",
+            },
+          }),
+        }).catch(() => null);
+
+        if (createRes && createRes.ok) {
+          console.log("Chats table initialized");
+        }
+
+        // Ensure bot_responses table exists
+        const botTableRes = await fetch(`/api.php`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            table: "bot_responses",
+            create_table: true,
+            columns: {
+              id: "INT AUTO_INCREMENT PRIMARY KEY",
+              keyword: "VARCHAR(255) NOT NULL",
+              answer: "TEXT NOT NULL",
+              createdAt: "DATETIME DEFAULT CURRENT_TIMESTAMP",
+            },
+          }),
+        }).catch(() => null);
+
+        if (botTableRes && botTableRes.ok) {
+          console.log("Bot responses table initialized");
+        }
+
+        // Check if bot_responses table has any data
+        console.log("Checking for existing bot responses...");
+        const checkRes = await fetch(`/api.php?table=bot_responses`);
+        if (checkRes.ok) {
+          const botData = await checkRes.json();
+          console.log("Existing bot responses:", botData);
+          const isEmpty = !Array.isArray(botData) || botData.length === 0;
+
+          // If empty, auto-seed with default responses
+          if (isEmpty) {
+            console.log("Bot responses table is empty, seeding defaults...");
+            const defaultResponses = [
+              {
+                keyword: "hours",
+                answer:
+                  "Our business hours are Monday - Friday: 8:00 AM - 5:00 PM, Saturday: 9:00 AM - 2:00 PM, Sunday: Closed.",
+              },
+              {
+                keyword: "location",
+                answer:
+                  "We are located at Cornbelt Flour Mill Limited, National Cereals & Produce Board Land, Kenya.",
+              },
+              {
+                keyword: "contact",
+                answer:
+                  "You can reach us via email at info@cornbeltmill.com or support@cornbeltmill.com, or use the contact form on our website.",
+              },
+              {
+                keyword: "products",
+                answer:
+                  "We offer a range of fortified maize meal and other products. Visit our Products page for more details.",
+              },
+              {
+                keyword: "shipping",
+                answer:
+                  "For shipping inquiries, please contact our support team via email and provide your location so we can advise on availability and rates.",
+              },
+            ];
+
+            // Seed default responses with better error handling
+            let seededCount = 0;
+            for (const response of defaultResponses) {
+              try {
+                const seedRes = await fetch(`/api.php?table=bot_responses`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify(response),
+                });
+                if (seedRes.ok) {
+                  seededCount++;
+                  console.log("Seeded response:", response.keyword);
+                } else {
+                  console.warn(
+                    "Failed to seed response:",
+                    response.keyword,
+                    seedRes.status,
+                  );
+                }
+              } catch (e) {
+                console.warn(
+                  "Failed to seed bot response:",
+                  response.keyword,
+                  e,
+                );
+              }
+            }
+
+            console.log(
+              `Default bot responses seeded: ${seededCount}/${defaultResponses.length}`,
+            );
+          } else {
+            console.log(`Found ${botData.length} existing bot responses`);
+          }
+        } else {
+          console.warn("Failed to fetch bot responses:", checkRes.status);
+        }
+
+        // Now fetch messages
         const res = await fetch(`/api.php?table=chats`);
         if (res.ok) {
           const data = await res.json();
@@ -46,6 +165,7 @@ export default function ChatWidget() {
   const sendMessage = async () => {
     if (!input.trim()) return;
     const text = input.trim();
+    console.log("Sending message:", text);
 
     // optimistic UI: show user message immediately
     setMessages((m) => [
@@ -57,7 +177,8 @@ export default function ChatWidget() {
 
     try {
       // Save user message to PHP endpoint
-      await fetch(`/api.php?table=chats`, {
+      console.log("Saving user message...");
+      const saveRes = await fetch(`/api.php?table=chats`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -67,32 +188,43 @@ export default function ChatWidget() {
           createdAt: new Date().toISOString(),
         }),
       });
+      console.log("User message saved:", saveRes.ok);
 
       // Fetch bot responses from PHP and compute reply on client
+      console.log("Fetching bot responses...");
       const resp = await fetch(`/api.php?table=bot_responses`);
+      console.log("Bot responses fetch status:", resp.status);
+
       let botReply: string | null = null;
       if (resp.ok) {
         const responses = await resp.json();
-        if (Array.isArray(responses)) {
+        console.log("Available bot responses:", responses);
+        if (Array.isArray(responses) && responses.length > 0) {
           const lower = text.toLowerCase();
           for (const r of responses) {
             const keyword = (r.keyword || "").toLowerCase();
             if (!keyword) continue;
             if (lower.includes(keyword)) {
               botReply = r.answer;
+              console.log("Matched keyword:", keyword);
               break;
             }
           }
         }
+      } else {
+        console.warn("Failed to fetch bot responses");
       }
 
       if (!botReply) {
+        console.log("No keyword match, using default response");
         botReply =
           "Thanks for your message! Our team will get back to you shortly. You can also visit the Contact page for more ways to reach us.";
       }
 
+      console.log("Bot reply:", botReply);
+
       // Save bot reply
-      await fetch(`/api.php?table=chats`, {
+      const botSaveRes = await fetch(`/api.php?table=chats`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -102,6 +234,7 @@ export default function ChatWidget() {
           createdAt: new Date().toISOString(),
         }),
       });
+      console.log("Bot message saved:", botSaveRes.ok);
 
       // Append bot reply to UI
       setMessages((m) => [
