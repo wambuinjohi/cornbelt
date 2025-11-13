@@ -111,9 +111,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && strpos($_SERVER['REQUEST_URI'], '/ap
         $defaultPhone = '+254 (0) XXX XXX XXX';
         $defaultEmail = 'info@cornbelt.co.ke';
         $defaultLocation = 'Kenya';
-        $defaultFacebook = 'https://facebook.com';
-        $defaultInstagram = 'https://instagram.com';
-        $defaultTwitter = 'https://twitter.com';
+        $defaultFacebook = '';
+        $defaultInstagram = '';
+        $defaultTwitter = '';
 
         $insertSql = "INSERT INTO `footer_settings` (`phone`, `email`, `location`, `facebookUrl`, `instagramUrl`, `twitterUrl`) VALUES (
             '" . $conn->real_escape_string($defaultPhone) . "',
