@@ -534,10 +534,12 @@ export default function AdminVisitorTracking() {
                             <>
                               <span className="text-base">
                                 {get_country_flag(
-                                  visitor.geolocation_country_code
+                                  visitor.geolocation_country_code,
                                 )}
                               </span>
-                              <span>{visitor.geolocation_country || "N/A"}</span>
+                              <span>
+                                {visitor.geolocation_country || "N/A"}
+                              </span>
                             </>
                           ) : (
                             <span className="text-muted-foreground">N/A</span>
