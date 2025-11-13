@@ -27,10 +27,10 @@ export default function Footer() {
   useEffect(() => {
     const fetchFooterSettings = async () => {
       try {
-        const response = await fetch("/api.php?table=footer_settings");
+        const response = await fetch("/api/footer-settings");
         const data = await response.json();
-        if (Array.isArray(data) && data.length > 0) {
-          setFooterData(data[0]);
+        if (data && typeof data === "object" && data.id) {
+          setFooterData(data);
         }
       } catch (error) {
         console.error("Error fetching footer settings:", error);
@@ -188,12 +188,18 @@ export default function Footer() {
             reserved.
           </p>
           <div className="flex gap-6 mt-4 md:mt-0">
-            <a href="#" className="hover:opacity-100 transition-opacity">
+            <Link
+              to="/privacy-policy"
+              className="hover:opacity-100 transition-opacity"
+            >
               Privacy Policy
-            </a>
-            <a href="#" className="hover:opacity-100 transition-opacity">
+            </Link>
+            <Link
+              to="/terms-of-service"
+              className="hover:opacity-100 transition-opacity"
+            >
               Terms of Service
-            </a>
+            </Link>
           </div>
         </div>
       </div>

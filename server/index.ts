@@ -14,10 +14,43 @@ const API_BASE_URL =
 // Initialize database tables
 async function initializeAdminTable() {
   try {
+    // Always initialize footer_settings table in development
     if (!API_BASE_URL) {
       console.log(
-        "API_BASE_URL not set — skipping external API table initialization",
+        "API_BASE_URL not set — initializing local footer_settings table",
       );
+      // Initialize footer_settings table via local /api.php endpoint
+      try {
+        const footerTableData = {
+          create_table: true,
+          columns: {
+            id: "INT AUTO_INCREMENT PRIMARY KEY",
+            phone: "VARCHAR(255) NOT NULL",
+            email: "VARCHAR(255) NOT NULL",
+            location: "VARCHAR(255) NOT NULL",
+            facebookUrl: "VARCHAR(255)",
+            instagramUrl: "VARCHAR(255)",
+            twitterUrl: "VARCHAR(255)",
+            updatedAt:
+              "DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
+          },
+        };
+
+        await fetch("http://localhost:8080/api.php", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            table: "footer_settings",
+            ...footerTableData,
+          }),
+        }).catch(() => {
+          // Silently fail if api.php is not available yet
+        });
+
+        console.log("Footer settings table initialized in development");
+      } catch (e) {
+        console.warn("Could not initialize footer_settings in dev:", e);
+      }
       return;
     }
     const baseUrl = API_BASE_URL;
@@ -419,6 +452,45 @@ async function initializeAdminTable() {
 
       console.log("Sample orders seeded");
     }
+
+    // Create footer_settings table
+    const footerTableData = {
+      create_table: true,
+      columns: {
+        id: "INT AUTO_INCREMENT PRIMARY KEY",
+        phone: "VARCHAR(255) NOT NULL",
+        email: "VARCHAR(255) NOT NULL",
+        location: "VARCHAR(255) NOT NULL",
+        facebookUrl: "VARCHAR(255)",
+        instagramUrl: "VARCHAR(255)",
+        twitterUrl: "VARCHAR(255)",
+        updatedAt:
+          "DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
+      },
+    };
+
+    await fetch(`${baseUrl}/api.php?table=footer_settings`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(footerTableData),
+    });
+
+    console.log("Footer settings table initialized");
+
+    // Seed default footer settings if table is empty
+    const existingFooter = await apiCall("GET", "footer_settings");
+    if (!Array.isArray(existingFooter) || existingFooter.length === 0) {
+      await apiCall("POST", "footer_settings", {
+        phone: "+254 (0) XXX XXX XXX",
+        email: "info@cornbelt.co.ke",
+        location: "Kenya",
+        facebookUrl: "https://facebook.com",
+        instagramUrl: "https://instagram.com",
+        twitterUrl: "https://twitter.com",
+      });
+
+      console.log("Default footer settings seeded");
+    }
   } catch (error) {
     console.error("Error initializing tables:", error);
   }
@@ -497,7 +569,8 @@ async function apiCall(
   // Always try the known canonical host as a fallback
   candidates.push("https://cornbelt.co.ke");
   // In development try localhost as a fallback
-  if (process.env.NODE_ENV !== "production") candidates.push("http://localhost:8080");
+  if (process.env.NODE_ENV !== "production")
+    candidates.push("http://localhost:8080");
 
   const options: any = {
     method,
@@ -514,7 +587,9 @@ async function apiCall(
   const errors: any[] = [];
   for (const base of candidates) {
     try {
-      const url = `${base}/api.php?table=${encodeURIComponent(table)}` + (id ? `&id=${encodeURIComponent(String(id))}` : "");
+      const url =
+        `${base}/api.php?table=${encodeURIComponent(table)}` +
+        (id ? `&id=${encodeURIComponent(String(id))}` : "");
       const response = await fetch(url, options);
       const contentType = response.headers.get("content-type") || "";
       const status = response.status;
@@ -524,24 +599,46 @@ async function apiCall(
         try {
           const json = await response.json();
           if (!response.ok) {
-            errors.push({ base, status, error: "External API returned an error", body: json });
+            errors.push({
+              base,
+              status,
+              error: "External API returned an error",
+              body: json,
+            });
             continue; // try next base
           }
           return json;
         } catch (parseErr) {
           // Failed to parse JSON despite content-type claiming JSON �� include raw text for debugging
           const text = await response.text();
-          errors.push({ base, status, error: "Invalid JSON response from external API", contentType, body: text });
+          errors.push({
+            base,
+            status,
+            error: "Invalid JSON response from external API",
+            contentType,
+            body: text,
+          });
           continue;
         }
       } else {
         const text = await response.text();
-        errors.push({ base, status, error: "Non-JSON response from external API", contentType, body: text });
+        errors.push({
+          base,
+          status,
+          error: "Non-JSON response from external API",
+          contentType,
+          body: text,
+        });
         continue;
       }
     } catch (fetchErr) {
       // Network or other fetch failure — record and try next base
-      errors.push({ base, error: "Network error while calling external API", message: fetchErr instanceof Error ? fetchErr.message : String(fetchErr) });
+      errors.push({
+        base,
+        error: "Network error while calling external API",
+        message:
+          fetchErr instanceof Error ? fetchErr.message : String(fetchErr),
+      });
       continue;
     }
   }
@@ -714,7 +811,12 @@ Disallow: /api/`;
       if (users && typeof users === "object" && "error" in users) {
         // External API error — surface with 502 Bad Gateway for clarity
         console.error("External API error fetching admin_users:", users);
-        return res.status(502).json({ error: users.error || "External API failure", details: users });
+        return res
+          .status(502)
+          .json({
+            error: users.error || "External API failure",
+            details: users,
+          });
       }
 
       if (!Array.isArray(users)) {
@@ -806,6 +908,120 @@ Disallow: /api/`;
     } catch (error) {
       console.error("Error fetching submissions:", error);
       res.json([]);
+    }
+  });
+
+  // Footer Settings Management
+  app.get("/api/admin/footer-settings", async (req, res) => {
+    const token = req.headers.authorization?.split(" ")[1];
+
+    if (!token || !verifyToken(token)) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    try {
+      const settings = await apiCall("GET", "footer_settings");
+      res.json(Array.isArray(settings) ? settings : []);
+    } catch (error) {
+      console.error("Error fetching footer settings:", error);
+      res.json([]);
+    }
+  });
+
+  app.post("/api/admin/footer-settings", async (req, res) => {
+    const token = req.headers.authorization?.split(" ")[1];
+
+    if (!token || !verifyToken(token)) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const { phone, email, location, facebookUrl, instagramUrl, twitterUrl } =
+      req.body;
+
+    if (!phone || !email || !location) {
+      return res.status(400).json({
+        error: "Phone, email, and location are required fields",
+      });
+    }
+
+    try {
+      const result = await apiCall("POST", "footer_settings", {
+        phone,
+        email,
+        location,
+        facebookUrl: facebookUrl || "",
+        instagramUrl: instagramUrl || "",
+        twitterUrl: twitterUrl || "",
+      });
+
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      res.json({
+        success: true,
+        message: "Footer settings created successfully",
+        id: result.id,
+      });
+    } catch (error) {
+      console.error("Error creating footer settings:", error);
+      res.status(500).json({
+        error:
+          error instanceof Error ? error.message : "Failed to create settings",
+      });
+    }
+  });
+
+  app.patch("/api/admin/footer-settings", async (req, res) => {
+    const token = req.headers.authorization?.split(" ")[1];
+
+    if (!token || !verifyToken(token)) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const id = req.query.id as string;
+    if (!id) {
+      return res.status(400).json({ error: "Missing id parameter" });
+    }
+
+    const { phone, email, location, facebookUrl, instagramUrl, twitterUrl } =
+      req.body;
+
+    if (!phone || !email || !location) {
+      return res.status(400).json({
+        error: "Phone, email, and location are required fields",
+      });
+    }
+
+    try {
+      const result = await apiCall(
+        "PUT",
+        "footer_settings",
+        {
+          phone,
+          email,
+          location,
+          facebookUrl: facebookUrl || "",
+          instagramUrl: instagramUrl || "",
+          twitterUrl: twitterUrl || "",
+        },
+        parseInt(id),
+      );
+
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      res.json({
+        success: true,
+        message: "Footer settings updated successfully",
+      });
+    } catch (error) {
+      console.error("Error updating footer settings:", error);
+      res.status(500).json({
+        error:
+          error instanceof Error ? error.message : "Failed to update settings",
+      });
     }
   });
 
@@ -1044,6 +1260,40 @@ Disallow: /api/`;
     };
     return mimeTypes[ext || "jpeg"] || "jpeg";
   }
+
+  // Public endpoint to get footer settings (auto-initializes if empty)
+  app.get("/api/footer-settings", async (_req, res) => {
+    try {
+      const settings = await apiCall("GET", "footer_settings");
+      let arr = Array.isArray(settings) ? settings : [];
+
+      if (arr.length === 0) {
+        // Table is empty, insert default settings
+        const defaultSettings = {
+          phone: "+254 (0) XXX XXX XXX",
+          email: "info@cornbelt.co.ke",
+          location: "Kenya",
+          facebookUrl: "https://facebook.com",
+          instagramUrl: "https://instagram.com",
+          twitterUrl: "https://twitter.com",
+        };
+
+        const insertResult = await apiCall(
+          "POST",
+          "footer_settings",
+          defaultSettings,
+        );
+        if (!insertResult.error && insertResult.id) {
+          arr = [{ id: insertResult.id, ...defaultSettings }];
+        }
+      }
+
+      res.json(arr.length > 0 ? arr[0] : null);
+    } catch (error) {
+      console.error("Error fetching footer settings:", error);
+      res.json(null);
+    }
+  });
 
   // Public endpoint to get hero images
   app.get("/api/hero-images", async (_req, res) => {

@@ -172,18 +172,8 @@ export default function AdminFooter() {
           twitterUrl: settings.twitterUrl || "",
         });
       } else {
-        // No data yet, provide empty form for creation
-        setFormData({
-          phone: "",
-          email: "",
-          location: "",
-          facebookUrl: "",
-          instagramUrl: "",
-          twitterUrl: "",
-        });
-        setError(
-          "No footer settings found. Fill in the form and click 'Save Changes' to create them.",
-        );
+        // No data yet, seed default footer settings
+        await seedDefaultFooterSettings();
       }
     } catch (err) {
       console.error("Error fetching footer settings:", err);
@@ -201,6 +191,53 @@ export default function AdminFooter() {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const seedDefaultFooterSettings = async () => {
+    try {
+      const token = localStorage.getItem("adminToken");
+      const defaultSettings = {
+        phone: "+254 (0) XXX XXX XXX",
+        email: "info@cornbelt.co.ke",
+        location: "Kenya",
+        facebookUrl: "https://facebook.com",
+        instagramUrl: "https://instagram.com",
+        twitterUrl: "https://twitter.com",
+      };
+
+      const response = await (
+        await import("@/lib/adminApi")
+      ).default("/api/admin/footer-settings", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(defaultSettings),
+      });
+
+      if (!response || !response.ok) {
+        throw new Error("Failed to seed default footer settings");
+      }
+
+      const result = await response.json();
+      setFormData(defaultSettings);
+      setError("");
+      await fetchFooterSettings();
+    } catch (err) {
+      console.error("Error seeding default footer settings:", err);
+      setError(
+        "Failed to initialize footer settings. Fill in the form and click 'Save Changes'.",
+      );
+      setFormData({
+        phone: "",
+        email: "",
+        location: "",
+        facebookUrl: "",
+        instagramUrl: "",
+        twitterUrl: "",
+      });
     }
   };
 
