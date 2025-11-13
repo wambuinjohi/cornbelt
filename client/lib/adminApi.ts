@@ -248,12 +248,15 @@ export default async function adminFetch(
     if (!headers["Content-Type"] && init.body)
       headers["Content-Type"] = "application/json";
 
+    // Convert body to string once to avoid stream consumption issues
+    const bodyStr = typeof init.body === "string" ? init.body : undefined;
+
     // try across bases
     let finalPhpRes: Response | null = null;
     for (const b of [window.location.origin, "https://cornbelt.co.ke"]) {
       try {
         const url = b + phpUrl.replace(/^[.\/]+/, "/");
-        finalPhpRes = await fetch(url, { method, headers, body: init.body });
+        finalPhpRes = await fetch(url, { method, headers, body: bodyStr });
         if (finalPhpRes) break;
       } catch (e) {
         finalPhpRes = null;
