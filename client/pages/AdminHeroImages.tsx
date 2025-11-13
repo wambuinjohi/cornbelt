@@ -225,12 +225,16 @@ export default function AdminHeroImages() {
       // Use fallback images if database is empty
       if (activeImages.length === 0) {
         console.log("[Hero Images] Database empty, using fallback images");
-        setImages(FALLBACK_IMAGES);
+        // Filter out removed fallback images
+        const filteredFallbacks = FALLBACK_IMAGES.filter(
+          (img) => !removedFallbackIds.has(img.id)
+        );
+        setImages(filteredFallbacks);
         setIsFallback(true);
         // Cache fallback images in localStorage
         localStorage.setItem(
           "heroImagesCache",
-          JSON.stringify(FALLBACK_IMAGES),
+          JSON.stringify(filteredFallbacks),
         );
       } else {
         setImages(activeImages);
@@ -252,12 +256,18 @@ export default function AdminHeroImages() {
           setIsFallback(cachedImages.some((img: HeroImage) => img.id < 0));
           toast.warning("Showing cached images. Server may be unavailable.");
         } catch {
-          setImages(FALLBACK_IMAGES);
+          const filteredFallbacks = FALLBACK_IMAGES.filter(
+            (img) => !removedFallbackIds.has(img.id)
+          );
+          setImages(filteredFallbacks);
           setIsFallback(true);
           toast.error("Failed to load images. Showing defaults.");
         }
       } else {
-        setImages(FALLBACK_IMAGES);
+        const filteredFallbacks = FALLBACK_IMAGES.filter(
+          (img) => !removedFallbackIds.has(img.id)
+        );
+        setImages(filteredFallbacks);
         setIsFallback(true);
         toast.error("Failed to load images. Showing defaults.");
       }
