@@ -541,7 +541,7 @@ export default function AdminHeroImages() {
           Manage Hero Slider Images
         </h1>
         <p className="text-muted-foreground mt-2">
-          Add, edit, and organize hero slider images
+          Add, edit, and organize hero slider images. Deleted images can be recovered from the Archive.
         </p>
 
         {isFallback && (
@@ -728,156 +728,261 @@ export default function AdminHeroImages() {
             </Form>
           </div>
 
-          {/* Images List */}
+          {/* Images List with Tabs */}
           <div className="bg-primary/5 p-8 rounded-lg border border-primary/10">
-            <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center gap-2">
-              <Eye className="w-6 h-6 text-primary" />
-              Current Images ({images.length})
-            </h2>
+            <Tabs defaultValue="active" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="active" className="flex items-center gap-2">
+                  <Eye className="w-4 h-4" />
+                  Active ({images.length})
+                </TabsTrigger>
+                <TabsTrigger value="archived" className="flex items-center gap-2">
+                  <Archive className="w-4 h-4" />
+                  Archive ({archivedImages.length})
+                </TabsTrigger>
+              </TabsList>
 
-            {images.length === 0 ? (
-              <div className="text-center py-12">
-                <p className="text-muted-foreground">
-                  No images yet. Add one using the form on the left.
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-4 max-h-[600px] overflow-y-auto">
-                {images.map((image) => (
-                  <div
-                    key={image.id}
-                    className={`bg-background p-4 rounded-lg border ${
-                      image.id < 0
-                        ? "border-yellow-200 bg-yellow-50/50"
-                        : "border-primary/10"
-                    }`}
-                  >
-                    {image.id < 0 && (
-                      <div className="mb-2 text-xs font-medium text-yellow-800 bg-yellow-100 px-2 py-1 rounded w-fit">
-                        Fallback Image
-                      </div>
-                    )}
+              {/* Active Images Tab */}
+              <TabsContent value="active" className="mt-6">
+                <h2 className="text-2xl font-bold text-foreground mb-6">
+                  Current Images
+                </h2>
 
-                    {/* Image Thumbnail */}
-                    <div className="relative w-full h-24 bg-black rounded mb-3 overflow-hidden">
-                      <img
-                        src={image.imageUrl}
-                        alt={image.altText}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
+                {images.length === 0 ? (
+                  <div className="text-center py-12">
+                    <p className="text-muted-foreground">
+                      No images yet. Add one using the form on the left.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-4 max-h-[600px] overflow-y-auto">
+                    {images.map((image) => (
+                      <div
+                        key={image.id}
+                        className={`bg-background p-4 rounded-lg border ${
+                          image.id < 0
+                            ? "border-yellow-200 bg-yellow-50/50"
+                            : "border-primary/10"
+                        }`}
+                      >
+                        {image.id < 0 && (
+                          <div className="mb-2 text-xs font-medium text-yellow-800 bg-yellow-100 px-2 py-1 rounded w-fit">
+                            Fallback Image
+                          </div>
+                        )}
 
-                    {/* Image Info */}
-                    <div className="space-y-2 mb-4 text-sm">
-                      <div>
-                        <p className="text-xs text-muted-foreground">
-                          Alt Text:
-                        </p>
-                        <p className="text-foreground font-medium">
-                          {image.altText}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground">
-                          Display Order:
-                        </p>
-                        <div className="flex gap-2">
-                          <input
-                            type="number"
-                            value={image.displayOrder}
-                            onChange={(e) =>
-                              handleUpdateOrder(
-                                image.id,
-                                parseInt(e.target.value) || 0,
-                              )
-                            }
-                            disabled={image.id < 0}
-                            className="w-16 px-2 py-1 border border-primary/10 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                        {/* Image Thumbnail */}
+                        <div className="relative w-full h-24 bg-black rounded mb-3 overflow-hidden">
+                          <img
+                            src={image.imageUrl}
+                            alt={image.altText}
+                            className="w-full h-full object-cover"
                           />
                         </div>
+
+                        {/* Image Info */}
+                        <div className="space-y-2 mb-4 text-sm">
+                          <div>
+                            <p className="text-xs text-muted-foreground">
+                              Alt Text:
+                            </p>
+                            <p className="text-foreground font-medium">
+                              {image.altText}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-muted-foreground">
+                              Display Order:
+                            </p>
+                            <div className="flex gap-2">
+                              <input
+                                type="number"
+                                value={image.displayOrder}
+                                onChange={(e) =>
+                                  handleUpdateOrder(
+                                    image.id,
+                                    parseInt(e.target.value) || 0,
+                                  )
+                                }
+                                disabled={image.id < 0}
+                                className="w-16 px-2 py-1 border border-primary/10 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                              />
+                            </div>
+                          </div>
+
+                          <div>
+                            <p className="text-xs text-muted-foreground mb-2">
+                              Visibility:
+                            </p>
+                            <span
+                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                image.isActive
+                                  ? "bg-green-100 text-green-800"
+                                  : "bg-gray-100 text-gray-800"
+                              }`}
+                            >
+                              {image.isActive ? "Visible" : "Hidden"}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="space-y-2">
+                          {/* Visibility Controls */}
+                          <div className="flex gap-2">
+                            {image.isActive ? (
+                              <Button
+                                onClick={() => handleToggleActive(image.id, false)}
+                                variant="outline"
+                                size="sm"
+                                className="flex-1 gap-2"
+                                disabled={image.id < 0}
+                              >
+                                Hide from Slider
+                              </Button>
+                            ) : (
+                              <Button
+                                onClick={() => handleToggleActive(image.id, true)}
+                                variant="outline"
+                                size="sm"
+                                className="flex-1 gap-2"
+                                disabled={image.id < 0}
+                              >
+                                Show in Slider
+                              </Button>
+                            )}
+                          </div>
+
+                          {/* View/Download/Archive */}
+                          <div className="flex gap-2">
+                            <a
+                              href={image.imageUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 border rounded bg-white/5 hover:bg-white/10 text-sm"
+                            >
+                              <Eye className="w-4 h-4" />
+                              View
+                            </a>
+
+                            <a
+                              href={image.imageUrl}
+                              download
+                              className="inline-flex items-center justify-center gap-2 px-3 py-2 border rounded bg-white/5 hover:bg-white/10 text-sm"
+                            >
+                              <Download className="w-4 h-4" />
+                              Download
+                            </a>
+
+                            {image.id >= 0 && (
+                              <Button
+                                onClick={() => handleArchiveImage(image.id)}
+                                variant="destructive"
+                                size="sm"
+                                className="gap-2"
+                              >
+                                <Archive className="w-4 h-4" />
+                                Archive
+                              </Button>
+                            )}
+                          </div>
+                        </div>
                       </div>
-
-                      <div>
-                        <p className="text-xs text-muted-foreground mb-2">
-                          Visibility:
-                        </p>
-                        <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            image.isActive
-                              ? "bg-green-100 text-green-800"
-                              : "bg-gray-100 text-gray-800"
-                          }`}
-                        >
-                          {image.isActive ? "Visible" : "Hidden"}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="space-y-2">
-                      {/* Visibility Controls */}
-                      <div className="flex gap-2">
-                        {image.isActive ? (
-                          <Button
-                            onClick={() => handleToggleActive(image.id, false)}
-                            variant="outline"
-                            size="sm"
-                            className="flex-1 gap-2"
-                            disabled={image.id < 0}
-                          >
-                            Hide from Slider
-                          </Button>
-                        ) : (
-                          <Button
-                            onClick={() => handleToggleActive(image.id, true)}
-                            variant="outline"
-                            size="sm"
-                            className="flex-1 gap-2"
-                            disabled={image.id < 0}
-                          >
-                            Show in Slider
-                          </Button>
-                        )}
-                      </div>
-
-                      {/* View/Download/Delete */}
-                      <div className="flex gap-2">
-                        <a
-                          href={image.imageUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 border rounded bg-white/5 hover:bg-white/10 text-sm"
-                        >
-                          <Eye className="w-4 h-4" />
-                          View
-                        </a>
-
-                        <a
-                          href={image.imageUrl}
-                          download
-                          className="inline-flex items-center justify-center gap-2 px-3 py-2 border rounded bg-white/5 hover:bg-white/10 text-sm"
-                        >
-                          <Download className="w-4 h-4" />
-                          Download
-                        </a>
-
-                        {image.id >= 0 && (
-                          <Button
-                            onClick={() => handleDeleteImage(image.id)}
-                            variant="destructive"
-                            size="sm"
-                            className="gap-2"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                            Delete
-                          </Button>
-                        )}
-                      </div>
-                    </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            )}
+                )}
+              </TabsContent>
+
+              {/* Archived Images Tab */}
+              <TabsContent value="archived" className="mt-6">
+                <h2 className="text-2xl font-bold text-foreground mb-6">
+                  Archived Images
+                </h2>
+
+                {archivedImages.length === 0 ? (
+                  <div className="text-center py-12">
+                    <p className="text-muted-foreground">
+                      No archived images. Images you archive will appear here.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-4 max-h-[600px] overflow-y-auto">
+                    {archivedImages.map((image) => (
+                      <div
+                        key={image.id}
+                        className="bg-background p-4 rounded-lg border border-orange-200 bg-orange-50/50"
+                      >
+                        <div className="mb-2 text-xs font-medium text-orange-800 bg-orange-100 px-2 py-1 rounded w-fit">
+                          Archived
+                        </div>
+
+                        {/* Image Thumbnail */}
+                        <div className="relative w-full h-24 bg-black rounded mb-3 overflow-hidden">
+                          <img
+                            src={image.imageUrl}
+                            alt={image.altText}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+
+                        {/* Image Info */}
+                        <div className="space-y-2 mb-4 text-sm">
+                          <div>
+                            <p className="text-xs text-muted-foreground">
+                              Alt Text:
+                            </p>
+                            <p className="text-foreground font-medium">
+                              {image.altText}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-muted-foreground">
+                              Display Order:
+                            </p>
+                            <p className="text-foreground font-medium">
+                              {image.displayOrder}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="space-y-2">
+                          {/* View/Download/Restore */}
+                          <div className="flex gap-2">
+                            <a
+                              href={image.imageUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 border rounded bg-white/5 hover:bg-white/10 text-sm"
+                            >
+                              <Eye className="w-4 h-4" />
+                              View
+                            </a>
+
+                            <a
+                              href={image.imageUrl}
+                              download
+                              className="inline-flex items-center justify-center gap-2 px-3 py-2 border rounded bg-white/5 hover:bg-white/10 text-sm"
+                            >
+                              <Download className="w-4 h-4" />
+                              Download
+                            </a>
+
+                            <Button
+                              onClick={() => handleRestoreImage(image.id)}
+                              className="gap-2"
+                            >
+                              <RotateCcw className="w-4 h-4" />
+                              Restore
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
           </div>
         </div>
       </div>
