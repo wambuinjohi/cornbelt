@@ -494,7 +494,7 @@ export default function AdminVisitorTracking() {
               <tbody>
                 {paginatedVisitors.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-6 py-8 text-center">
+                    <td colSpan={9} className="px-6 py-8 text-center">
                       <p className="text-muted-foreground">
                         No visitor data found
                       </p>
