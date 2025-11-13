@@ -193,6 +193,8 @@ export default function AdminHeroImages() {
     const saved = localStorage.getItem("removedFallbackIds");
     return saved ? new Set(JSON.parse(saved)) : new Set();
   });
+  const [removalConfirmOpen, setRemovalConfirmOpen] = useState(false);
+  const [imageToRemove, setImageToRemove] = useState<number | null>(null);
 
   const form = useForm<FormData>({
     defaultValues: {
