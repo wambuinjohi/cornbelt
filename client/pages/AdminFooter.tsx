@@ -66,7 +66,10 @@ export default function AdminFooter() {
       });
 
       if (!createTableResponse.ok) {
-        console.warn("Table creation response not ok:", createTableResponse.status);
+        console.warn(
+          "Table creation response not ok:",
+          createTableResponse.status,
+        );
       }
 
       // Then fetch the data
@@ -74,7 +77,7 @@ export default function AdminFooter() {
     } catch (err) {
       console.error("Error initializing table:", err);
       setError(
-        "Failed to initialize footer settings. Please check database connection."
+        "Failed to initialize footer settings. Please check database connection.",
       );
     }
   };
@@ -150,7 +153,8 @@ export default function AdminFooter() {
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(
-          errorData.error || `HTTP ${response.status}: Failed to fetch footer settings`
+          errorData.error ||
+            `HTTP ${response.status}: Failed to fetch footer settings`,
         );
       }
 
@@ -178,13 +182,13 @@ export default function AdminFooter() {
           twitterUrl: "",
         });
         setError(
-          "No footer settings found. Fill in the form and click 'Save Changes' to create them."
+          "No footer settings found. Fill in the form and click 'Save Changes' to create them.",
         );
       }
     } catch (err) {
       console.error("Error fetching footer settings:", err);
       setError(
-        `Failed to load footer settings: ${err instanceof Error ? err.message : 'Unknown error'}`
+        `Failed to load footer settings: ${err instanceof Error ? err.message : "Unknown error"}`,
       );
       // Provide empty form anyway
       setFormData({
@@ -244,7 +248,7 @@ export default function AdminFooter() {
               Authorization: `Bearer ${token}`,
             },
             body: body,
-          }
+          },
         );
 
         if (!response) {
@@ -254,7 +258,7 @@ export default function AdminFooter() {
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
           throw new Error(
-            errorData.error || `HTTP ${response.status}: Failed to update`
+            errorData.error || `HTTP ${response.status}: Failed to update`,
           );
         }
 
@@ -279,7 +283,7 @@ export default function AdminFooter() {
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
           throw new Error(
-            errorData.error || `HTTP ${response.status}: Failed to create`
+            errorData.error || `HTTP ${response.status}: Failed to create`,
           );
         }
 
@@ -355,7 +359,10 @@ export default function AdminFooter() {
 
               <div className="space-y-4">
                 <div>
-                  <label htmlFor="phone" className="block text-sm font-medium text-foreground mb-2">
+                  <label
+                    htmlFor="phone"
+                    className="block text-sm font-medium text-foreground mb-2"
+                  >
                     Phone Number
                   </label>
                   <input
@@ -370,7 +377,10 @@ export default function AdminFooter() {
                 </div>
 
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-foreground mb-2">
+                  <label
+                    htmlFor="email"
+                    className="block text-sm font-medium text-foreground mb-2"
+                  >
                     Email Address
                   </label>
                   <input
@@ -385,7 +395,10 @@ export default function AdminFooter() {
                 </div>
 
                 <div>
-                  <label htmlFor="location" className="block text-sm font-medium text-foreground mb-2">
+                  <label
+                    htmlFor="location"
+                    className="block text-sm font-medium text-foreground mb-2"
+                  >
                     Location
                   </label>
                   <input
@@ -409,7 +422,10 @@ export default function AdminFooter() {
 
               <div className="space-y-4">
                 <div>
-                  <label htmlFor="facebookUrl" className="block text-sm font-medium text-foreground mb-2">
+                  <label
+                    htmlFor="facebookUrl"
+                    className="block text-sm font-medium text-foreground mb-2"
+                  >
                     Facebook URL
                   </label>
                   <input
@@ -424,7 +440,10 @@ export default function AdminFooter() {
                 </div>
 
                 <div>
-                  <label htmlFor="instagramUrl" className="block text-sm font-medium text-foreground mb-2">
+                  <label
+                    htmlFor="instagramUrl"
+                    className="block text-sm font-medium text-foreground mb-2"
+                  >
                     Instagram URL
                   </label>
                   <input
@@ -439,7 +458,10 @@ export default function AdminFooter() {
                 </div>
 
                 <div>
-                  <label htmlFor="twitterUrl" className="block text-sm font-medium text-foreground mb-2">
+                  <label
+                    htmlFor="twitterUrl"
+                    className="block text-sm font-medium text-foreground mb-2"
+                  >
                     Twitter/X URL
                   </label>
                   <input

@@ -27,13 +27,13 @@ export default function Footer() {
   useEffect(() => {
     const fetchFooterSettings = async () => {
       try {
-        const response = await fetch('/api.php?table=footer_settings');
+        const response = await fetch("/api.php?table=footer_settings");
         const data = await response.json();
         if (Array.isArray(data) && data.length > 0) {
           setFooterData(data[0]);
         }
       } catch (error) {
-        console.error('Error fetching footer settings:', error);
+        console.error("Error fetching footer settings:", error);
       } finally {
         setIsLoading(false);
       }
@@ -117,15 +117,25 @@ export default function Footer() {
             <ul className="space-y-3 text-sm">
               <li className="flex items-start gap-2">
                 <Phone className="w-4 h-4 mt-0.5 flex-shrink-0 text-secondary" />
-                <span>{isLoading ? 'Loading...' : footerData?.phone || '+254 (0) XXX XXX XXX'}</span>
+                <span>
+                  {isLoading
+                    ? "Loading..."
+                    : footerData?.phone || "+254 (0) XXX XXX XXX"}
+                </span>
               </li>
               <li className="flex items-start gap-2">
                 <Mail className="w-4 h-4 mt-0.5 flex-shrink-0 text-secondary" />
-                <span>{isLoading ? 'Loading...' : footerData?.email || 'info@cornbelt.co.ke'}</span>
+                <span>
+                  {isLoading
+                    ? "Loading..."
+                    : footerData?.email || "info@cornbelt.co.ke"}
+                </span>
               </li>
               <li className="flex items-start gap-2">
                 <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0 text-secondary" />
-                <span>{isLoading ? 'Loading...' : footerData?.location || 'Kenya'}</span>
+                <span>
+                  {isLoading ? "Loading..." : footerData?.location || "Kenya"}
+                </span>
               </li>
             </ul>
           </div>

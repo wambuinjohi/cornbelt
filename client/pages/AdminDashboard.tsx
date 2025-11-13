@@ -100,7 +100,9 @@ export default function AdminDashboard() {
               <h3 className="text-2xl font-bold text-foreground">
                 Footer Settings
               </h3>
-              <p className="text-muted-foreground">Manage contact & social links</p>
+              <p className="text-muted-foreground">
+                Manage contact & social links
+              </p>
             </div>
           </Link>
           <div className="bg-primary/5 p-6 rounded-lg border border-primary/10">
