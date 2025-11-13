@@ -662,6 +662,7 @@ if (strpos($uri, '/api/admin') !== false) {
 
         // set table and id for reuse in main CRUD handling below
         $table = $map[$resource];
+        $_GET['table'] = $table;
         if ($resourceId) {
             $_GET['id'] = $resourceId;
         }
