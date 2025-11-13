@@ -27,35 +27,13 @@ export default function Footer() {
   useEffect(() => {
     const fetchFooterSettings = async () => {
       try {
-        let response = null;
-        let lastError: Error | null = null;
-
-        // Try multiple endpoints with fallback strategy
-        const endpoints = [
-          "/api.php?action=get-footer-settings",
-          "/api/footer-settings",
-        ];
-
-        for (const url of endpoints) {
-          try {
-            response = await fetch(url, {
-              method: "GET",
-              headers: { Accept: "application/json" },
-            });
-
-            if (response && response.ok) {
-              break;
-            }
-          } catch (err) {
-            lastError = err as Error;
-            continue;
-          }
-        }
+        const response = await fetch("/api.php?action=get-footer-settings", {
+          method: "GET",
+          headers: { Accept: "application/json" },
+        });
 
         if (!response || !response.ok) {
-          throw (
-            lastError || new Error(`Failed to fetch footer settings`)
-          );
+          throw new Error(`Failed to fetch footer settings`);
         }
 
         const data = await response.json();
