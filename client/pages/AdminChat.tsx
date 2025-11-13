@@ -195,17 +195,28 @@ export default function AdminChat() {
 
     try {
       const adminFetch = (await import("@/lib/adminApi")).default;
-      const res = await adminFetch("/api/admin/bot-responses", {
+      const payload = {
+        keyword: keyword.trim(),
+        answer: answer.trim(),
+      };
+
+      let res = await adminFetch("/api/admin/bot-responses", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          keyword: keyword.trim(),
-          answer: answer.trim(),
-        }),
+        body: JSON.stringify(payload),
       });
+
+      // If Node endpoint fails, try PHP endpoint
+      if (!res || !res.ok) {
+        res = await fetch("/api.php?table=bot_responses", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      }
 
       if (!res || !res.ok) throw new Error("Failed to create response");
 
