@@ -81,6 +81,78 @@ if ($conn->connect_error) {
     exit;
 }
 
+// Public action handler for footer settings (no authentication required)
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['action'] === 'get-footer-settings') {
+    // Check if table exists, create if not
+    $tableExists = $conn->query("SHOW TABLES LIKE 'footer_settings'");
+    if (!$tableExists || $tableExists->num_rows === 0) {
+        // Create the table
+        $createTableSql = "CREATE TABLE IF NOT EXISTS `footer_settings` (
+            `id` INT AUTO_INCREMENT PRIMARY KEY,
+            `phone` VARCHAR(255),
+            `email` VARCHAR(255),
+            `location` VARCHAR(255),
+            `facebookUrl` VARCHAR(500),
+            `instagramUrl` VARCHAR(500),
+            `twitterUrl` VARCHAR(500),
+            `createdAt` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            `updatedAt` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        )";
+        $conn->query($createTableSql);
+    }
+
+    // Try to fetch existing settings
+    $res = $conn->query("SELECT * FROM `footer_settings` LIMIT 1");
+    if ($res && $res->num_rows > 0) {
+        $row = $res->fetch_assoc();
+        echo json_encode($row);
+    } else {
+        // Table is empty, auto-insert default settings
+        $defaultPhone = '+254 (0) XXX XXX XXX';
+        $defaultEmail = 'info@cornbelt.co.ke';
+        $defaultLocation = 'Kenya';
+        $defaultFacebook = '';
+        $defaultInstagram = '';
+        $defaultTwitter = '';
+
+        $insertSql = "INSERT INTO `footer_settings` (`phone`, `email`, `location`, `facebookUrl`, `instagramUrl`, `twitterUrl`) VALUES (
+            '" . $conn->real_escape_string($defaultPhone) . "',
+            '" . $conn->real_escape_string($defaultEmail) . "',
+            '" . $conn->real_escape_string($defaultLocation) . "',
+            '" . $conn->real_escape_string($defaultFacebook) . "',
+            '" . $conn->real_escape_string($defaultInstagram) . "',
+            '" . $conn->real_escape_string($defaultTwitter) . "'
+        )";
+
+        if ($conn->query($insertSql) === TRUE) {
+            // Return the newly inserted record
+            $newId = $conn->insert_id;
+            echo json_encode([
+                'id' => $newId,
+                'phone' => $defaultPhone,
+                'email' => $defaultEmail,
+                'location' => $defaultLocation,
+                'facebookUrl' => $defaultFacebook,
+                'instagramUrl' => $defaultInstagram,
+                'twitterUrl' => $defaultTwitter
+            ]);
+        } else {
+            // Insert failed, return fallback
+            echo json_encode([
+                'id' => 0,
+                'phone' => $defaultPhone,
+                'email' => $defaultEmail,
+                'location' => $defaultLocation,
+                'facebookUrl' => $defaultFacebook,
+                'instagramUrl' => $defaultInstagram,
+                'twitterUrl' => $defaultTwitter
+            ]);
+        }
+    }
+    $conn->close();
+    exit;
+}
+
 // Public endpoint for footer settings (no authentication required)
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && strpos($_SERVER['REQUEST_URI'], '/api/footer-settings') !== false) {
     // Check if table exists, create if not
