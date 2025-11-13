@@ -904,32 +904,32 @@ export default function AdminHeroImages() {
 
                         {/* Actions */}
                         <div className="space-y-2">
-                          {/* Visibility Controls */}
-                          <div className="flex gap-2">
-                            {image.isActive ? (
-                              <Button
-                                onClick={() => handleToggleActive(image.id, false)}
-                                variant="outline"
-                                size="sm"
-                                className="flex-1 gap-2"
-                                disabled={image.id < 0}
-                              >
-                                Hide from Slider
-                              </Button>
-                            ) : (
-                              <Button
-                                onClick={() => handleToggleActive(image.id, true)}
-                                variant="outline"
-                                size="sm"
-                                className="flex-1 gap-2"
-                                disabled={image.id < 0}
-                              >
-                                Show in Slider
-                              </Button>
-                            )}
-                          </div>
+                          {/* Visibility Controls - disabled for fallback images */}
+                          {image.id >= 0 && (
+                            <div className="flex gap-2">
+                              {image.isActive ? (
+                                <Button
+                                  onClick={() => handleToggleActive(image.id, false)}
+                                  variant="outline"
+                                  size="sm"
+                                  className="flex-1 gap-2"
+                                >
+                                  Hide from Slider
+                                </Button>
+                              ) : (
+                                <Button
+                                  onClick={() => handleToggleActive(image.id, true)}
+                                  variant="outline"
+                                  size="sm"
+                                  className="flex-1 gap-2"
+                                >
+                                  Show in Slider
+                                </Button>
+                              )}
+                            </div>
+                          )}
 
-                          {/* View/Download/Archive */}
+                          {/* View/Download/Archive or Delete */}
                           <div className="flex gap-2">
                             <a
                               href={image.imageUrl}
@@ -950,7 +950,7 @@ export default function AdminHeroImages() {
                               Download
                             </a>
 
-                            {image.id >= 0 && (
+                            {image.id >= 0 ? (
                               <Button
                                 onClick={() => handleArchiveImage(image.id)}
                                 variant="destructive"
@@ -959,6 +959,16 @@ export default function AdminHeroImages() {
                               >
                                 <Archive className="w-4 h-4" />
                                 Archive
+                              </Button>
+                            ) : (
+                              <Button
+                                onClick={() => handleRemoveFallbackImage(image.id)}
+                                variant="destructive"
+                                size="sm"
+                                className="gap-2"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                                Remove
                               </Button>
                             )}
                           </div>
