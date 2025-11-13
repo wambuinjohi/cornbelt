@@ -307,7 +307,7 @@ export default function AdminHeroImages() {
             setUploadProgress(75);
 
             if (!response || !response.ok) {
-              const errorData = await response?.text().catch(() => null);
+              const errorData = await response?.json().catch(() => null);
               console.error("Upload error response:", errorData);
 
               if (response?.status === 413) {
@@ -316,7 +316,9 @@ export default function AdminHeroImages() {
                 );
               }
 
-              throw new Error("Failed to upload file");
+              throw new Error(
+                errorData?.error || "Failed to upload file"
+              );
             }
 
             const result = await response.json();
