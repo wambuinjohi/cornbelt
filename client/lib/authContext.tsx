@@ -62,17 +62,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = (newToken: string, newUser: AdminUser) => {
+    console.log("[Auth] Logging in user:", newUser.email);
     setToken(newToken);
     setUser(newUser);
-    localStorage.setItem("adminToken", newToken);
-    localStorage.setItem("adminUser", JSON.stringify(newUser));
+    try {
+      localStorage.setItem("adminToken", newToken);
+      localStorage.setItem("adminUser", JSON.stringify(newUser));
+      console.log("[Auth] Credentials saved to localStorage");
+    } catch (error) {
+      console.error("[Auth] Failed to save credentials to localStorage:", error);
+    }
   };
 
   const logout = () => {
+    console.log("[Auth] Logging out");
     setToken(null);
     setUser(null);
-    localStorage.removeItem("adminToken");
-    localStorage.removeItem("adminUser");
+    try {
+      localStorage.removeItem("adminToken");
+      localStorage.removeItem("adminUser");
+      console.log("[Auth] Credentials removed from localStorage");
+    } catch (error) {
+      console.error("[Auth] Failed to remove credentials from localStorage:", error);
+    }
   };
 
   const value: AuthContextType = {
