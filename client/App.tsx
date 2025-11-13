@@ -28,6 +28,7 @@ import AdminFooter from "./pages/AdminFooter";
 import AdminChat from "./pages/AdminChat";
 import AdminOrders from "./pages/AdminOrders";
 import AdminVisitorTracking from "./pages/AdminVisitorTracking";
+import AdminNewsletter from "./pages/AdminNewsletter";
 
 const queryClient = new QueryClient();
 
@@ -118,6 +119,14 @@ const AppContent = () => {
         element={
           <ProtectedRoute>
             <AdminVisitorTracking />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/newsletter"
+        element={
+          <ProtectedRoute>
+            <AdminNewsletter />
           </ProtectedRoute>
         }
       />

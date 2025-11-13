@@ -17,6 +17,7 @@ const map: Record<string, string> = {
   "support-chat": "support_chat",
   "admin-users": "admin_users",
   "footer-settings": "footer_settings",
+  "newsletter-requests": "newsletter_requests",
 };
 
 function buildPhpUrlForResource(resource: string, id?: string | number) {

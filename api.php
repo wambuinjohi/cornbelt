@@ -169,7 +169,8 @@ if (strpos($uri, '/api/admin') !== false) {
         'visitor-tracking' => 'visitor_tracking',
         'support-chat' => 'support_chat',
         'admin-users' => 'admin_users',
-        'footer-settings' => 'footer_settings'
+        'footer-settings' => 'footer_settings',
+        'newsletter-requests' => 'newsletter_requests'
     ];
 
     // check-initialized: returns whether admin_users has any rows
@@ -541,6 +542,14 @@ if (strpos($uri, '/api/admin') !== false) {
             }
             if ($resource === 'bot-responses') {
                 $q = $conn->query("SELECT * FROM `bot_responses` ORDER BY id ASC");
+                $out = [];
+                if ($q) while ($r = $q->fetch_assoc()) $out[] = $r;
+                echo json_encode($out);
+                $conn->close();
+                exit;
+            }
+            if ($resource === 'newsletter-requests') {
+                $q = $conn->query("SELECT * FROM `newsletter_requests` ORDER BY createdAt DESC");
                 $out = [];
                 if ($q) while ($r = $q->fetch_assoc()) $out[] = $r;
                 echo json_encode($out);

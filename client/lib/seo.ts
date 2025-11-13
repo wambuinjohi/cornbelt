@@ -138,6 +138,19 @@ export const pageMetadata = {
     keywords:
       "contact Cornbelt, flour mill contact, customer support, wholesale inquiries, Kenya contact",
   },
+  privacy: {
+    title: "Privacy Policy - Cornbelt Flour Mill",
+    description:
+      "Read Cornbelt Flour Mill's privacy policy to understand how we collect, use, and protect your personal information.",
+    keywords: "privacy policy, data protection, personal information, privacy",
+  },
+  terms: {
+    title: "Terms of Service - Cornbelt Flour Mill",
+    description:
+      "Review the terms and conditions for using Cornbelt Flour Mill's website and services.",
+    keywords:
+      "terms of service, terms and conditions, legal terms, website terms",
+  },
   notfound: {
     title: "Page Not Found - Cornbelt Flour Mill",
     description: "The page you're looking for doesn't exist.",

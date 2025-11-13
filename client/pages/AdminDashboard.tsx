@@ -16,10 +16,12 @@ export default function AdminDashboard() {
   const { user, token } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [contactSubmissions, setContactSubmissions] = useState<any[]>([]);
+  const [newsletterRequests, setNewsletterRequests] = useState<any[]>([]);
 
   useEffect(() => {
     if (user) {
       fetchContactSubmissions();
+      fetchNewsletterRequests();
     }
     setIsLoading(false);
   }, [user]);
@@ -41,6 +43,26 @@ export default function AdminDashboard() {
     } catch (error) {
       console.error("Error fetching submissions:", error);
       toast.error("Failed to load contact submissions");
+    }
+  };
+
+  const fetchNewsletterRequests = async () => {
+    try {
+      const response = await (
+        await import("@/lib/adminApi")
+      ).default("/api/admin/newsletter-requests", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!response || !response.ok) {
+        throw new Error("Failed to fetch newsletter requests");
+      }
+
+      const data = await response.json();
+      setNewsletterRequests(data);
+    } catch (error) {
+      console.error("Error fetching newsletter requests:", error);
+      toast.error("Failed to load newsletter requests");
     }
   };
 
@@ -67,7 +89,7 @@ export default function AdminDashboard() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
           <Link to="/admin/hero-images">
             <div className="bg-primary/5 p-6 rounded-lg border border-primary/10 hover:border-primary/30 transition-colors cursor-pointer h-full">
               <Images className="w-8 h-8 text-primary mb-4" />
@@ -88,13 +110,24 @@ export default function AdminDashboard() {
               </p>
             </div>
           </Link>
-          <div className="bg-primary/5 p-6 rounded-lg border border-primary/10">
-            <Mail className="w-8 h-8 text-primary mb-4" />
-            <h3 className="text-2xl font-bold text-foreground">
-              {contactSubmissions.length}
-            </h3>
-            <p className="text-muted-foreground">Contact Submissions</p>
-          </div>
+          <Link to="/admin/submissions">
+            <div className="bg-primary/5 p-6 rounded-lg border border-primary/10 hover:border-primary/30 transition-colors cursor-pointer h-full">
+              <Mail className="w-8 h-8 text-primary mb-4" />
+              <h3 className="text-2xl font-bold text-foreground">
+                {contactSubmissions.length}
+              </h3>
+              <p className="text-muted-foreground">Contact Submissions</p>
+            </div>
+          </Link>
+          <Link to="/admin/newsletter">
+            <div className="bg-primary/5 p-6 rounded-lg border border-primary/10 hover:border-primary/30 transition-colors cursor-pointer h-full">
+              <Mail className="w-8 h-8 text-primary mb-4" />
+              <h3 className="text-2xl font-bold text-foreground">
+                {newsletterRequests.length}
+              </h3>
+              <p className="text-muted-foreground">Newsletter Subscribers</p>
+            </div>
+          </Link>
         </div>
 
         <section className="bg-primary/5 rounded-lg border border-primary/10 p-8">
