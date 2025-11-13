@@ -773,38 +773,66 @@ export default function AdminHeroImages() {
                       </div>
                     </div>
 
-                    {/* Actions: View / Download / Delete */}
-                    <div className="flex gap-2">
-                      <a
-                        href={image.imageUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 border rounded bg-white/5 hover:bg-white/10 text-sm"
-                      >
-                        <Eye className="w-4 h-4" />
-                        View
-                      </a>
+                    {/* Actions */}
+                    <div className="space-y-2">
+                      {/* Visibility Controls */}
+                      <div className="flex gap-2">
+                        {image.isActive ? (
+                          <Button
+                            onClick={() => handleToggleActive(image.id, false)}
+                            variant="outline"
+                            size="sm"
+                            className="flex-1 gap-2"
+                            disabled={image.id < 0}
+                          >
+                            Hide from Slider
+                          </Button>
+                        ) : (
+                          <Button
+                            onClick={() => handleToggleActive(image.id, true)}
+                            variant="outline"
+                            size="sm"
+                            className="flex-1 gap-2"
+                            disabled={image.id < 0}
+                          >
+                            Show in Slider
+                          </Button>
+                        )}
+                      </div>
 
-                      <a
-                        href={image.imageUrl}
-                        download
-                        className="inline-flex items-center justify-center gap-2 px-3 py-2 border rounded bg-white/5 hover:bg-white/10 text-sm"
-                      >
-                        <Download className="w-4 h-4" />
-                        Download
-                      </a>
-
-                      {image.id >= 0 && (
-                        <Button
-                          onClick={() => handleDeleteImage(image.id)}
-                          variant="destructive"
-                          size="sm"
-                          className="gap-2"
+                      {/* View/Download/Delete */}
+                      <div className="flex gap-2">
+                        <a
+                          href={image.imageUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 border rounded bg-white/5 hover:bg-white/10 text-sm"
                         >
-                          <Trash2 className="w-4 h-4" />
-                          Delete
-                        </Button>
-                      )}
+                          <Eye className="w-4 h-4" />
+                          View
+                        </a>
+
+                        <a
+                          href={image.imageUrl}
+                          download
+                          className="inline-flex items-center justify-center gap-2 px-3 py-2 border rounded bg-white/5 hover:bg-white/10 text-sm"
+                        >
+                          <Download className="w-4 h-4" />
+                          Download
+                        </a>
+
+                        {image.id >= 0 && (
+                          <Button
+                            onClick={() => handleDeleteImage(image.id)}
+                            variant="destructive"
+                            size="sm"
+                            className="gap-2"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            Delete
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}
