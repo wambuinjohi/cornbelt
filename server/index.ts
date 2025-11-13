@@ -1299,13 +1299,16 @@ Disallow: /api/`;
       const images = await apiCall("GET", "hero_slider_images");
       let arr = Array.isArray(images) ? images : [];
 
-      // Filter for explicitly active images only (detached images are excluded)
+      // Filter for explicitly active images only (detached images are excluded) and exclude archived images
       const active = arr.filter(
         (i: any) =>
-          i.isActive === true || i.isActive === 1 || i.isActive === "1",
+          (i.isActive === true || i.isActive === 1 || i.isActive === "1") &&
+          !i.isArchived &&
+          i.isArchived !== 1 &&
+          i.isArchived !== "1",
       );
 
-      // Return only active images (no fallback to all images; let HeroSlider use defaults if empty)
+      // Return only active, non-archived images (no fallback to all images; let HeroSlider use defaults if empty)
       const sortedImages = active.sort(
         (a: any, b: any) => (a.displayOrder || 0) - (b.displayOrder || 0),
       );

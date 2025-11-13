@@ -11,9 +11,29 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { ArrowLeft, Upload, Trash2, Eye, FileUp, Download } from "lucide-react";
+import {
+  ArrowLeft,
+  Upload,
+  Trash2,
+  Eye,
+  FileUp,
+  Download,
+  Archive,
+  RotateCcw,
+} from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface HeroImage {
   id: number;
@@ -23,6 +43,7 @@ interface HeroImage {
   displayOrder: number;
   createdAt: string;
   isActive?: boolean;
+  isArchived?: boolean;
 }
 
 interface FormData {
@@ -88,9 +109,9 @@ const FALLBACK_IMAGES: HeroImage[] = [
 // Compress image before upload to avoid "request entity too large" errors
 async function compressImage(
   file: File,
-  maxWidth: number = 1920,
-  maxHeight: number = 1080,
-  quality: number = 0.8,
+  maxWidth: number = 1200,
+  maxHeight: number = 800,
+  quality: number = 0.75,
 ): Promise<Blob> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -126,17 +147,31 @@ async function compressImage(
 
         ctx.drawImage(img, 0, 0, width, height);
 
-        canvas.toBlob(
-          (blob) => {
-            if (blob) {
-              resolve(blob);
-            } else {
-              reject(new Error("Failed to compress image"));
-            }
-          },
-          "image/jpeg",
-          quality,
-        );
+        // Use progressive compression with blob size check
+        const compressAndCheck = (q: number) => {
+          canvas.toBlob(
+            (blob) => {
+              if (!blob) {
+                reject(new Error("Failed to compress image"));
+                return;
+              }
+
+              // If blob is still too large (> 2MB), try lower quality
+              if (blob.size > 2 * 1024 * 1024 && q > 0.3) {
+                console.warn(
+                  `Image too large (${(blob.size / 1024 / 1024).toFixed(2)}MB), retrying with lower quality`,
+                );
+                compressAndCheck(q - 0.1);
+              } else {
+                resolve(blob);
+              }
+            },
+            "image/jpeg",
+            q,
+          );
+        };
+
+        compressAndCheck(quality);
       };
 
       img.onerror = () => {
@@ -158,12 +193,21 @@ export default function AdminHeroImages() {
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [images, setImages] = useState<HeroImage[]>([]);
+  const [archivedImages, setArchivedImages] = useState<HeroImage[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isFallback, setIsFallback] = useState(false);
+  const [removedFallbackIds, setRemovedFallbackIds] = useState<Set<number>>(
+    () => {
+      const saved = localStorage.getItem("removedFallbackIds");
+      return saved ? new Set(JSON.parse(saved)) : new Set();
+    },
+  );
+  const [removalConfirmOpen, setRemovalConfirmOpen] = useState(false);
+  const [imageToRemove, setImageToRemove] = useState<number | null>(null);
 
   const form = useForm<FormData>({
     defaultValues: {
@@ -199,22 +243,34 @@ export default function AdminHeroImages() {
       const data = await response.json();
       const imageList = Array.isArray(data) ? data : [];
 
+      // Separate active and archived images
+      const activeImages = imageList.filter(
+        (img: HeroImage) => !img.isArchived,
+      );
+      const archived = imageList.filter((img: HeroImage) => img.isArchived);
+
       // Use fallback images if database is empty
-      if (imageList.length === 0) {
+      if (activeImages.length === 0) {
         console.log("[Hero Images] Database empty, using fallback images");
-        setImages(FALLBACK_IMAGES);
+        // Filter out removed fallback images
+        const filteredFallbacks = FALLBACK_IMAGES.filter(
+          (img) => !removedFallbackIds.has(img.id),
+        );
+        setImages(filteredFallbacks);
         setIsFallback(true);
         // Cache fallback images in localStorage
         localStorage.setItem(
           "heroImagesCache",
-          JSON.stringify(FALLBACK_IMAGES),
+          JSON.stringify(filteredFallbacks),
         );
       } else {
-        setImages(imageList);
+        setImages(activeImages);
         setIsFallback(false);
         // Cache fetched images in localStorage for offline access
-        localStorage.setItem("heroImagesCache", JSON.stringify(imageList));
+        localStorage.setItem("heroImagesCache", JSON.stringify(activeImages));
       }
+
+      setArchivedImages(archived);
     } catch (error) {
       console.error("Error fetching images:", error);
       // Try to load from localStorage cache on error
@@ -227,12 +283,18 @@ export default function AdminHeroImages() {
           setIsFallback(cachedImages.some((img: HeroImage) => img.id < 0));
           toast.warning("Showing cached images. Server may be unavailable.");
         } catch {
-          setImages(FALLBACK_IMAGES);
+          const filteredFallbacks = FALLBACK_IMAGES.filter(
+            (img) => !removedFallbackIds.has(img.id),
+          );
+          setImages(filteredFallbacks);
           setIsFallback(true);
           toast.error("Failed to load images. Showing defaults.");
         }
       } else {
-        setImages(FALLBACK_IMAGES);
+        const filteredFallbacks = FALLBACK_IMAGES.filter(
+          (img) => !removedFallbackIds.has(img.id),
+        );
+        setImages(filteredFallbacks);
         setIsFallback(true);
         toast.error("Failed to load images. Showing defaults.");
       }
@@ -298,7 +360,7 @@ export default function AdminHeroImages() {
             setUploadProgress(75);
 
             if (!response || !response.ok) {
-              const errorData = await response?.text().catch(() => null);
+              const errorData = await response?.json().catch(() => null);
               console.error("Upload error response:", errorData);
 
               if (response?.status === 413) {
@@ -307,7 +369,7 @@ export default function AdminHeroImages() {
                 );
               }
 
-              throw new Error("Failed to upload file");
+              throw new Error(errorData?.error || "Failed to upload file");
             }
 
             const result = await response.json();
@@ -384,14 +446,18 @@ export default function AdminHeroImages() {
     }
   };
 
-  const handleDeleteImage = async (id: number) => {
-    // Don't allow deleting fallback images
+  const handleArchiveImage = async (id: number) => {
+    // Don't allow archiving fallback images
     if (id < 0) {
-      toast.error("Cannot delete fallback images. Add a real image first.");
+      toast.error("Cannot archive fallback images. Add a real image first.");
       return;
     }
 
-    if (!confirm("Are you sure you want to delete this image?")) {
+    if (
+      !confirm(
+        "Are you sure you want to archive this image? You can recover it later from the Archive tab.",
+      )
+    ) {
       return;
     }
 
@@ -399,22 +465,114 @@ export default function AdminHeroImages() {
       const token = localStorage.getItem("adminToken");
       const adminFetch = (await import("@/lib/adminApi")).default;
       const response = await adminFetch(`/api/admin/hero-images/${id}`, {
-        method: "DELETE",
+        method: "PUT",
         headers: {
+          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
+        body: JSON.stringify({ isArchived: true }),
       });
 
       if (!response || !response.ok) {
-        throw new Error("Failed to delete image");
+        throw new Error("Failed to archive image");
       }
 
-      toast.success("Image deleted successfully!");
+      toast.success(
+        "Image archived successfully! You can restore it from the Archive tab.",
+      );
       fetchImages();
     } catch (error) {
-      console.error("Error deleting image:", error);
-      toast.error("Failed to delete image");
+      console.error("Error archiving image:", error);
+      toast.error("Failed to archive image");
     }
+  };
+
+  const handleRestoreImage = async (id: number) => {
+    // Don't allow restoring fallback images
+    if (id < 0) {
+      toast.error("Cannot restore fallback images.");
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("adminToken");
+      const adminFetch = (await import("@/lib/adminApi")).default;
+      const response = await adminFetch(`/api/admin/hero-images/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ isArchived: false }),
+      });
+
+      if (!response || !response.ok) {
+        throw new Error("Failed to restore image");
+      }
+
+      toast.success("Image restored successfully!");
+      fetchImages();
+    } catch (error) {
+      console.error("Error restoring image:", error);
+      toast.error("Failed to restore image");
+    }
+  };
+
+  const handleRemoveFallbackImage = (id: number) => {
+    // Only allow removing fallback images (negative IDs)
+    if (id >= 0) {
+      toast.error("Can only remove fallback images.");
+      return;
+    }
+
+    setImageToRemove(id);
+    setRemovalConfirmOpen(true);
+  };
+
+  const confirmRemoveFallbackImage = () => {
+    if (imageToRemove === null) return;
+
+    const newRemovedIds = new Set(removedFallbackIds);
+    newRemovedIds.add(imageToRemove);
+    setRemovedFallbackIds(newRemovedIds);
+
+    // Persist to localStorage
+    localStorage.setItem(
+      "removedFallbackIds",
+      JSON.stringify(Array.from(newRemovedIds)),
+    );
+
+    // Update images display
+    setImages((prevImages) =>
+      prevImages.filter((img) => img.id !== imageToRemove),
+    );
+    toast.success("Fallback image removed!");
+
+    // Close modal
+    setRemovalConfirmOpen(false);
+    setImageToRemove(null);
+  };
+
+  const handleRestoreFallbackImage = (id: number) => {
+    // Only allow restoring fallback images (negative IDs)
+    if (id >= 0) {
+      toast.error("Can only restore fallback images.");
+      return;
+    }
+
+    const newRemovedIds = new Set(removedFallbackIds);
+    newRemovedIds.delete(id);
+    setRemovedFallbackIds(newRemovedIds);
+
+    // Persist to localStorage
+    localStorage.setItem(
+      "removedFallbackIds",
+      JSON.stringify(Array.from(newRemovedIds)),
+    );
+
+    // Re-fetch to show the restored image
+    fetchImages();
+    toast.success("Fallback image restored!");
   };
 
   const handleUpdateOrder = async (id: number, newOrder: number) => {
@@ -499,7 +657,8 @@ export default function AdminHeroImages() {
           Manage Hero Slider Images
         </h1>
         <p className="text-muted-foreground mt-2">
-          Add, edit, and organize hero slider images
+          Add, edit, and organize hero slider images. Deleted images can be
+          recovered from the Archive.
         </p>
 
         {isFallback && (
@@ -686,159 +845,326 @@ export default function AdminHeroImages() {
             </Form>
           </div>
 
-          {/* Images List */}
+          {/* Images List with Tabs */}
           <div className="bg-primary/5 p-8 rounded-lg border border-primary/10">
-            <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center gap-2">
-              <Eye className="w-6 h-6 text-primary" />
-              Current Images ({images.length})
-            </h2>
+            <Tabs defaultValue="active" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="active" className="flex items-center gap-2">
+                  <Eye className="w-4 h-4" />
+                  Active ({images.length})
+                </TabsTrigger>
+                <TabsTrigger
+                  value="archived"
+                  className="flex items-center gap-2"
+                >
+                  <Archive className="w-4 h-4" />
+                  Archive ({archivedImages.length})
+                </TabsTrigger>
+              </TabsList>
 
-            {images.length === 0 ? (
-              <div className="text-center py-12">
-                <p className="text-muted-foreground">
-                  No images yet. Add one using the form on the left.
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-4 max-h-[600px] overflow-y-auto">
-                {images.map((image) => (
-                  <div
-                    key={image.id}
-                    className={`bg-background p-4 rounded-lg border ${
-                      image.id < 0
-                        ? "border-yellow-200 bg-yellow-50/50"
-                        : "border-primary/10"
-                    }`}
-                  >
-                    {image.id < 0 && (
-                      <div className="mb-2 text-xs font-medium text-yellow-800 bg-yellow-100 px-2 py-1 rounded w-fit">
-                        Fallback Image
-                      </div>
-                    )}
+              {/* Active Images Tab */}
+              <TabsContent value="active" className="mt-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-bold text-foreground">
+                    Current Images
+                  </h2>
+                  {removedFallbackIds.size > 0 && isFallback && (
+                    <Button
+                      onClick={() => {
+                        setRemovedFallbackIds(new Set());
+                        localStorage.removeItem("removedFallbackIds");
+                        fetchImages();
+                        toast.success("All fallback images restored!");
+                      }}
+                      variant="outline"
+                      size="sm"
+                      className="gap-2"
+                    >
+                      <RotateCcw className="w-4 h-4" />
+                      Restore Fallbacks ({removedFallbackIds.size})
+                    </Button>
+                  )}
+                </div>
 
-                    {/* Image Thumbnail */}
-                    <div className="relative w-full h-24 bg-black rounded mb-3 overflow-hidden">
-                      <img
-                        src={image.imageUrl}
-                        alt={image.altText}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
+                {images.length === 0 ? (
+                  <div className="text-center py-12">
+                    <p className="text-muted-foreground">
+                      No images yet. Add one using the form on the left.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-4 max-h-[600px] overflow-y-auto">
+                    {images.map((image) => (
+                      <div
+                        key={image.id}
+                        className={`bg-background p-4 rounded-lg border ${
+                          image.id < 0
+                            ? "border-yellow-200 bg-yellow-50/50"
+                            : "border-primary/10"
+                        }`}
+                      >
+                        {image.id < 0 && (
+                          <div className="mb-2 text-xs font-medium text-yellow-800 bg-yellow-100 px-2 py-1 rounded w-fit">
+                            Fallback Image
+                          </div>
+                        )}
 
-                    {/* Image Info */}
-                    <div className="space-y-2 mb-4 text-sm">
-                      <div>
-                        <p className="text-xs text-muted-foreground">
-                          Alt Text:
-                        </p>
-                        <p className="text-foreground font-medium">
-                          {image.altText}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground">
-                          Display Order:
-                        </p>
-                        <div className="flex gap-2">
-                          <input
-                            type="number"
-                            value={image.displayOrder}
-                            onChange={(e) =>
-                              handleUpdateOrder(
-                                image.id,
-                                parseInt(e.target.value) || 0,
-                              )
-                            }
-                            disabled={image.id < 0}
-                            className="w-16 px-2 py-1 border border-primary/10 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                        {/* Image Thumbnail */}
+                        <div className="relative w-full h-24 bg-black rounded mb-3 overflow-hidden">
+                          <img
+                            src={image.imageUrl}
+                            alt={image.altText}
+                            className="w-full h-full object-cover"
                           />
                         </div>
+
+                        {/* Image Info */}
+                        <div className="space-y-2 mb-4 text-sm">
+                          <div>
+                            <p className="text-xs text-muted-foreground">
+                              Alt Text:
+                            </p>
+                            <p className="text-foreground font-medium">
+                              {image.altText}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-muted-foreground">
+                              Display Order:
+                            </p>
+                            <div className="flex gap-2">
+                              <input
+                                type="number"
+                                value={image.displayOrder}
+                                onChange={(e) =>
+                                  handleUpdateOrder(
+                                    image.id,
+                                    parseInt(e.target.value) || 0,
+                                  )
+                                }
+                                disabled={image.id < 0}
+                                className="w-16 px-2 py-1 border border-primary/10 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                              />
+                            </div>
+                          </div>
+
+                          <div>
+                            <p className="text-xs text-muted-foreground mb-2">
+                              Visibility:
+                            </p>
+                            <span
+                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                image.isActive
+                                  ? "bg-green-100 text-green-800"
+                                  : "bg-gray-100 text-gray-800"
+                              }`}
+                            >
+                              {image.isActive ? "Visible" : "Hidden"}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="space-y-2">
+                          {/* Visibility Controls - disabled for fallback images */}
+                          {image.id >= 0 && (
+                            <div className="flex gap-2">
+                              {image.isActive ? (
+                                <Button
+                                  onClick={() =>
+                                    handleToggleActive(image.id, false)
+                                  }
+                                  variant="outline"
+                                  size="sm"
+                                  className="flex-1 gap-2"
+                                >
+                                  Hide from Slider
+                                </Button>
+                              ) : (
+                                <Button
+                                  onClick={() =>
+                                    handleToggleActive(image.id, true)
+                                  }
+                                  variant="outline"
+                                  size="sm"
+                                  className="flex-1 gap-2"
+                                >
+                                  Show in Slider
+                                </Button>
+                              )}
+                            </div>
+                          )}
+
+                          {/* View/Download/Archive or Delete */}
+                          <div className="flex gap-2">
+                            <a
+                              href={image.imageUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 border rounded bg-white/5 hover:bg-white/10 text-sm"
+                            >
+                              <Eye className="w-4 h-4" />
+                              View
+                            </a>
+
+                            <a
+                              href={image.imageUrl}
+                              download
+                              className="inline-flex items-center justify-center gap-2 px-3 py-2 border rounded bg-white/5 hover:bg-white/10 text-sm"
+                            >
+                              <Download className="w-4 h-4" />
+                              Download
+                            </a>
+
+                            {image.id >= 0 ? (
+                              <Button
+                                onClick={() => handleArchiveImage(image.id)}
+                                variant="destructive"
+                                size="sm"
+                                className="gap-2"
+                              >
+                                <Archive className="w-4 h-4" />
+                                Archive
+                              </Button>
+                            ) : (
+                              <Button
+                                onClick={() =>
+                                  handleRemoveFallbackImage(image.id)
+                                }
+                                variant="destructive"
+                                size="sm"
+                                className="gap-2"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                                Remove
+                              </Button>
+                            )}
+                          </div>
+                        </div>
                       </div>
-
-                      <div>
-                        <p className="text-xs text-muted-foreground mb-2">
-                          Visibility:
-                        </p>
-                        <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            image.isActive
-                              ? "bg-green-100 text-green-800"
-                              : "bg-gray-100 text-gray-800"
-                          }`}
-                        >
-                          {image.isActive ? "Visible" : "Hidden"}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="space-y-2">
-                      {/* Visibility Controls */}
-                      <div className="flex gap-2">
-                        {image.isActive ? (
-                          <Button
-                            onClick={() => handleToggleActive(image.id, false)}
-                            variant="outline"
-                            size="sm"
-                            className="flex-1 gap-2"
-                            disabled={image.id < 0}
-                          >
-                            Hide from Slider
-                          </Button>
-                        ) : (
-                          <Button
-                            onClick={() => handleToggleActive(image.id, true)}
-                            variant="outline"
-                            size="sm"
-                            className="flex-1 gap-2"
-                            disabled={image.id < 0}
-                          >
-                            Show in Slider
-                          </Button>
-                        )}
-                      </div>
-
-                      {/* View/Download/Delete */}
-                      <div className="flex gap-2">
-                        <a
-                          href={image.imageUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 border rounded bg-white/5 hover:bg-white/10 text-sm"
-                        >
-                          <Eye className="w-4 h-4" />
-                          View
-                        </a>
-
-                        <a
-                          href={image.imageUrl}
-                          download
-                          className="inline-flex items-center justify-center gap-2 px-3 py-2 border rounded bg-white/5 hover:bg-white/10 text-sm"
-                        >
-                          <Download className="w-4 h-4" />
-                          Download
-                        </a>
-
-                        {image.id >= 0 && (
-                          <Button
-                            onClick={() => handleDeleteImage(image.id)}
-                            variant="destructive"
-                            size="sm"
-                            className="gap-2"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                            Delete
-                          </Button>
-                        )}
-                      </div>
-                    </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            )}
+                )}
+              </TabsContent>
+
+              {/* Archived Images Tab */}
+              <TabsContent value="archived" className="mt-6">
+                <h2 className="text-2xl font-bold text-foreground mb-6">
+                  Archived Images
+                </h2>
+
+                {archivedImages.length === 0 ? (
+                  <div className="text-center py-12">
+                    <p className="text-muted-foreground">
+                      No archived images. Images you archive will appear here.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-4 max-h-[600px] overflow-y-auto">
+                    {archivedImages.map((image) => (
+                      <div
+                        key={image.id}
+                        className="bg-background p-4 rounded-lg border border-orange-200 bg-orange-50/50"
+                      >
+                        <div className="mb-2 text-xs font-medium text-orange-800 bg-orange-100 px-2 py-1 rounded w-fit">
+                          Archived
+                        </div>
+
+                        {/* Image Thumbnail */}
+                        <div className="relative w-full h-24 bg-black rounded mb-3 overflow-hidden">
+                          <img
+                            src={image.imageUrl}
+                            alt={image.altText}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+
+                        {/* Image Info */}
+                        <div className="space-y-2 mb-4 text-sm">
+                          <div>
+                            <p className="text-xs text-muted-foreground">
+                              Alt Text:
+                            </p>
+                            <p className="text-foreground font-medium">
+                              {image.altText}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-muted-foreground">
+                              Display Order:
+                            </p>
+                            <p className="text-foreground font-medium">
+                              {image.displayOrder}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="space-y-2">
+                          {/* View/Download/Restore */}
+                          <div className="flex gap-2">
+                            <a
+                              href={image.imageUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 border rounded bg-white/5 hover:bg-white/10 text-sm"
+                            >
+                              <Eye className="w-4 h-4" />
+                              View
+                            </a>
+
+                            <a
+                              href={image.imageUrl}
+                              download
+                              className="inline-flex items-center justify-center gap-2 px-3 py-2 border rounded bg-white/5 hover:bg-white/10 text-sm"
+                            >
+                              <Download className="w-4 h-4" />
+                              Download
+                            </a>
+
+                            <Button
+                              onClick={() => handleRestoreImage(image.id)}
+                              className="gap-2"
+                            >
+                              <RotateCcw className="w-4 h-4" />
+                              Restore
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
           </div>
         </div>
       </div>
+
+      {/* Removal Confirmation Modal */}
+      <AlertDialog
+        open={removalConfirmOpen}
+        onOpenChange={setRemovalConfirmOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove Fallback Image?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to remove this fallback image? You can
+              restore it anytime by clicking the "Restore Fallbacks" button.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmRemoveFallbackImage}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AdminLayout>
   );
 }
