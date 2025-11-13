@@ -419,6 +419,45 @@ async function initializeAdminTable() {
 
       console.log("Sample orders seeded");
     }
+
+    // Create footer_settings table
+    const footerTableData = {
+      create_table: true,
+      columns: {
+        id: "INT AUTO_INCREMENT PRIMARY KEY",
+        phone: "VARCHAR(255) NOT NULL",
+        email: "VARCHAR(255) NOT NULL",
+        location: "VARCHAR(255) NOT NULL",
+        facebookUrl: "VARCHAR(255)",
+        instagramUrl: "VARCHAR(255)",
+        twitterUrl: "VARCHAR(255)",
+        updatedAt:
+          "DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
+      },
+    };
+
+    await fetch(`${baseUrl}/api.php?table=footer_settings`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(footerTableData),
+    });
+
+    console.log("Footer settings table initialized");
+
+    // Seed default footer settings if table is empty
+    const existingFooter = await apiCall("GET", "footer_settings");
+    if (!Array.isArray(existingFooter) || existingFooter.length === 0) {
+      await apiCall("POST", "footer_settings", {
+        phone: "+254 (0) XXX XXX XXX",
+        email: "info@cornbelt.co.ke",
+        location: "Kenya",
+        facebookUrl: "https://facebook.com",
+        instagramUrl: "https://instagram.com",
+        twitterUrl: "https://twitter.com",
+      });
+
+      console.log("Default footer settings seeded");
+    }
   } catch (error) {
     console.error("Error initializing tables:", error);
   }
