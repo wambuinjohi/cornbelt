@@ -487,6 +487,54 @@ export default function AdminHeroImages() {
     }
   };
 
+  const handleRemoveFallbackImage = (id: number) => {
+    // Only allow removing fallback images (negative IDs)
+    if (id >= 0) {
+      toast.error("Can only remove fallback images.");
+      return;
+    }
+
+    if (!confirm("Are you sure you want to remove this fallback image? You can restore it later by refreshing the page or clearing your browser cache.")) {
+      return;
+    }
+
+    const newRemovedIds = new Set(removedFallbackIds);
+    newRemovedIds.add(id);
+    setRemovedFallbackIds(newRemovedIds);
+
+    // Persist to localStorage
+    localStorage.setItem(
+      "removedFallbackIds",
+      JSON.stringify(Array.from(newRemovedIds))
+    );
+
+    // Update images display
+    setImages((prevImages) => prevImages.filter((img) => img.id !== id));
+    toast.success("Fallback image removed!");
+  };
+
+  const handleRestoreFallbackImage = (id: number) => {
+    // Only allow restoring fallback images (negative IDs)
+    if (id >= 0) {
+      toast.error("Can only restore fallback images.");
+      return;
+    }
+
+    const newRemovedIds = new Set(removedFallbackIds);
+    newRemovedIds.delete(id);
+    setRemovedFallbackIds(newRemovedIds);
+
+    // Persist to localStorage
+    localStorage.setItem(
+      "removedFallbackIds",
+      JSON.stringify(Array.from(newRemovedIds))
+    );
+
+    // Re-fetch to show the restored image
+    fetchImages();
+    toast.success("Fallback image restored!");
+  };
+
   const handleUpdateOrder = async (id: number, newOrder: number) => {
     // Don't allow updating fallback images
     if (id < 0) {
