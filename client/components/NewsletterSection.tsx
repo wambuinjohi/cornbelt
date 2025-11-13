@@ -17,21 +17,49 @@ export default function NewsletterSection() {
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api.php", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          table: "newsletter_requests",
-          email: email.trim(),
-          createdAt: new Date().toISOString(),
-        }),
+      const payload = JSON.stringify({
+        table: "newsletter_requests",
+        email: email.trim(),
+        createdAt: new Date().toISOString(),
       });
 
-      const data = await response.json();
+      // Try multiple origins (local dev, current origin, and remote domain)
+      const bases = [
+        window.location.origin,
+        "https://cornbelt.co.ke",
+        "https://www.cornbelt.co.ke",
+      ].filter(Boolean);
 
-      if (response.ok && data.success) {
+      let finalResponse: Response | null = null;
+
+      for (const base of bases) {
+        try {
+          const url = base + "/api.php";
+          const response = await fetch(url, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: payload,
+          });
+
+          if (response.ok) {
+            finalResponse = response;
+            break;
+          }
+        } catch (err) {
+          // Try next base
+          continue;
+        }
+      }
+
+      if (!finalResponse) {
+        throw new Error("Could not reach database server");
+      }
+
+      const data = await finalResponse.json();
+
+      if (data.success) {
         toast.success("Thanks for subscribing! Check your email soon.");
         setEmail("");
       } else {
