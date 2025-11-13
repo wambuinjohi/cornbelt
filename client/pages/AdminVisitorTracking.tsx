@@ -125,7 +125,9 @@ export default function AdminVisitorTracking() {
       return (
         visitor.page_url.toLowerCase().includes(query) ||
         visitor.ip_address?.toLowerCase().includes(query) ||
-        visitor.session_id.toLowerCase().includes(query)
+        visitor.session_id.toLowerCase().includes(query) ||
+        visitor.geolocation_country?.toLowerCase().includes(query) ||
+        visitor.geolocation_city?.toLowerCase().includes(query)
       );
     }
     return true;
