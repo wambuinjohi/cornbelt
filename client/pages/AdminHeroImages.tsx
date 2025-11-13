@@ -24,6 +24,7 @@ interface HeroImage {
   displayOrder: number;
   createdAt: string;
   isActive?: boolean;
+  isArchived?: boolean;
 }
 
 interface FormData {
