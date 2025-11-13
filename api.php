@@ -740,6 +740,35 @@ if (strpos($uri, '/api/admin') !== false) {
                 $conn->close();
                 exit;
             }
+            if ($resource === 'footer-settings') {
+                // Public endpoint - no authentication required
+                $q = $conn->query("SELECT * FROM `footer_settings` LIMIT 1");
+                $out = null;
+                if ($q && $q->num_rows > 0) {
+                    $out = $q->fetch_assoc();
+                } else {
+                    // Auto-seed default footer settings if table is empty
+                    $defaultSettings = [
+                        'phone' => '+254 (0) XXX XXX XXX',
+                        'email' => 'info@cornbelt.co.ke',
+                        'location' => 'Kenya',
+                        'facebookUrl' => '',
+                        'instagramUrl' => '',
+                        'twitterUrl' => ''
+                    ];
+                    $keys = array_keys($defaultSettings);
+                    $vals = array_map(fn($v) => $conn->real_escape_string((string)$v), $defaultSettings);
+                    $insertSql = "INSERT INTO `footer_settings` (`" . implode('`, `', $keys) . "`) VALUES ('" . implode("', '", $vals) . "')";
+                    if ($conn->query($insertSql) === TRUE) {
+                        $out = array_merge(['id' => $conn->insert_id], $defaultSettings);
+                    } else {
+                        $out = array_merge(['id' => 0], $defaultSettings);
+                    }
+                }
+                echo json_encode($out);
+                $conn->close();
+                exit;
+            }
             // default falls through to generic CRUD below
         }
         // continue to generic CRUD handler
