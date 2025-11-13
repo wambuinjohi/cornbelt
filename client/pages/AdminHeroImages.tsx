@@ -758,20 +758,18 @@ export default function AdminHeroImages() {
                       </div>
 
                       <div>
-                        <label className="flex items-center gap-2 text-sm">
-                          <input
-                            type="checkbox"
-                            checked={!!image.isActive}
-                            onChange={() =>
-                              handleToggleActive(image.id, !image.isActive)
-                            }
-                            disabled={image.id < 0}
-                            className="w-4 h-4 disabled:opacity-50 disabled:cursor-not-allowed"
-                          />
-                          <span className="text-xs text-muted-foreground">
-                            Active
-                          </span>
-                        </label>
+                        <p className="text-xs text-muted-foreground mb-2">
+                          Visibility:
+                        </p>
+                        <span
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            image.isActive
+                              ? "bg-green-100 text-green-800"
+                              : "bg-gray-100 text-gray-800"
+                          }`}
+                        >
+                          {image.isActive ? "Visible" : "Hidden"}
+                        </span>
                       </div>
                     </div>
 
