@@ -811,12 +811,10 @@ Disallow: /api/`;
       if (users && typeof users === "object" && "error" in users) {
         // External API error — surface with 502 Bad Gateway for clarity
         console.error("External API error fetching admin_users:", users);
-        return res
-          .status(502)
-          .json({
-            error: users.error || "External API failure",
-            details: users,
-          });
+        return res.status(502).json({
+          error: users.error || "External API failure",
+          details: users,
+        });
       }
 
       if (!Array.isArray(users)) {

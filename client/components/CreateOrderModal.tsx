@@ -51,7 +51,9 @@ export default function CreateOrderModal({
       <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-primary/10">
-          <h2 className="text-2xl font-bold text-foreground">Create New Order</h2>
+          <h2 className="text-2xl font-bold text-foreground">
+            Create New Order
+          </h2>
           <button
             onClick={onClose}
             className="text-muted-foreground hover:text-foreground"
@@ -120,7 +122,10 @@ export default function CreateOrderModal({
               <label className="block text-sm font-medium text-foreground mb-2">
                 Product *
               </label>
-              <Select value={formData.product} onValueChange={(value) => handleChange("product", value)}>
+              <Select
+                value={formData.product}
+                onValueChange={(value) => handleChange("product", value)}
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -138,7 +143,10 @@ export default function CreateOrderModal({
               <label className="block text-sm font-medium text-foreground mb-2">
                 Size *
               </label>
-              <Select value={formData.size} onValueChange={(value) => handleChange("size", value)}>
+              <Select
+                value={formData.size}
+                onValueChange={(value) => handleChange("size", value)}
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -159,7 +167,10 @@ export default function CreateOrderModal({
                 type="number"
                 value={formData.quantity}
                 onChange={(e) =>
-                  handleChange("quantity", Math.max(1, parseInt(e.target.value) || 1))
+                  handleChange(
+                    "quantity",
+                    Math.max(1, parseInt(e.target.value) || 1),
+                  )
                 }
                 placeholder="1"
                 min="1"

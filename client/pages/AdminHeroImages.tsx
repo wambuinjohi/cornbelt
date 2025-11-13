@@ -205,7 +205,10 @@ export default function AdminHeroImages() {
         setImages(FALLBACK_IMAGES);
         setIsFallback(true);
         // Cache fallback images in localStorage
-        localStorage.setItem("heroImagesCache", JSON.stringify(FALLBACK_IMAGES));
+        localStorage.setItem(
+          "heroImagesCache",
+          JSON.stringify(FALLBACK_IMAGES),
+        );
       } else {
         setImages(imageList);
         setIsFallback(false);

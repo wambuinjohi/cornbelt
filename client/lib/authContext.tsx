@@ -126,7 +126,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log("[Auth] Credentials saved to localStorage");
       dispatch({ type: "LOGIN", token: newToken, user: newUser });
     } catch (error) {
-      console.error("[Auth] Failed to save credentials to localStorage:", error);
+      console.error(
+        "[Auth] Failed to save credentials to localStorage:",
+        error,
+      );
     }
   };
 
@@ -137,7 +140,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.removeItem("adminUser");
       console.log("[Auth] Credentials removed from localStorage");
     } catch (error) {
-      console.error("[Auth] Failed to remove credentials from localStorage:", error);
+      console.error(
+        "[Auth] Failed to remove credentials from localStorage:",
+        error,
+      );
     }
     dispatch({ type: "LOGOUT" });
   };

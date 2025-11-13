@@ -149,7 +149,9 @@ export default function OrdersTable({
                     </button>
                     <button
                       onClick={() => {
-                        onExpandOrder(expandedOrderId === order.id ? null : order.id);
+                        onExpandOrder(
+                          expandedOrderId === order.id ? null : order.id,
+                        );
                       }}
                       title="View details"
                       className="p-1.5 text-primary hover:bg-primary/10 rounded-lg transition-colors"
