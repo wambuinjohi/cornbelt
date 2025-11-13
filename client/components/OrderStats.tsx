@@ -9,7 +9,10 @@ interface OrderStatsProps {
 }
 
 export default function OrderStats({ orders }: OrderStatsProps) {
-  const totalRevenue = orders.reduce((sum, o) => sum + (o.totalPrice || 0), 0);
+  const totalRevenue = orders.reduce(
+    (sum, o) => sum + (typeof o.totalPrice === "string" ? parseFloat(o.totalPrice) : o.totalPrice || 0),
+    0,
+  );
   const pendingCount = orders.filter((o) => o.status === "pending").length;
   const confirmedCount = orders.filter((o) => o.status === "confirmed").length;
 
