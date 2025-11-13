@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import AdminLayout from "@/components/AdminLayout";
 import { toast } from "sonner";
-import { Mail, Images } from "lucide-react";
+import { Mail, Images, FileText } from "lucide-react";
 
 interface AdminUser {
   id: number;
@@ -94,16 +94,23 @@ export default function AdminDashboard() {
               <p className="text-muted-foreground">Manage slider images</p>
             </div>
           </Link>
+          <Link to="/admin/footer">
+            <div className="bg-primary/5 p-6 rounded-lg border border-primary/10 hover:border-primary/30 transition-colors cursor-pointer h-full">
+              <FileText className="w-8 h-8 text-primary mb-4" />
+              <h3 className="text-2xl font-bold text-foreground">
+                Footer Settings
+              </h3>
+              <p className="text-muted-foreground">
+                Manage contact & social links
+              </p>
+            </div>
+          </Link>
           <div className="bg-primary/5 p-6 rounded-lg border border-primary/10">
             <Mail className="w-8 h-8 text-primary mb-4" />
             <h3 className="text-2xl font-bold text-foreground">
               {contactSubmissions.length}
             </h3>
             <p className="text-muted-foreground">Contact Submissions</p>
-          </div>
-          <div className="bg-primary/5 p-6 rounded-lg border border-primary/10">
-            <h3 className="text-2xl font-bold text-foreground">Active</h3>
-            <p className="text-muted-foreground">Account status</p>
           </div>
         </div>
 

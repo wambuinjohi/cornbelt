@@ -16,6 +16,7 @@ const map: Record<string, string> = {
   "visitor-tracking": "visitor_tracking",
   "support-chat": "support_chat",
   "admin-users": "admin_users",
+  "footer-settings": "footer_settings",
 };
 
 function buildPhpUrlForResource(resource: string, id?: string | number) {
@@ -45,7 +46,13 @@ export default async function adminFetch(
         if (age >= 0 && age < TTL && parsed.backend) {
           if (parsed.backend === "node") {
             try {
-              const res = await fetch(adminUrl, init);
+              const nodeBody =
+                typeof init.body === "string" ? init.body : undefined;
+              const res = await fetch(adminUrl, {
+                method: init.method,
+                headers: init.headers,
+                body: nodeBody,
+              });
               const ct = res.headers.get("content-type") || "";
               if (res.ok && ct.includes("application/json"))
                 return {
@@ -116,7 +123,13 @@ export default async function adminFetch(
     // If node is preferred, try it first
     if (preferred === "node") {
       try {
-        const res = await fetch(adminUrl, init);
+        // Convert body to string to avoid stream consumption
+        const nodeBody = typeof init.body === "string" ? init.body : undefined;
+        const res = await fetch(adminUrl, {
+          method: init.method,
+          headers: init.headers,
+          body: nodeBody,
+        });
         const ct = res.headers.get("content-type") || "";
         if (res.ok && ct.includes("application/json"))
           return { ok: true, status: res.status, json: async () => res.json() };
@@ -138,8 +151,12 @@ export default async function adminFetch(
     if (resource === "upload" && method === "POST") {
       // forward JSON body if present
       let bodyObj: any = null;
+      let bodyStr: string | undefined = undefined;
       try {
-        bodyObj = init.body ? JSON.parse(init.body as string) : null;
+        if (typeof init.body === "string") {
+          bodyStr = init.body;
+          bodyObj = JSON.parse(init.body);
+        }
       } catch {}
       // try upload across bases
       let phpRes: Response | null = null;
@@ -152,7 +169,7 @@ export default async function adminFetch(
               "Content-Type": "application/json",
               ...(init.headers || {}),
             },
-            body: bodyObj ? JSON.stringify(bodyObj) : init.body,
+            body: bodyStr || (bodyObj ? JSON.stringify(bodyObj) : undefined),
           });
           if (phpRes) break;
         } catch (e) {
@@ -247,12 +264,15 @@ export default async function adminFetch(
     if (!headers["Content-Type"] && init.body)
       headers["Content-Type"] = "application/json";
 
+    // Convert body to string once to avoid stream consumption issues
+    const bodyStr = typeof init.body === "string" ? init.body : undefined;
+
     // try across bases
     let finalPhpRes: Response | null = null;
     for (const b of [window.location.origin, "https://cornbelt.co.ke"]) {
       try {
         const url = b + phpUrl.replace(/^[.\/]+/, "/");
-        finalPhpRes = await fetch(url, { method, headers, body: init.body });
+        finalPhpRes = await fetch(url, { method, headers, body: bodyStr });
         if (finalPhpRes) break;
       } catch (e) {
         finalPhpRes = null;

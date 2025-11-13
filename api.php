@@ -168,7 +168,8 @@ if (strpos($uri, '/api/admin') !== false) {
         'chat' => 'chats',
         'visitor-tracking' => 'visitor_tracking',
         'support-chat' => 'support_chat',
-        'admin-users' => 'admin_users'
+        'admin-users' => 'admin_users',
+        'footer-settings' => 'footer_settings'
     ];
 
     // check-initialized: returns whether admin_users has any rows

@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
   Mail,
@@ -8,8 +9,38 @@ import {
   Twitter,
 } from "lucide-react";
 
+interface FooterSettings {
+  id: number;
+  phone: string;
+  email: string;
+  location: string;
+  facebookUrl?: string;
+  instagramUrl?: string;
+  twitterUrl?: string;
+}
+
 export default function Footer() {
   const currentYear = new Date().getFullYear();
+  const [footerData, setFooterData] = useState<FooterSettings | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchFooterSettings = async () => {
+      try {
+        const response = await fetch("/api.php?table=footer_settings");
+        const data = await response.json();
+        if (Array.isArray(data) && data.length > 0) {
+          setFooterData(data[0]);
+        }
+      } catch (error) {
+        console.error("Error fetching footer settings:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchFooterSettings();
+  }, []);
 
   return (
     <footer className="w-full bg-foreground text-background">
@@ -17,15 +48,15 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
           {/* Company Info */}
           <div>
-            <div className="flex items-center gap-2 mb-4">
+            <div className="flex items-center gap-3 mb-4">
               <img
                 src="https://cdn.builder.io/api/v1/image/assets%2Fbf7a511dd4454ae88c7c49627a9a0f54%2F80b3bed3a8e14bf3ae5cc941d2cfab50?format=webp&width=100"
                 alt="Cornbelt Logo"
-                className="w-8 h-8 object-contain"
+                className="w-12 h-12 object-contain"
               />
               <div>
-                <div className="font-bold text-sm">CORNBELT</div>
-                <div className="text-xs opacity-75">FLOUR MILL</div>
+                <div className="font-bold text-lg">CORNBELT</div>
+                <div className="text-sm opacity-75">FLOUR MILL</div>
               </div>
             </div>
             <p className="text-sm opacity-80">
@@ -86,15 +117,25 @@ export default function Footer() {
             <ul className="space-y-3 text-sm">
               <li className="flex items-start gap-2">
                 <Phone className="w-4 h-4 mt-0.5 flex-shrink-0 text-secondary" />
-                <span>+254 (0) XXX XXX XXX</span>
+                <span>
+                  {isLoading
+                    ? "Loading..."
+                    : footerData?.phone || "+254 (0) XXX XXX XXX"}
+                </span>
               </li>
               <li className="flex items-start gap-2">
                 <Mail className="w-4 h-4 mt-0.5 flex-shrink-0 text-secondary" />
-                <span>info@cornbelt.co.ke</span>
+                <span>
+                  {isLoading
+                    ? "Loading..."
+                    : footerData?.email || "info@cornbelt.co.ke"}
+                </span>
               </li>
               <li className="flex items-start gap-2">
                 <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0 text-secondary" />
-                <span>Kenya</span>
+                <span>
+                  {isLoading ? "Loading..." : footerData?.location || "Kenya"}
+                </span>
               </li>
             </ul>
           </div>
@@ -103,33 +144,39 @@ export default function Footer() {
           <div>
             <h3 className="font-bold text-sm mb-4">Follow Us</h3>
             <div className="flex gap-3">
-              <a
-                href="https://facebook.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-10 h-10 rounded-lg bg-secondary/20 flex items-center justify-center hover:bg-secondary/30 transition-colors"
-                aria-label="Facebook"
-              >
-                <Facebook className="w-5 h-5" />
-              </a>
-              <a
-                href="https://instagram.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-10 h-10 rounded-lg bg-secondary/20 flex items-center justify-center hover:bg-secondary/30 transition-colors"
-                aria-label="Instagram"
-              >
-                <Instagram className="w-5 h-5" />
-              </a>
-              <a
-                href="https://twitter.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-10 h-10 rounded-lg bg-secondary/20 flex items-center justify-center hover:bg-secondary/30 transition-colors"
-                aria-label="Twitter"
-              >
-                <Twitter className="w-5 h-5" />
-              </a>
+              {!isLoading && footerData?.facebookUrl && (
+                <a
+                  href={footerData.facebookUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 rounded-lg bg-secondary/20 flex items-center justify-center hover:bg-secondary/30 transition-colors"
+                  aria-label="Facebook"
+                >
+                  <Facebook className="w-5 h-5" />
+                </a>
+              )}
+              {!isLoading && footerData?.instagramUrl && (
+                <a
+                  href={footerData.instagramUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 rounded-lg bg-secondary/20 flex items-center justify-center hover:bg-secondary/30 transition-colors"
+                  aria-label="Instagram"
+                >
+                  <Instagram className="w-5 h-5" />
+                </a>
+              )}
+              {!isLoading && footerData?.twitterUrl && (
+                <a
+                  href={footerData.twitterUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 rounded-lg bg-secondary/20 flex items-center justify-center hover:bg-secondary/30 transition-colors"
+                  aria-label="Twitter"
+                >
+                  <Twitter className="w-5 h-5" />
+                </a>
+              )}
             </div>
           </div>
         </div>
