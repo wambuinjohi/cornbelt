@@ -848,6 +848,120 @@ Disallow: /api/`;
     }
   });
 
+  // Footer Settings Management
+  app.get("/api/admin/footer-settings", async (req, res) => {
+    const token = req.headers.authorization?.split(" ")[1];
+
+    if (!token || !verifyToken(token)) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    try {
+      const settings = await apiCall("GET", "footer_settings");
+      res.json(Array.isArray(settings) ? settings : []);
+    } catch (error) {
+      console.error("Error fetching footer settings:", error);
+      res.json([]);
+    }
+  });
+
+  app.post("/api/admin/footer-settings", async (req, res) => {
+    const token = req.headers.authorization?.split(" ")[1];
+
+    if (!token || !verifyToken(token)) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const { phone, email, location, facebookUrl, instagramUrl, twitterUrl } =
+      req.body;
+
+    if (!phone || !email || !location) {
+      return res.status(400).json({
+        error: "Phone, email, and location are required fields",
+      });
+    }
+
+    try {
+      const result = await apiCall("POST", "footer_settings", {
+        phone,
+        email,
+        location,
+        facebookUrl: facebookUrl || "",
+        instagramUrl: instagramUrl || "",
+        twitterUrl: twitterUrl || "",
+      });
+
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      res.json({
+        success: true,
+        message: "Footer settings created successfully",
+        id: result.id,
+      });
+    } catch (error) {
+      console.error("Error creating footer settings:", error);
+      res.status(500).json({
+        error:
+          error instanceof Error ? error.message : "Failed to create settings",
+      });
+    }
+  });
+
+  app.patch("/api/admin/footer-settings", async (req, res) => {
+    const token = req.headers.authorization?.split(" ")[1];
+
+    if (!token || !verifyToken(token)) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const id = req.query.id as string;
+    if (!id) {
+      return res.status(400).json({ error: "Missing id parameter" });
+    }
+
+    const { phone, email, location, facebookUrl, instagramUrl, twitterUrl } =
+      req.body;
+
+    if (!phone || !email || !location) {
+      return res.status(400).json({
+        error: "Phone, email, and location are required fields",
+      });
+    }
+
+    try {
+      const result = await apiCall(
+        "PUT",
+        "footer_settings",
+        {
+          phone,
+          email,
+          location,
+          facebookUrl: facebookUrl || "",
+          instagramUrl: instagramUrl || "",
+          twitterUrl: twitterUrl || "",
+        },
+        parseInt(id),
+      );
+
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      res.json({
+        success: true,
+        message: "Footer settings updated successfully",
+      });
+    } catch (error) {
+      console.error("Error updating footer settings:", error);
+      res.status(500).json({
+        error:
+          error instanceof Error ? error.message : "Failed to update settings",
+      });
+    }
+  });
+
   // Hero Slider Images Management
   app.get("/api/admin/hero-images", async (req, res) => {
     const token = req.headers.authorization?.split(" ")[1];
