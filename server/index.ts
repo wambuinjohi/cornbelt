@@ -4,6 +4,7 @@ import cors from "cors";
 import crypto from "crypto";
 import { Readable } from "stream";
 import { handleDemo } from "./routes/demo";
+import { handleTestOrdersUpdate } from "./routes/test-orders-update";
 import fs from "fs";
 import path from "path";
 
@@ -678,6 +679,8 @@ export function createServer() {
   });
 
   app.get("/api/demo", handleDemo);
+
+  app.get("/api/test-orders-update", handleTestOrdersUpdate);
 
   // Sitemap
   app.get("/sitemap.xml", (_req, res) => {

@@ -140,16 +140,11 @@ export default function AdminFooter() {
       setIsLoading(true);
       setError("");
       const token = localStorage.getItem("adminToken");
-      const adminFetch = (await import("@/lib/adminApi")).default;
 
-      let response = await adminFetch("/api/admin/footer-settings", {
+      // Use api.php admin endpoint directly (works on Apache without Node server)
+      const response = await fetch("/api/admin/footer-settings", {
         headers: { Authorization: `Bearer ${token}` },
       });
-
-      // If Node endpoint fails, try PHP endpoint
-      if (!response || !response.ok) {
-        response = await fetch("/api.php?table=footer_settings");
-      }
 
       if (!response) {
         throw new Error("Network request failed");
@@ -211,9 +206,7 @@ export default function AdminFooter() {
         twitterUrl: "https://twitter.com",
       };
 
-      const response = await (
-        await import("@/lib/adminApi")
-      ).default("/api/admin/footer-settings", {
+      const response = await fetch("/api/admin/footer-settings", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -267,7 +260,6 @@ export default function AdminFooter() {
       }
 
       const token = localStorage.getItem("adminToken");
-      const adminFetch = (await import("@/lib/adminApi")).default;
 
       // Prepare the body
       const payloadData = {
@@ -280,9 +272,9 @@ export default function AdminFooter() {
       };
 
       if (footerData?.id) {
-        // Update existing - try Node endpoint first, fallback to PHP
-        let response = await adminFetch(
-          `/api/admin/footer-settings?id=${footerData.id}`,
+        // Update existing using api.php admin endpoint
+        const response = await fetch(
+          `/api/admin/footer-settings/${footerData.id}`,
           {
             method: "PATCH",
             headers: {
@@ -292,18 +284,6 @@ export default function AdminFooter() {
             body: JSON.stringify(payloadData),
           },
         );
-
-        // If Node endpoint fails, try PHP endpoint
-        if (!response || !response.ok) {
-          response = await fetch(
-            `/api.php?table=footer_settings&id=${footerData.id}`,
-            {
-              method: "PUT",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ id: footerData.id, ...payloadData }),
-            },
-          );
-        }
 
         if (!response) {
           throw new Error("Network request failed");
@@ -320,8 +300,8 @@ export default function AdminFooter() {
         toast.success("Footer settings updated successfully");
         await fetchFooterSettings();
       } else {
-        // Create new - try Node endpoint first, fallback to PHP
-        let response = await adminFetch("/api/admin/footer-settings", {
+        // Create new using api.php admin endpoint
+        const response = await fetch("/api/admin/footer-settings", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -329,15 +309,6 @@ export default function AdminFooter() {
           },
           body: JSON.stringify(payloadData),
         });
-
-        // If Node endpoint fails, try PHP endpoint
-        if (!response || !response.ok) {
-          response = await fetch(`/api.php?table=footer_settings`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payloadData),
-          });
-        }
 
         if (!response) {
           throw new Error("Network request failed");

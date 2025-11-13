@@ -29,19 +29,18 @@ export default function Footer() {
       try {
         console.log("Starting footer settings fetch...");
 
-        // Try the Node/Express endpoint first
-        let response = await fetch("/api/footer-settings");
-        console.log("Node endpoint response:", response.status);
+        // Try Node endpoint first (development), fallback to PHP endpoint (production)
+        let response = await fetch("/api/footer-settings").catch(() => null);
 
-        // If that fails or returns empty, try the PHP endpoint
-        if (!response.ok) {
+        if (!response || !response.ok) {
           console.log("Node endpoint failed, trying PHP endpoint...");
           response = await fetch("/api.php?table=footer_settings");
-          console.log("PHP endpoint response:", response.status);
         }
 
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
+        console.log("API response status:", response?.status);
+
+        if (!response || !response.ok) {
+          throw new Error(`HTTP ${response?.status || "unknown"}`);
         }
 
         const data = await response.json();
@@ -60,7 +59,10 @@ export default function Footer() {
         console.log("Processed footer settings:", footerSettings);
 
         // Accept data if it has the expected structure
-        if (footerSettings && (footerSettings.id || footerSettings.email)) {
+        if (
+          footerSettings &&
+          (footerSettings.id || footerSettings.email || footerSettings.phone)
+        ) {
           console.log("Setting footer data:", footerSettings);
           setFooterData(footerSettings);
         } else {

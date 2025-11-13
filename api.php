@@ -107,16 +107,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && strpos($_SERVER['REQUEST_URI'], '/ap
         $row = $res->fetch_assoc();
         echo json_encode($row);
     } else {
-        // Return minimal default if no settings exist yet
-        echo json_encode([
-            'id' => 0,
-            'phone' => '+254 (0) XXX XXX XXX',
-            'email' => 'info@cornbelt.co.ke',
-            'location' => 'Kenya',
-            'facebookUrl' => '',
-            'instagramUrl' => '',
-            'twitterUrl' => ''
-        ]);
+        // Table is empty, auto-insert default settings
+        $defaultPhone = '+254 (0) XXX XXX XXX';
+        $defaultEmail = 'info@cornbelt.co.ke';
+        $defaultLocation = 'Kenya';
+        $defaultFacebook = '';
+        $defaultInstagram = '';
+        $defaultTwitter = '';
+
+        $insertSql = "INSERT INTO `footer_settings` (`phone`, `email`, `location`, `facebookUrl`, `instagramUrl`, `twitterUrl`) VALUES (
+            '" . $conn->real_escape_string($defaultPhone) . "',
+            '" . $conn->real_escape_string($defaultEmail) . "',
+            '" . $conn->real_escape_string($defaultLocation) . "',
+            '" . $conn->real_escape_string($defaultFacebook) . "',
+            '" . $conn->real_escape_string($defaultInstagram) . "',
+            '" . $conn->real_escape_string($defaultTwitter) . "'
+        )";
+
+        if ($conn->query($insertSql) === TRUE) {
+            // Return the newly inserted record
+            $newId = $conn->insert_id;
+            echo json_encode([
+                'id' => $newId,
+                'phone' => $defaultPhone,
+                'email' => $defaultEmail,
+                'location' => $defaultLocation,
+                'facebookUrl' => $defaultFacebook,
+                'instagramUrl' => $defaultInstagram,
+                'twitterUrl' => $defaultTwitter
+            ]);
+        } else {
+            // Insert failed, return fallback
+            echo json_encode([
+                'id' => 0,
+                'phone' => $defaultPhone,
+                'email' => $defaultEmail,
+                'location' => $defaultLocation,
+                'facebookUrl' => $defaultFacebook,
+                'instagramUrl' => $defaultInstagram,
+                'twitterUrl' => $defaultTwitter
+            ]);
+        }
     }
     $conn->close();
     exit;
@@ -705,6 +736,35 @@ if (strpos($uri, '/api/admin') !== false) {
                 $q = $conn->query("SELECT * FROM `newsletter_requests` ORDER BY createdAt DESC");
                 $out = [];
                 if ($q) while ($r = $q->fetch_assoc()) $out[] = $r;
+                echo json_encode($out);
+                $conn->close();
+                exit;
+            }
+            if ($resource === 'footer-settings') {
+                // Public endpoint - no authentication required
+                $q = $conn->query("SELECT * FROM `footer_settings` LIMIT 1");
+                $out = null;
+                if ($q && $q->num_rows > 0) {
+                    $out = $q->fetch_assoc();
+                } else {
+                    // Auto-seed default footer settings if table is empty
+                    $defaultSettings = [
+                        'phone' => '+254 (0) XXX XXX XXX',
+                        'email' => 'info@cornbelt.co.ke',
+                        'location' => 'Kenya',
+                        'facebookUrl' => '',
+                        'instagramUrl' => '',
+                        'twitterUrl' => ''
+                    ];
+                    $keys = array_keys($defaultSettings);
+                    $vals = array_map(fn($v) => $conn->real_escape_string((string)$v), $defaultSettings);
+                    $insertSql = "INSERT INTO `footer_settings` (`" . implode('`, `', $keys) . "`) VALUES ('" . implode("', '", $vals) . "')";
+                    if ($conn->query($insertSql) === TRUE) {
+                        $out = array_merge(['id' => $conn->insert_id], $defaultSettings);
+                    } else {
+                        $out = array_merge(['id' => 0], $defaultSettings);
+                    }
+                }
                 echo json_encode($out);
                 $conn->close();
                 exit;
