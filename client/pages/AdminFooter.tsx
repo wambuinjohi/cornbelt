@@ -39,6 +39,59 @@ export default function AdminFooter() {
     fetchFooterSettings();
   }, [navigate]);
 
+  const initializeFooterTable = async () => {
+    try {
+      const response = await fetch("/api.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          table: "footer_settings",
+          create_table: true,
+          columns: {
+            id: "INT PRIMARY KEY AUTO_INCREMENT",
+            phone: "VARCHAR(255) NOT NULL",
+            email: "VARCHAR(255) NOT NULL",
+            location: "VARCHAR(255) NOT NULL",
+            facebookUrl: "VARCHAR(255)",
+            instagramUrl: "VARCHAR(255)",
+            twitterUrl: "VARCHAR(255)",
+            updatedAt:
+              "TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
+          },
+        }),
+      });
+
+      const result = await response.json();
+      console.log("Table creation result:", result);
+
+      // Insert default settings
+      const insertResponse = await fetch("/api.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          table: "footer_settings",
+          phone: "+254 (0) XXX XXX XXX",
+          email: "info@cornbelt.co.ke",
+          location: "Kenya",
+          facebookUrl: "https://facebook.com",
+          instagramUrl: "https://instagram.com",
+          twitterUrl: "https://twitter.com",
+        }),
+      });
+
+      const insertResult = await insertResponse.json();
+      console.log("Insert result:", insertResult);
+
+      if (insertResult.success) {
+        toast.success("Footer table initialized successfully!");
+        fetchFooterSettings();
+      }
+    } catch (err) {
+      console.error("Error initializing footer table:", err);
+      toast.error("Failed to initialize footer table");
+    }
+  };
+
   const fetchFooterSettings = async () => {
     try {
       setIsLoading(true);
@@ -68,12 +121,14 @@ export default function AdminFooter() {
           twitterUrl: settings.twitterUrl || "",
         });
       } else {
-        setError("No footer settings found. Please create initial settings.");
+        setError(
+          "No footer settings found. Click 'Initialize Footer Table' to create default settings."
+        );
       }
     } catch (err) {
       console.error("Error fetching footer settings:", err);
       setError(
-        "Failed to load footer settings. Footer table may not exist yet."
+        "Failed to load footer settings. Click 'Initialize Footer Table' to create the table."
       );
     } finally {
       setIsLoading(false);
