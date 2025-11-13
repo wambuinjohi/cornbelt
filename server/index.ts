@@ -1574,34 +1574,35 @@ Disallow: /api/`;
       // Handle special action endpoints
       const action = req.query.action as string | undefined;
       if (action === "get-footer-settings" && method === "GET") {
-        // Public footer settings endpoint - auto-seed with defaults if needed
+        // Public footer settings endpoint
         const footerTable = "footer_settings";
-        if (!db[footerTable] || db[footerTable].length === 0) {
-          // Auto-seed default footer settings
-          db[footerTable] = [
-            {
-              id: 1,
-              phone: "+254 (0) XXX XXX XXX",
-              email: "info@cornbelt.co.ke",
-              location: "Kenya",
-              facebookUrl: "",
-              instagramUrl: "",
-              twitterUrl: ""
-            }
-          ];
-          meta[footerTable] = {
-            id: "INT",
-            phone: "VARCHAR(255)",
-            email: "VARCHAR(255)",
-            location: "VARCHAR(255)",
-            facebookUrl: "VARCHAR(500)",
-            instagramUrl: "VARCHAR(500)",
-            twitterUrl: "VARCHAR(500)"
-          };
-          seq[footerTable] = 2;
+
+        // Try to fetch from actual database first (if connected)
+        const ensureTable = (name: string) => {
+          if (!db[name]) {
+            db[name] = [];
+            meta[name] = {};
+            seq[name] = 1;
+          }
+        };
+
+        ensureTable(footerTable);
+
+        // If table has data, return it
+        if (db[footerTable] && db[footerTable].length > 0) {
+          return res.json(db[footerTable][0]);
         }
-        // Return first record
-        return res.json(db[footerTable][0] || null);
+
+        // Otherwise return fallback with proper defaults (including empty social URLs for user to fill in)
+        return res.json({
+          id: 0,
+          phone: "+254 (0) XXX XXX XXX",
+          email: "info@cornbelt.co.ke",
+          location: "Kenya",
+          facebookUrl: "",
+          instagramUrl: "",
+          twitterUrl: ""
+        });
       }
 
       const table = (req.query.table || req.body.table) as string;
