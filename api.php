@@ -86,6 +86,64 @@ function valid_identifier($s) {
     return is_string($s) && preg_match('/^[A-Za-z0-9_]+$/', $s);
 }
 
+// IP Geolocation helper using free ip-api.com API
+function fetch_ip_location($ip) {
+    if (empty($ip) || $ip === '0.0.0.0') {
+        return null;
+    }
+
+    // Skip private/local IPs
+    if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false) {
+        return null;
+    }
+
+    $cache_key = 'ip_location_' . md5($ip);
+    // Check cache in /tmp (60 minute TTL via file mtime)
+    $cache_file = sys_get_temp_dir() . '/' . $cache_key;
+    if (file_exists($cache_file) && (time() - filemtime($cache_file)) < 3600) {
+        return json_decode(file_get_contents($cache_file), true);
+    }
+
+    try {
+        $url = "http://ip-api.com/json/" . urlencode($ip) . "?fields=status,country,countryCode,city,timezone";
+
+        // Use stream context with timeout
+        $context = stream_context_create([
+            'http' => [
+                'timeout' => 3,
+                'method' => 'GET',
+            ]
+        ]);
+
+        $response = @file_get_contents($url, false, $context);
+
+        if ($response === false) {
+            return null;
+        }
+
+        $data = json_decode($response, true);
+
+        if (!$data || $data['status'] !== 'success') {
+            return null;
+        }
+
+        $location = [
+            'country' => $data['country'] ?? '',
+            'country_code' => $data['countryCode'] ?? '',
+            'city' => $data['city'] ?? '',
+            'timezone' => $data['timezone'] ?? ''
+        ];
+
+        // Cache result
+        @file_put_contents($cache_file, json_encode($location), LOCK_EX);
+
+        return $location;
+    } catch (Exception $e) {
+        error_log("IP location fetch error for $ip: " . $e->getMessage());
+        return null;
+    }
+}
+
 // JWT helpers for admin endpoints
 function base64url_encode($data) {
     return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
