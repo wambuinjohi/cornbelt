@@ -27,24 +27,39 @@ export default function Footer() {
   useEffect(() => {
     const fetchFooterSettings = async () => {
       try {
-        console.log("Starting footer settings fetch...");
+        let response = null;
+        let lastError: Error | null = null;
 
-        // Try Node endpoint first (development), fallback to PHP endpoint (production)
-        let response = await fetch("/api/footer-settings").catch(() => null);
+        // Try multiple endpoints with fallback strategy
+        const endpoints = [
+          { url: "/api/footer-settings", name: "Direct API endpoint" },
+          { url: "/api.php?action=footer-settings", name: "PHP API with action" },
+          { url: "/api.php?table=footer_settings", name: "PHP API table query" },
+        ];
 
-        if (!response || !response.ok) {
-          console.log("Node endpoint failed, trying PHP endpoint...");
-          response = await fetch("/api.php?table=footer_settings");
+        for (const endpoint of endpoints) {
+          try {
+            response = await fetch(endpoint.url, {
+              method: "GET",
+              headers: { Accept: "application/json" },
+            });
+
+            if (response && response.ok) {
+              break;
+            }
+          } catch (err) {
+            lastError = err as Error;
+            continue;
+          }
         }
 
-        console.log("API response status:", response?.status);
-
         if (!response || !response.ok) {
-          throw new Error(`HTTP ${response?.status || "unknown"}`);
+          throw (
+            lastError || new Error(`Failed to fetch footer settings`)
+          );
         }
 
         const data = await response.json();
-        console.log("Fetched footer data:", data);
 
         // Handle both single object and array responses
         let footerSettings = null;
@@ -56,21 +71,15 @@ export default function Footer() {
           }
         }
 
-        console.log("Processed footer settings:", footerSettings);
-
         // Accept data if it has the expected structure
         if (
           footerSettings &&
           (footerSettings.id || footerSettings.email || footerSettings.phone)
         ) {
-          console.log("Setting footer data:", footerSettings);
           setFooterData(footerSettings);
-        } else {
-          console.warn("Footer settings missing required fields");
         }
       } catch (error) {
         console.error("Error fetching footer settings:", error);
-        // Fallback data will remain set in initial state
       } finally {
         setIsLoading(false);
       }
