@@ -60,6 +60,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       href: "/admin/submissions",
     },
     {
+      icon: Mail,
+      label: "Newsletter Subscriptions",
+      href: "/admin/newsletter",
+    },
+    {
       icon: MessageCircle,
       label: "Chat & Bot",
       href: "/admin/chat",
