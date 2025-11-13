@@ -25,6 +25,10 @@ interface VisitorRecord {
   connection_type: string;
   geolocation_latitude: number | null;
   geolocation_longitude: number | null;
+  geolocation_country?: string | null;
+  geolocation_country_code?: string | null;
+  geolocation_city?: string | null;
+  geolocation_timezone?: string | null;
   ip_address: string | null;
   session_id: string;
   local_time: string;
