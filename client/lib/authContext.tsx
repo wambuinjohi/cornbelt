@@ -35,13 +35,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const storedToken = localStorage.getItem("adminToken");
         const storedUser = localStorage.getItem("adminUser");
 
+        console.log("[Auth] Initializing from localStorage", {
+          hasToken: !!storedToken,
+          hasUser: !!storedUser,
+          tokenLength: storedToken?.length || 0,
+        });
+
         if (storedToken && storedUser) {
           const parsedUser = JSON.parse(storedUser);
+          console.log("[Auth] Successfully parsed user:", parsedUser);
           setToken(storedToken);
           setUser(parsedUser);
+        } else {
+          console.log("[Auth] No stored credentials found in localStorage");
         }
       } catch (error) {
-        console.error("Error initializing auth:", error);
+        console.error("[Auth] Error initializing auth:", error);
         localStorage.removeItem("adminToken");
         localStorage.removeItem("adminUser");
       } finally {
