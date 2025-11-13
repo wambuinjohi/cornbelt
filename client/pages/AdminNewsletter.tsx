@@ -33,7 +33,8 @@ export default function AdminNewsletter() {
       ).default("/api/admin/newsletter-requests", {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (!res || !res.ok) throw new Error("Failed to fetch newsletter requests");
+      if (!res || !res.ok)
+        throw new Error("Failed to fetch newsletter requests");
       const data = await res.json();
       setNewsletter(Array.isArray(data) ? data : []);
     } catch (err) {
@@ -83,7 +84,7 @@ export default function AdminNewsletter() {
 
     if (
       !confirm(
-        `Delete ${selectedIds.size} subscription${selectedIds.size === 1 ? "" : "s"}?`
+        `Delete ${selectedIds.size} subscription${selectedIds.size === 1 ? "" : "s"}?`,
       )
     ) {
       return;
@@ -107,7 +108,9 @@ export default function AdminNewsletter() {
       }
 
       if (deletedCount > 0) {
-        toast.success(`Deleted ${deletedCount} subscription${deletedCount === 1 ? "" : "s"}`);
+        toast.success(
+          `Deleted ${deletedCount} subscription${deletedCount === 1 ? "" : "s"}`,
+        );
         setNewsletter(newsletter.filter((n) => !selectedIds.has(n.id)));
         setSelectedIds(new Set());
         await fetchNewsletter();
@@ -168,7 +171,9 @@ export default function AdminNewsletter() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-muted-foreground">Loading newsletter requests...</p>
+          <p className="mt-4 text-muted-foreground">
+            Loading newsletter requests...
+          </p>
         </div>
       </div>
     );
@@ -216,7 +221,9 @@ export default function AdminNewsletter() {
 
         {newsletter.length === 0 ? (
           <div className="text-center py-12 bg-primary/5 border border-primary/10 rounded-lg">
-            <p className="text-muted-foreground">No newsletter subscriptions yet.</p>
+            <p className="text-muted-foreground">
+              No newsletter subscriptions yet.
+            </p>
           </div>
         ) : (
           <div className="overflow-x-auto bg-primary/5 border border-primary/10 rounded-lg">
@@ -226,7 +233,10 @@ export default function AdminNewsletter() {
                   <th className="text-left py-3 px-4 font-semibold text-foreground">
                     <input
                       type="checkbox"
-                      checked={selectedIds.size === newsletter.length && newsletter.length > 0}
+                      checked={
+                        selectedIds.size === newsletter.length &&
+                        newsletter.length > 0
+                      }
                       onChange={handleSelectAll}
                       className="cursor-pointer"
                     />

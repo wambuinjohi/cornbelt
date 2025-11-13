@@ -148,7 +148,8 @@ export const pageMetadata = {
     title: "Terms of Service - Cornbelt Flour Mill",
     description:
       "Review the terms and conditions for using Cornbelt Flour Mill's website and services.",
-    keywords: "terms of service, terms and conditions, legal terms, website terms",
+    keywords:
+      "terms of service, terms and conditions, legal terms, website terms",
   },
   notfound: {
     title: "Page Not Found - Cornbelt Flour Mill",
