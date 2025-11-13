@@ -160,13 +160,26 @@ export default function AdminChat() {
   const fetchSessionMessages = async (sessionId: string) => {
     try {
       const adminFetch = (await import("@/lib/adminApi")).default;
-      const res = await adminFetch(
+      let res = await adminFetch(
         `/api/admin/chat/${encodeURIComponent(sessionId)}`,
         { headers: { Authorization: `Bearer ${token}` } },
       );
+
+      // If Node endpoint fails, fetch from PHP and filter
+      if (!res || !res.ok) {
+        res = await fetch("/api.php?table=chats");
+      }
+
       if (!res || !res.ok) throw new Error("Failed to fetch messages");
       const data = await res.json();
-      setMessages(Array.isArray(data) ? data : []);
+
+      // If we got all chats, filter by sessionId
+      if (Array.isArray(data)) {
+        const filtered = data.filter((m: any) => m.sessionId === sessionId);
+        setMessages(filtered);
+      } else {
+        setMessages(Array.isArray(data) ? data : []);
+      }
       setSelectedSession(sessionId);
     } catch (e) {
       console.error(e);
