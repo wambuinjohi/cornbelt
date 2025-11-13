@@ -42,6 +42,17 @@ interface FilterState {
   searchQuery: string;
 }
 
+function get_country_flag(country_code: string): string {
+  if (!country_code || country_code.length !== 2) return "🌍";
+  const code = country_code.toUpperCase();
+  const offset = 127397;
+  const codePoints = [
+    code.charCodeAt(0) - 65 + offset,
+    code.charCodeAt(1) - 65 + offset,
+  ];
+  return String.fromCodePoint(...codePoints);
+}
+
 export default function AdminVisitorTracking() {
   const navigate = useNavigate();
   const [visitors, setVisitors] = useState<VisitorRecord[]>([]);
