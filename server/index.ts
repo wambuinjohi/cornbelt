@@ -1295,20 +1295,20 @@ Disallow: /api/`;
     }
   });
 
-  // Public endpoint to get hero images
+  // Public endpoint to get hero images (filters out detached/inactive images)
   app.get("/api/hero-images", async (_req, res) => {
     try {
       const images = await apiCall("GET", "hero_slider_images");
       let arr = Array.isArray(images) ? images : [];
 
-      // Prefer images explicitly marked active. If none are active, return all.
+      // Filter for explicitly active images only (detached images are excluded)
       const active = arr.filter(
         (i: any) =>
           i.isActive === true || i.isActive === 1 || i.isActive === "1",
       );
-      const toReturn = active.length > 0 ? active : arr;
 
-      const sortedImages = toReturn.sort(
+      // Return only active images (no fallback to all images; let HeroSlider use defaults if empty)
+      const sortedImages = active.sort(
         (a: any, b: any) => (a.displayOrder || 0) - (b.displayOrder || 0),
       );
       res.json(sortedImages);
