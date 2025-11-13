@@ -27,13 +27,22 @@ export default function Footer() {
   useEffect(() => {
     const fetchFooterSettings = async () => {
       try {
+        // Try the public API endpoint first
         const response = await fetch("/api/footer-settings");
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
         const data = await response.json();
-        if (data && typeof data === "object" && data.id) {
+
+        // Accept data if it has the expected structure
+        if (data && typeof data === "object" && (data.id || data.email)) {
           setFooterData(data);
         }
       } catch (error) {
         console.error("Error fetching footer settings:", error);
+        // Fallback data will remain set in initial state
       } finally {
         setIsLoading(false);
       }

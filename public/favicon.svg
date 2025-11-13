@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Background -->
+  <rect width="100" height="100" fill="white"/>
+  
+  <!-- Main circle green arc -->
+  <circle cx="50" cy="50" r="45" fill="none" stroke="#1b7e3a" stroke-width="12"/>
+  
+  <!-- Checkmark interior lines -->
+  <g transform="translate(50, 50) scale(0.4)">
+    <!-- Left diagonal -->
+    <line x1="-35" y1="-10" x2="0" y2="40" stroke="#1b7e3a" stroke-width="8" stroke-linecap="round"/>
+    <!-- Right diagonal -->
+    <line x1="0" y1="40" x2="40" y2="-30" stroke="#1b7e3a" stroke-width="8" stroke-linecap="round"/>
+  </g>
+  
+  <!-- Corn/grain elements -->
+  <g transform="translate(50, 50) scale(0.35)">
+    <!-- Top left corn -->
+    <g transform="translate(-30, -35)">
+      <ellipse cx="0" cy="-5" rx="3" ry="8" fill="#c41e3a"/>
+      <ellipse cx="-4" cy="0" rx="2" ry="6" fill="#2d5f2e"/>
+      <ellipse cx="4" cy="0" rx="2" ry="6" fill="#2d5f2e"/>
+    </g>
+    
+    <!-- Top right wheat -->
+    <g transform="translate(25, -30)">
+      <path d="M 0,-8 Q -3,-5 -2,2 M 0,-8 Q 0,-5 0,2 M 0,-8 Q 3,-5 2,2" stroke="#ffa500" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <ellipse cx="0" cy="-10" rx="2" ry="3" fill="#ffa500"/>
+    </g>
+    
+    <!-- Bottom right sunflower -->
+    <g transform="translate(30, 25)">
+      <circle cx="0" cy="0" r="4" fill="#ffa500"/>
+      <circle cx="-6" cy="-3" r="2" fill="#ffa500"/>
+      <circle cx="-4" cy="5" r="2" fill="#ffa500"/>
+      <circle cx="4" cy="5" r="2" fill="#ffa500"/>
+      <circle cx="6" cy="-3" r="2" fill="#ffa500"/>
+    </g>
+    
+    <!-- Bottom left corn -->
+    <g transform="translate(-25, 20)">
+      <ellipse cx="0" cy="-5" rx="3" ry="8" fill="#c41e3a"/>
+      <ellipse cx="-4" cy="0" rx="2" ry="6" fill="#2d5f2e"/>
+      <ellipse cx="4" cy="0" rx="2" ry="6" fill="#2d5f2e"/>
+    </g>
+    
+    <!-- Center circle -->
+    <circle cx="0" cy="0" r="6" fill="#ffa500"/>
+  </g>
+</svg>

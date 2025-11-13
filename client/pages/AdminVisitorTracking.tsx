@@ -25,6 +25,10 @@ interface VisitorRecord {
   connection_type: string;
   geolocation_latitude: number | null;
   geolocation_longitude: number | null;
+  geolocation_country?: string | null;
+  geolocation_country_code?: string | null;
+  geolocation_city?: string | null;
+  geolocation_timezone?: string | null;
   ip_address: string | null;
   session_id: string;
   local_time: string;
@@ -36,6 +40,17 @@ interface FilterState {
   connectionType: string;
   dateRange: string;
   searchQuery: string;
+}
+
+function get_country_flag(country_code: string): string {
+  if (!country_code || country_code.length !== 2) return "🌍";
+  const code = country_code.toUpperCase();
+  const offset = 127397;
+  const codePoints = [
+    code.charCodeAt(0) - 65 + offset,
+    code.charCodeAt(1) - 65 + offset,
+  ];
+  return String.fromCodePoint(...codePoints);
 }
 
 export default function AdminVisitorTracking() {
@@ -110,7 +125,9 @@ export default function AdminVisitorTracking() {
       return (
         visitor.page_url.toLowerCase().includes(query) ||
         visitor.ip_address?.toLowerCase().includes(query) ||
-        visitor.session_id.toLowerCase().includes(query)
+        visitor.session_id.toLowerCase().includes(query) ||
+        visitor.geolocation_country?.toLowerCase().includes(query) ||
+        visitor.geolocation_city?.toLowerCase().includes(query)
       );
     }
     return true;
@@ -161,6 +178,8 @@ export default function AdminVisitorTracking() {
       "Browser Language",
       "Connection Type",
       "IP Address",
+      "Country",
+      "City",
       "Latitude",
       "Longitude",
       "Session ID",
@@ -175,6 +194,8 @@ export default function AdminVisitorTracking() {
       v.browser_language,
       v.connection_type,
       v.ip_address || "N/A",
+      v.geolocation_country || "N/A",
+      v.geolocation_city || "N/A",
       v.geolocation_latitude || "N/A",
       v.geolocation_longitude || "N/A",
       v.session_id,
@@ -446,6 +467,12 @@ export default function AdminVisitorTracking() {
                   <th className="px-6 py-3 text-left font-semibold text-foreground">
                     IP Address
                   </th>
+                  <th className="px-6 py-3 text-left font-semibold text-foreground">
+                    Country
+                  </th>
+                  <th className="px-6 py-3 text-left font-semibold text-foreground">
+                    City
+                  </th>
                   <th className="px-6 py-3 text-left">
                     <button
                       onClick={() => handleSort("browser_language")}
@@ -467,7 +494,7 @@ export default function AdminVisitorTracking() {
               <tbody>
                 {paginatedVisitors.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-6 py-8 text-center">
+                    <td colSpan={9} className="px-6 py-8 text-center">
                       <p className="text-muted-foreground">
                         No visitor data found
                       </p>
@@ -500,6 +527,27 @@ export default function AdminVisitorTracking() {
                       </td>
                       <td className="px-6 py-4 text-sm text-muted-foreground font-mono">
                         {visitor.ip_address || "N/A"}
+                      </td>
+                      <td className="px-6 py-4 text-sm">
+                        <span className="inline-flex items-center gap-2">
+                          {visitor.geolocation_country_code ? (
+                            <>
+                              <span className="text-base">
+                                {get_country_flag(
+                                  visitor.geolocation_country_code,
+                                )}
+                              </span>
+                              <span>
+                                {visitor.geolocation_country || "N/A"}
+                              </span>
+                            </>
+                          ) : (
+                            <span className="text-muted-foreground">N/A</span>
+                          )}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-muted-foreground">
+                        {visitor.geolocation_city || "N/A"}
                       </td>
                       <td className="px-6 py-4 text-sm text-muted-foreground">
                         {visitor.browser_language}

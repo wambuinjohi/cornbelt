@@ -62,6 +62,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['act
     exit;
 }
 
+// Public endpoint for footer settings (no authentication required)
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && strpos($_SERVER['REQUEST_URI'], '/api/footer-settings') !== false) {
+    $res = $conn->query("SELECT * FROM `footer_settings` LIMIT 1");
+    if ($res && $res->num_rows > 0) {
+        $row = $res->fetch_assoc();
+        echo json_encode($row);
+    } else {
+        // Return minimal default if no settings exist yet
+        echo json_encode([
+            'id' => 0,
+            'phone' => '+254 (0) XXX XXX XXX',
+            'email' => 'info@cornbelt.co.ke',
+            'location' => 'Kenya',
+            'facebookUrl' => '',
+            'instagramUrl' => '',
+            'twitterUrl' => ''
+        ]);
+    }
+    $conn->close();
+    exit;
+}
+
 $DB_HOST = getenv('DB_HOST');
 $DB_USER = getenv('DB_USER');
 $DB_PASS = getenv('DB_PASS');
@@ -84,6 +106,64 @@ if ($conn->connect_error) {
 // Helper: simple identifier validation
 function valid_identifier($s) {
     return is_string($s) && preg_match('/^[A-Za-z0-9_]+$/', $s);
+}
+
+// IP Geolocation helper using free ip-api.com API
+function fetch_ip_location($ip) {
+    if (empty($ip) || $ip === '0.0.0.0') {
+        return null;
+    }
+
+    // Skip private/local IPs
+    if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false) {
+        return null;
+    }
+
+    $cache_key = 'ip_location_' . md5($ip);
+    // Check cache in /tmp (60 minute TTL via file mtime)
+    $cache_file = sys_get_temp_dir() . '/' . $cache_key;
+    if (file_exists($cache_file) && (time() - filemtime($cache_file)) < 3600) {
+        return json_decode(file_get_contents($cache_file), true);
+    }
+
+    try {
+        $url = "http://ip-api.com/json/" . urlencode($ip) . "?fields=status,country,countryCode,city,timezone";
+
+        // Use stream context with timeout
+        $context = stream_context_create([
+            'http' => [
+                'timeout' => 3,
+                'method' => 'GET',
+            ]
+        ]);
+
+        $response = @file_get_contents($url, false, $context);
+
+        if ($response === false) {
+            return null;
+        }
+
+        $data = json_decode($response, true);
+
+        if (!$data || $data['status'] !== 'success') {
+            return null;
+        }
+
+        $location = [
+            'country' => $data['country'] ?? '',
+            'country_code' => $data['countryCode'] ?? '',
+            'city' => $data['city'] ?? '',
+            'timezone' => $data['timezone'] ?? ''
+        ];
+
+        // Cache result
+        @file_put_contents($cache_file, json_encode($location), LOCK_EX);
+
+        return $location;
+    } catch (Exception $e) {
+        error_log("IP location fetch error for $ip: " . $e->getMessage());
+        return null;
+    }
 }
 
 // JWT helpers for admin endpoints
@@ -444,6 +524,59 @@ if (strpos($uri, '/api/admin') !== false) {
             while ($r = $res->fetch_assoc()) $messages[] = $r;
         }
         echo json_encode($messages);
+        $conn->close();
+        exit;
+    }
+
+    // Footer settings GET - return single record
+    if ($resource === 'footer-settings' && $_SERVER['REQUEST_METHOD'] === 'GET') {
+        $authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? null;
+        $token = null; if ($authHeader && preg_match('/Bearer\s+(\S+)/', $authHeader, $m)) $token = $m[1];
+        if (!$token || !verify_jwt($token)) { http_response_code(401); echo json_encode(['error'=>'Unauthorized']); $conn->close(); exit; }
+
+        $res = $conn->query("SELECT * FROM `footer_settings`");
+        $records = [];
+        if ($res) {
+            while ($r = $res->fetch_assoc()) $records[] = $r;
+        }
+        echo json_encode($records);
+        $conn->close();
+        exit;
+    }
+
+    // Visitor tracking with IP-to-location enrichment
+    if ($resource === 'visitor-tracking' && $_SERVER['REQUEST_METHOD'] === 'GET') {
+        $authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? null;
+        $token = null; if ($authHeader && preg_match('/Bearer\s+(\S+)/', $authHeader, $m)) $token = $m[1];
+        if (!$token || !verify_jwt($token)) { http_response_code(401); echo json_encode(['error'=>'Unauthorized']); $conn->close(); exit; }
+
+        $res = $conn->query("SELECT * FROM `visitor_tracking` ORDER BY timestamp DESC");
+        $records = [];
+        if ($res) {
+            while ($r = $res->fetch_assoc()) {
+                // Enrich with IP location if IP exists and location columns are empty
+                if (!empty($r['ip_address']) && (empty($r['geolocation_country']) || empty($r['geolocation_city']))) {
+                    $location = fetch_ip_location($r['ip_address']);
+                    if ($location) {
+                        $r['geolocation_country'] = $location['country'] ?? '';
+                        $r['geolocation_country_code'] = $location['country_code'] ?? '';
+                        $r['geolocation_city'] = $location['city'] ?? '';
+                        $r['geolocation_timezone'] = $location['timezone'] ?? '';
+
+                        // Optionally update database to cache the location
+                        $update_sql = "UPDATE `visitor_tracking` SET
+                            `geolocation_country`='" . $conn->real_escape_string($location['country'] ?? '') . "',
+                            `geolocation_country_code`='" . $conn->real_escape_string($location['country_code'] ?? '') . "',
+                            `geolocation_city`='" . $conn->real_escape_string($location['city'] ?? '') . "',
+                            `geolocation_timezone`='" . $conn->real_escape_string($location['timezone'] ?? '') . "'
+                            WHERE id=" . intval($r['id']);
+                        $conn->query($update_sql);
+                    }
+                }
+                $records[] = $r;
+            }
+        }
+        echo json_encode($records);
         $conn->close();
         exit;
     }
