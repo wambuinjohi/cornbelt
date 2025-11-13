@@ -27,12 +27,17 @@ export default function Footer() {
   useEffect(() => {
     const fetchFooterSettings = async () => {
       try {
+        console.log("Starting footer settings fetch...");
+
         // Try the Node/Express endpoint first
         let response = await fetch("/api/footer-settings");
+        console.log("Node endpoint response:", response.status);
 
         // If that fails or returns empty, try the PHP endpoint
         if (!response.ok) {
+          console.log("Node endpoint failed, trying PHP endpoint...");
           response = await fetch("/api.php?table=footer_settings");
+          console.log("PHP endpoint response:", response.status);
         }
 
         if (!response.ok) {
@@ -40,6 +45,7 @@ export default function Footer() {
         }
 
         const data = await response.json();
+        console.log("Fetched footer data:", data);
 
         // Handle both single object and array responses
         let footerSettings = null;
@@ -51,9 +57,14 @@ export default function Footer() {
           }
         }
 
+        console.log("Processed footer settings:", footerSettings);
+
         // Accept data if it has the expected structure
         if (footerSettings && (footerSettings.id || footerSettings.email)) {
+          console.log("Setting footer data:", footerSettings);
           setFooterData(footerSettings);
+        } else {
+          console.warn("Footer settings missing required fields");
         }
       } catch (error) {
         console.error("Error fetching footer settings:", error);
