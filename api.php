@@ -448,6 +448,43 @@ if (strpos($uri, '/api/admin') !== false) {
         exit;
     }
 
+    // Visitor tracking with IP-to-location enrichment
+    if ($resource === 'visitor-tracking' && $_SERVER['REQUEST_METHOD'] === 'GET') {
+        $authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? null;
+        $token = null; if ($authHeader && preg_match('/Bearer\s+(\S+)/', $authHeader, $m)) $token = $m[1];
+        if (!$token || !verify_jwt($token)) { http_response_code(401); echo json_encode(['error'=>'Unauthorized']); $conn->close(); exit; }
+
+        $res = $conn->query("SELECT * FROM `visitor_tracking` ORDER BY timestamp DESC");
+        $records = [];
+        if ($res) {
+            while ($r = $res->fetch_assoc()) {
+                // Enrich with IP location if IP exists and location columns are empty
+                if (!empty($r['ip_address']) && (empty($r['geolocation_country']) || empty($r['geolocation_city']))) {
+                    $location = fetch_ip_location($r['ip_address']);
+                    if ($location) {
+                        $r['geolocation_country'] = $location['country'] ?? '';
+                        $r['geolocation_country_code'] = $location['country_code'] ?? '';
+                        $r['geolocation_city'] = $location['city'] ?? '';
+                        $r['geolocation_timezone'] = $location['timezone'] ?? '';
+
+                        // Optionally update database to cache the location
+                        $update_sql = "UPDATE `visitor_tracking` SET
+                            `geolocation_country`='" . $conn->real_escape_string($location['country'] ?? '') . "',
+                            `geolocation_country_code`='" . $conn->real_escape_string($location['country_code'] ?? '') . "',
+                            `geolocation_city`='" . $conn->real_escape_string($location['city'] ?? '') . "',
+                            `geolocation_timezone`='" . $conn->real_escape_string($location['timezone'] ?? '') . "'
+                            WHERE id=" . intval($r['id']);
+                        $conn->query($update_sql);
+                    }
+                }
+                $records[] = $r;
+            }
+        }
+        echo json_encode($records);
+        $conn->close();
+        exit;
+    }
+
     // Allow unauthenticated visitor tracking inserts from client-side tracking
     if ($resource === 'visitor-tracking' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         // Insert visitor tracking record without requiring JWT auth
