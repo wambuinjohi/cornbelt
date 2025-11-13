@@ -1570,6 +1570,40 @@ Disallow: /api/`;
       const seq = (app.locals._phpSeq ||= {} as Record<string, number>);
 
       const method = req.method.toUpperCase();
+
+      // Handle special action endpoints
+      const action = req.query.action as string | undefined;
+      if (action === "get-footer-settings" && method === "GET") {
+        // Public footer settings endpoint - auto-seed with defaults if needed
+        const footerTable = "footer_settings";
+        if (!db[footerTable] || db[footerTable].length === 0) {
+          // Auto-seed default footer settings
+          db[footerTable] = [
+            {
+              id: 1,
+              phone: "+254 (0) XXX XXX XXX",
+              email: "info@cornbelt.co.ke",
+              location: "Kenya",
+              facebookUrl: "",
+              instagramUrl: "",
+              twitterUrl: ""
+            }
+          ];
+          meta[footerTable] = {
+            id: "INT",
+            phone: "VARCHAR(255)",
+            email: "VARCHAR(255)",
+            location: "VARCHAR(255)",
+            facebookUrl: "VARCHAR(500)",
+            instagramUrl: "VARCHAR(500)",
+            twitterUrl: "VARCHAR(500)"
+          };
+          seq[footerTable] = 2;
+        }
+        // Return first record
+        return res.json(db[footerTable][0] || null);
+      }
+
       const table = (req.query.table || req.body.table) as string;
       const idParam = req.query.id as string | undefined;
 
