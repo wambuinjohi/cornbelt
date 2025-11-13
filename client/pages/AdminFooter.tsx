@@ -36,8 +36,48 @@ export default function AdminFooter() {
       navigate("/admin/login");
       return;
     }
-    fetchFooterSettings();
+    initTableAndFetch();
   }, [navigate]);
+
+  const initTableAndFetch = async () => {
+    try {
+      setIsLoading(true);
+      setError("");
+
+      // First, ensure table exists
+      const createTableResponse = await fetch("/api.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          table: "footer_settings",
+          create_table: true,
+          columns: {
+            id: "INT PRIMARY KEY AUTO_INCREMENT",
+            phone: "VARCHAR(255) NOT NULL",
+            email: "VARCHAR(255) NOT NULL",
+            location: "VARCHAR(255) NOT NULL",
+            facebookUrl: "VARCHAR(255)",
+            instagramUrl: "VARCHAR(255)",
+            twitterUrl: "VARCHAR(255)",
+            updatedAt:
+              "TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
+          },
+        }),
+      });
+
+      if (!createTableResponse.ok) {
+        console.warn("Table creation response not ok:", createTableResponse.status);
+      }
+
+      // Then fetch the data
+      await fetchFooterSettings();
+    } catch (err) {
+      console.error("Error initializing table:", err);
+      setError(
+        "Failed to initialize footer settings. Please check database connection."
+      );
+    }
+  };
 
   const initializeFooterTable = async () => {
     try {
