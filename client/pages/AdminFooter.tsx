@@ -231,10 +231,18 @@ export default function AdminFooter() {
         </p>
 
         {error && (
-          <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4 flex gap-3">
+          <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4 flex gap-3 items-start">
             <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-            <div>
+            <div className="flex-1">
               <h3 className="font-semibold text-red-900">{error}</h3>
+              {error.includes("Initialize") && (
+                <button
+                  onClick={initializeFooterTable}
+                  className="mt-3 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors text-sm font-medium"
+                >
+                  Initialize Footer Table
+                </button>
+              )}
             </div>
           </div>
         )}
