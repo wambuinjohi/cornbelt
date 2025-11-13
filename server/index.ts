@@ -1601,7 +1601,7 @@ Disallow: /api/`;
           location: "Kenya",
           facebookUrl: "",
           instagramUrl: "",
-          twitterUrl: ""
+          twitterUrl: "",
         });
       }
 
