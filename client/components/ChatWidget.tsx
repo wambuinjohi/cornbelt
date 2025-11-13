@@ -43,6 +43,77 @@ export default function ChatWidget() {
           console.log("Chats table initialized");
         }
 
+        // Ensure bot_responses table exists
+        const botTableRes = await fetch(`/api.php`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            table: "bot_responses",
+            create_table: true,
+            columns: {
+              id: "INT AUTO_INCREMENT PRIMARY KEY",
+              keyword: "VARCHAR(255) NOT NULL",
+              answer: "TEXT NOT NULL",
+              createdAt: "DATETIME DEFAULT CURRENT_TIMESTAMP",
+            },
+          }),
+        }).catch(() => null);
+
+        if (botTableRes && botTableRes.ok) {
+          console.log("Bot responses table initialized");
+        }
+
+        // Check if bot_responses table has any data
+        const checkRes = await fetch(`/api.php?table=bot_responses`);
+        if (checkRes.ok) {
+          const botData = await checkRes.json();
+          const isEmpty = !Array.isArray(botData) || botData.length === 0;
+
+          // If empty, auto-seed with default responses
+          if (isEmpty) {
+            const defaultResponses = [
+              {
+                keyword: "hours",
+                answer:
+                  "Our business hours are Monday - Friday: 8:00 AM - 5:00 PM, Saturday: 9:00 AM - 2:00 PM, Sunday: Closed.",
+              },
+              {
+                keyword: "location",
+                answer:
+                  "We are located at Cornbelt Flour Mill Limited, National Cereals & Produce Board Land, Kenya.",
+              },
+              {
+                keyword: "contact",
+                answer:
+                  "You can reach us via email at info@cornbeltmill.com or support@cornbeltmill.com, or use the contact form on our website.",
+              },
+              {
+                keyword: "products",
+                answer:
+                  "We offer a range of fortified maize meal and other products. Visit our Products page for more details.",
+              },
+              {
+                keyword: "shipping",
+                answer:
+                  "For shipping inquiries, please contact our support team via email and provide your location so we can advise on availability and rates.",
+              },
+            ];
+
+            // Seed default responses
+            for (const response of defaultResponses) {
+              await fetch(`/api.php?table=bot_responses`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(response),
+              }).catch((e) => {
+                console.warn("Failed to seed bot response:", response.keyword, e);
+              });
+            }
+
+            console.log("Default bot responses seeded successfully");
+          }
+        }
+
         // Now fetch messages
         const res = await fetch(`/api.php?table=chats`);
         if (res.ok) {
