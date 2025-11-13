@@ -511,6 +511,25 @@ export default function AdminVisitorTracking() {
                       <td className="px-6 py-4 text-sm text-muted-foreground font-mono">
                         {visitor.ip_address || "N/A"}
                       </td>
+                      <td className="px-6 py-4 text-sm">
+                        <span className="inline-flex items-center gap-2">
+                          {visitor.geolocation_country_code ? (
+                            <>
+                              <span className="text-base">
+                                {get_country_flag(
+                                  visitor.geolocation_country_code
+                                )}
+                              </span>
+                              <span>{visitor.geolocation_country || "N/A"}</span>
+                            </>
+                          ) : (
+                            <span className="text-muted-foreground">N/A</span>
+                          )}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-muted-foreground">
+                        {visitor.geolocation_city || "N/A"}
+                      </td>
                       <td className="px-6 py-4 text-sm text-muted-foreground">
                         {visitor.browser_language}
                       </td>
