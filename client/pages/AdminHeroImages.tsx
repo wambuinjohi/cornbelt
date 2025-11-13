@@ -1109,6 +1109,24 @@ export default function AdminHeroImages() {
           </div>
         </div>
       </div>
+
+      {/* Removal Confirmation Modal */}
+      <AlertDialog open={removalConfirmOpen} onOpenChange={setRemovalConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove Fallback Image?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to remove this fallback image? You can restore it anytime by clicking the "Restore Fallbacks" button.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmRemoveFallbackImage} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AdminLayout>
   );
 }
