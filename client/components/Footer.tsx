@@ -32,14 +32,13 @@ export default function Footer() {
 
         // Try multiple endpoints with fallback strategy
         const endpoints = [
-          { url: "/api/footer-settings", name: "Direct API endpoint" },
-          { url: "/api.php?action=footer-settings", name: "PHP API with action" },
-          { url: "/api.php?table=footer_settings", name: "PHP API table query" },
+          "/api/footer-settings",
+          "/api.php?table=footer_settings",
         ];
 
-        for (const endpoint of endpoints) {
+        for (const url of endpoints) {
           try {
-            response = await fetch(endpoint.url, {
+            response = await fetch(url, {
               method: "GET",
               headers: { Accept: "application/json" },
             });
