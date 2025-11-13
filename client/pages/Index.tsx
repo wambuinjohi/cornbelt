@@ -5,6 +5,7 @@ import Footer from "@/components/Footer";
 import HeroSlider from "@/components/HeroSlider";
 import ProductGallery from "@/components/ProductGallery";
 import TestimonialsSection from "@/components/TestimonialsSection";
+import NewsletterSection from "@/components/NewsletterSection";
 import ChatWidget from "@/components/ChatWidget";
 import {
   useUpdateMetaTags,
