@@ -260,7 +260,6 @@ export default function AdminFooter() {
       }
 
       const token = localStorage.getItem("adminToken");
-      const adminFetch = (await import("@/lib/adminApi")).default;
 
       // Prepare the body
       const payloadData = {
