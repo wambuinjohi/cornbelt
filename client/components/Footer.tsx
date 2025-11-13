@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
   Mail,
@@ -8,8 +9,38 @@ import {
   Twitter,
 } from "lucide-react";
 
+interface FooterSettings {
+  id: number;
+  phone: string;
+  email: string;
+  location: string;
+  facebookUrl?: string;
+  instagramUrl?: string;
+  twitterUrl?: string;
+}
+
 export default function Footer() {
   const currentYear = new Date().getFullYear();
+  const [footerData, setFooterData] = useState<FooterSettings | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchFooterSettings = async () => {
+      try {
+        const response = await fetch('/api.php?table=footer_settings');
+        const data = await response.json();
+        if (Array.isArray(data) && data.length > 0) {
+          setFooterData(data[0]);
+        }
+      } catch (error) {
+        console.error('Error fetching footer settings:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchFooterSettings();
+  }, []);
 
   return (
     <footer className="w-full bg-foreground text-background">
