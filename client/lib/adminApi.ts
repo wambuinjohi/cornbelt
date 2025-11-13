@@ -139,8 +139,12 @@ export default async function adminFetch(
     if (resource === "upload" && method === "POST") {
       // forward JSON body if present
       let bodyObj: any = null;
+      let bodyStr: string | undefined = undefined;
       try {
-        bodyObj = init.body ? JSON.parse(init.body as string) : null;
+        if (typeof init.body === "string") {
+          bodyStr = init.body;
+          bodyObj = JSON.parse(init.body);
+        }
       } catch {}
       // try upload across bases
       let phpRes: Response | null = null;
@@ -153,7 +157,7 @@ export default async function adminFetch(
               "Content-Type": "application/json",
               ...(init.headers || {}),
             },
-            body: bodyObj ? JSON.stringify(bodyObj) : init.body,
+            body: bodyStr || (bodyObj ? JSON.stringify(bodyObj) : undefined),
           });
           if (phpRes) break;
         } catch (e) {
