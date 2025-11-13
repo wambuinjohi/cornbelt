@@ -2,7 +2,7 @@
 
 // Add geolocation columns to visitor_tracking table for IP-to-location enrichment
 
-const http = require('http');
+import http from 'http';
 
 function makeRequest(method, path, data = null) {
   return new Promise((resolve, reject) => {
