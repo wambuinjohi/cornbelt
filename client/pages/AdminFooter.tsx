@@ -295,11 +295,14 @@ export default function AdminFooter() {
 
         // If Node endpoint fails, try PHP endpoint
         if (!response || !response.ok) {
-          response = await fetch(`/api.php?table=footer_settings&id=${footerData.id}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ id: footerData.id, ...payloadData }),
-          });
+          response = await fetch(
+            `/api.php?table=footer_settings&id=${footerData.id}`,
+            {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ id: footerData.id, ...payloadData }),
+            },
+          );
         }
 
         if (!response) {

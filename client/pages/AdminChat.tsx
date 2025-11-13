@@ -142,7 +142,11 @@ export default function AdminChat() {
         for (const msg of data) {
           const sid = msg.sessionId || msg.sessionId;
           if (!sessions[sid]) {
-            sessions[sid] = { sessionId: sid, lastMessageAt: msg.createdAt, messages: [] };
+            sessions[sid] = {
+              sessionId: sid,
+              lastMessageAt: msg.createdAt,
+              messages: [],
+            };
           }
           sessions[sid].messages.push(msg);
           sessions[sid].lastMessageAt = msg.createdAt;
@@ -313,11 +317,31 @@ export default function AdminChat() {
       // If Node endpoint fails, seed default responses via PHP
       if (!res || !res.ok) {
         const defaultResponses = [
-          { keyword: "hours", answer: "Our business hours are Monday - Friday: 8:00 AM - 5:00 PM, Saturday: 9:00 AM - 2:00 PM, Sunday: Closed." },
-          { keyword: "location", answer: "We are located at Cornbelt Flour Mill Limited, National Cereals & Produce Board Land, Kenya." },
-          { keyword: "contact", answer: "You can reach us via email at info@cornbeltmill.com or support@cornbeltmill.com, or use the contact form on our website." },
-          { keyword: "products", answer: "We offer a range of fortified maize meal and other products. Visit our Products page for more details." },
-          { keyword: "shipping", answer: "For shipping inquiries, please contact our support team via email and provide your location so we can advise on availability and rates." }
+          {
+            keyword: "hours",
+            answer:
+              "Our business hours are Monday - Friday: 8:00 AM - 5:00 PM, Saturday: 9:00 AM - 2:00 PM, Sunday: Closed.",
+          },
+          {
+            keyword: "location",
+            answer:
+              "We are located at Cornbelt Flour Mill Limited, National Cereals & Produce Board Land, Kenya.",
+          },
+          {
+            keyword: "contact",
+            answer:
+              "You can reach us via email at info@cornbeltmill.com or support@cornbeltmill.com, or use the contact form on our website.",
+          },
+          {
+            keyword: "products",
+            answer:
+              "We offer a range of fortified maize meal and other products. Visit our Products page for more details.",
+          },
+          {
+            keyword: "shipping",
+            answer:
+              "For shipping inquiries, please contact our support team via email and provide your location so we can advise on availability and rates.",
+          },
         ];
 
         let count = 0;
@@ -337,7 +361,9 @@ export default function AdminChat() {
       if (!res || !res.ok) throw new Error("Failed to reseed responses");
 
       const data = await res.json();
-      toast.success(`Default responses loaded (${data.count || data.count || 5} responses)`);
+      toast.success(
+        `Default responses loaded (${data.count || data.count || 5} responses)`,
+      );
       await fetchResponses();
     } catch (e) {
       console.error(e);

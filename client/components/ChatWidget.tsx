@@ -115,14 +115,24 @@ export default function ChatWidget() {
                   seededCount++;
                   console.log("Seeded response:", response.keyword);
                 } else {
-                  console.warn("Failed to seed response:", response.keyword, seedRes.status);
+                  console.warn(
+                    "Failed to seed response:",
+                    response.keyword,
+                    seedRes.status,
+                  );
                 }
               } catch (e) {
-                console.warn("Failed to seed bot response:", response.keyword, e);
+                console.warn(
+                  "Failed to seed bot response:",
+                  response.keyword,
+                  e,
+                );
               }
             }
 
-            console.log(`Default bot responses seeded: ${seededCount}/${defaultResponses.length}`);
+            console.log(
+              `Default bot responses seeded: ${seededCount}/${defaultResponses.length}`,
+            );
           } else {
             console.log(`Found ${botData.length} existing bot responses`);
           }
