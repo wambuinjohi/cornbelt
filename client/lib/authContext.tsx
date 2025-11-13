@@ -120,12 +120,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = (newToken: string, newUser: AdminUser) => {
     console.log("[Auth] Logging in user:", newUser.email);
-    setToken(newToken);
-    setUser(newUser);
     try {
       localStorage.setItem("adminToken", newToken);
       localStorage.setItem("adminUser", JSON.stringify(newUser));
       console.log("[Auth] Credentials saved to localStorage");
+      dispatch({ type: "LOGIN", token: newToken, user: newUser });
     } catch (error) {
       console.error("[Auth] Failed to save credentials to localStorage:", error);
     }
@@ -133,8 +132,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = () => {
     console.log("[Auth] Logging out");
-    setToken(null);
-    setUser(null);
     try {
       localStorage.removeItem("adminToken");
       localStorage.removeItem("adminUser");
@@ -142,13 +139,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error("[Auth] Failed to remove credentials from localStorage:", error);
     }
+    dispatch({ type: "LOGOUT" });
   };
 
   const value: AuthContextType = {
-    user,
-    token,
-    isLoading,
-    isAuthenticated: !!token && !!user,
+    ...state,
+    isAuthenticated: !!state.token && !!state.user,
     login,
     logout,
   };
