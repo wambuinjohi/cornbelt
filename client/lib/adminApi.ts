@@ -46,7 +46,8 @@ export default async function adminFetch(
         if (age >= 0 && age < TTL && parsed.backend) {
           if (parsed.backend === "node") {
             try {
-              const res = await fetch(adminUrl, init);
+              const nodeBody = typeof init.body === "string" ? init.body : undefined;
+              const res = await fetch(adminUrl, { ...init, body: nodeBody });
               const ct = res.headers.get("content-type") || "";
               if (res.ok && ct.includes("application/json"))
                 return {
