@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import AdminLayout from "@/components/AdminLayout";
 import { toast } from "sonner";
-import { Mail, Images } from "lucide-react";
+import { Mail, Images, FileText } from "lucide-react";
 
 interface AdminUser {
   id: number;
