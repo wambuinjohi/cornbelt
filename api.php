@@ -83,6 +83,25 @@ if ($conn->connect_error) {
 
 // Public endpoint for footer settings (no authentication required)
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && strpos($_SERVER['REQUEST_URI'], '/api/footer-settings') !== false) {
+    // Check if table exists, create if not
+    $tableExists = $conn->query("SHOW TABLES LIKE 'footer_settings'");
+    if (!$tableExists || $tableExists->num_rows === 0) {
+        // Create the table
+        $createTableSql = "CREATE TABLE IF NOT EXISTS `footer_settings` (
+            `id` INT AUTO_INCREMENT PRIMARY KEY,
+            `phone` VARCHAR(255),
+            `email` VARCHAR(255),
+            `location` VARCHAR(255),
+            `facebookUrl` VARCHAR(500),
+            `instagramUrl` VARCHAR(500),
+            `twitterUrl` VARCHAR(500),
+            `createdAt` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            `updatedAt` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        )";
+        $conn->query($createTableSql);
+    }
+
+    // Try to fetch existing settings
     $res = $conn->query("SELECT * FROM `footer_settings` LIMIT 1");
     if ($res && $res->num_rows > 0) {
         $row = $res->fetch_assoc();
