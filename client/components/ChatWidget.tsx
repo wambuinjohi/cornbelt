@@ -64,13 +64,16 @@ export default function ChatWidget() {
         }
 
         // Check if bot_responses table has any data
+        console.log("Checking for existing bot responses...");
         const checkRes = await fetch(`/api.php?table=bot_responses`);
         if (checkRes.ok) {
           const botData = await checkRes.json();
+          console.log("Existing bot responses:", botData);
           const isEmpty = !Array.isArray(botData) || botData.length === 0;
 
           // If empty, auto-seed with default responses
           if (isEmpty) {
+            console.log("Bot responses table is empty, seeding defaults...");
             const defaultResponses = [
               {
                 keyword: "hours",
@@ -99,19 +102,32 @@ export default function ChatWidget() {
               },
             ];
 
-            // Seed default responses
+            // Seed default responses with better error handling
+            let seededCount = 0;
             for (const response of defaultResponses) {
-              await fetch(`/api.php?table=bot_responses`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(response),
-              }).catch((e) => {
+              try {
+                const seedRes = await fetch(`/api.php?table=bot_responses`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify(response),
+                });
+                if (seedRes.ok) {
+                  seededCount++;
+                  console.log("Seeded response:", response.keyword);
+                } else {
+                  console.warn("Failed to seed response:", response.keyword, seedRes.status);
+                }
+              } catch (e) {
                 console.warn("Failed to seed bot response:", response.keyword, e);
-              });
+              }
             }
 
-            console.log("Default bot responses seeded successfully");
+            console.log(`Default bot responses seeded: ${seededCount}/${defaultResponses.length}`);
+          } else {
+            console.log(`Found ${botData.length} existing bot responses`);
           }
+        } else {
+          console.warn("Failed to fetch bot responses:", checkRes.status);
         }
 
         // Now fetch messages
