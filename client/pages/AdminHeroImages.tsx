@@ -202,8 +202,12 @@ export default function AdminHeroImages() {
       const data = await response.json();
       const imageList = Array.isArray(data) ? data : [];
 
+      // Separate active and archived images
+      const activeImages = imageList.filter((img: HeroImage) => !img.isArchived);
+      const archived = imageList.filter((img: HeroImage) => img.isArchived);
+
       // Use fallback images if database is empty
-      if (imageList.length === 0) {
+      if (activeImages.length === 0) {
         console.log("[Hero Images] Database empty, using fallback images");
         setImages(FALLBACK_IMAGES);
         setIsFallback(true);
@@ -213,11 +217,13 @@ export default function AdminHeroImages() {
           JSON.stringify(FALLBACK_IMAGES),
         );
       } else {
-        setImages(imageList);
+        setImages(activeImages);
         setIsFallback(false);
         // Cache fetched images in localStorage for offline access
-        localStorage.setItem("heroImagesCache", JSON.stringify(imageList));
+        localStorage.setItem("heroImagesCache", JSON.stringify(activeImages));
       }
+
+      setArchivedImages(archived);
     } catch (error) {
       console.error("Error fetching images:", error);
       // Try to load from localStorage cache on error
