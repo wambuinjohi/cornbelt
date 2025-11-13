@@ -27,8 +27,13 @@ export default function Footer() {
   useEffect(() => {
     const fetchFooterSettings = async () => {
       try {
-        // Try the public API endpoint first
-        const response = await fetch("/api/footer-settings");
+        // Try the Node/Express endpoint first
+        let response = await fetch("/api/footer-settings");
+
+        // If that fails or returns empty, try the PHP endpoint
+        if (!response.ok) {
+          response = await fetch("/api.php?table=footer_settings");
+        }
 
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}`);
@@ -36,9 +41,19 @@ export default function Footer() {
 
         const data = await response.json();
 
+        // Handle both single object and array responses
+        let footerSettings = null;
+        if (data && typeof data === "object") {
+          if (Array.isArray(data)) {
+            footerSettings = data.length > 0 ? data[0] : null;
+          } else {
+            footerSettings = data;
+          }
+        }
+
         // Accept data if it has the expected structure
-        if (data && typeof data === "object" && (data.id || data.email)) {
-          setFooterData(data);
+        if (footerSettings && (footerSettings.id || footerSettings.email)) {
+          setFooterData(footerSettings);
         }
       } catch (error) {
         console.error("Error fetching footer settings:", error);
