@@ -27,24 +27,16 @@ export default function Footer() {
   useEffect(() => {
     const fetchFooterSettings = async () => {
       try {
-        console.log("Starting footer settings fetch...");
-
-        // Try Node endpoint first (development), fallback to PHP endpoint (production)
-        let response = await fetch("/api/footer-settings").catch(() => null);
-
-        if (!response || !response.ok) {
-          console.log("Node endpoint failed, trying PHP endpoint...");
-          response = await fetch("/api.php?table=footer_settings");
-        }
-
-        console.log("API response status:", response?.status);
+        const response = await fetch("/api.php?action=get-footer-settings", {
+          method: "GET",
+          headers: { Accept: "application/json" },
+        });
 
         if (!response || !response.ok) {
-          throw new Error(`HTTP ${response?.status || "unknown"}`);
+          throw new Error(`Failed to fetch footer settings`);
         }
 
         const data = await response.json();
-        console.log("Fetched footer data:", data);
 
         // Handle both single object and array responses
         let footerSettings = null;
@@ -56,21 +48,16 @@ export default function Footer() {
           }
         }
 
-        console.log("Processed footer settings:", footerSettings);
-
         // Accept data if it has the expected structure
         if (
           footerSettings &&
           (footerSettings.id || footerSettings.email || footerSettings.phone)
         ) {
-          console.log("Setting footer data:", footerSettings);
           setFooterData(footerSettings);
-        } else {
-          console.warn("Footer settings missing required fields");
         }
       } catch (error) {
         console.error("Error fetching footer settings:", error);
-        // Fallback data will remain set in initial state
+        console.log("Falling back to default footer settings");
       } finally {
         setIsLoading(false);
       }

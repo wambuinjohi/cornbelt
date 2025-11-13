@@ -482,12 +482,12 @@ async function initializeAdminTable() {
     const existingFooter = await apiCall("GET", "footer_settings");
     if (!Array.isArray(existingFooter) || existingFooter.length === 0) {
       await apiCall("POST", "footer_settings", {
-        phone: "+254 (0) XXX XXX XXX",
+        phone: "+254 123 456 789",
         email: "info@cornbelt.co.ke",
         location: "Kenya",
-        facebookUrl: "https://facebook.com",
-        instagramUrl: "https://instagram.com",
-        twitterUrl: "https://twitter.com",
+        facebookUrl: "https://facebook.com/cornbelt",
+        instagramUrl: "https://instagram.com/cornbelt",
+        twitterUrl: "https://twitter.com/cornbelt",
       });
 
       console.log("Default footer settings seeded");
@@ -1570,6 +1570,41 @@ Disallow: /api/`;
       const seq = (app.locals._phpSeq ||= {} as Record<string, number>);
 
       const method = req.method.toUpperCase();
+
+      // Handle special action endpoints
+      const action = req.query.action as string | undefined;
+      if (action === "get-footer-settings" && method === "GET") {
+        // Public footer settings endpoint
+        const footerTable = "footer_settings";
+
+        // Try to fetch from actual database first (if connected)
+        const ensureTable = (name: string) => {
+          if (!db[name]) {
+            db[name] = [];
+            meta[name] = {};
+            seq[name] = 1;
+          }
+        };
+
+        ensureTable(footerTable);
+
+        // If table has data, return it
+        if (db[footerTable] && db[footerTable].length > 0) {
+          return res.json(db[footerTable][0]);
+        }
+
+        // Otherwise return fallback with proper defaults (including empty social URLs for user to fill in)
+        return res.json({
+          id: 0,
+          phone: "+254 (0) XXX XXX XXX",
+          email: "info@cornbelt.co.ke",
+          location: "Kenya",
+          facebookUrl: "",
+          instagramUrl: "",
+          twitterUrl: "",
+        });
+      }
+
       const table = (req.query.table || req.body.table) as string;
       const idParam = req.query.id as string | undefined;
 
