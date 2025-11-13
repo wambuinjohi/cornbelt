@@ -27,10 +27,10 @@ export default function Footer() {
   useEffect(() => {
     const fetchFooterSettings = async () => {
       try {
-        const response = await fetch("/api.php?table=footer_settings");
+        const response = await fetch("/api/footer-settings");
         const data = await response.json();
-        if (Array.isArray(data) && data.length > 0) {
-          setFooterData(data[0]);
+        if (data && typeof data === "object" && data.id) {
+          setFooterData(data);
         }
       } catch (error) {
         console.error("Error fetching footer settings:", error);
