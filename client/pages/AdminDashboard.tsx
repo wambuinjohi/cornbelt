@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import AdminLayout from "@/components/AdminLayout";
 import { toast } from "sonner";
 import { Mail, Images, FileText } from "lucide-react";
+import { useAuth } from "@/lib/authContext";
 
 interface AdminUser {
   id: number;
@@ -12,37 +13,19 @@ interface AdminUser {
 }
 
 export default function AdminDashboard() {
-  const navigate = useNavigate();
-  const [user, setUser] = useState<AdminUser | null>(null);
+  const { user, token } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [contactSubmissions, setContactSubmissions] = useState<any[]>([]);
 
   useEffect(() => {
-    // Check if user is authenticated
-    const token = localStorage.getItem("adminToken");
-    const userData = localStorage.getItem("adminUser");
-
-    if (!token || !userData) {
-      navigate("/admin/login");
-      return;
-    }
-
-    try {
-      setUser(JSON.parse(userData));
+    if (user) {
       fetchContactSubmissions();
-    } catch (error) {
-      console.error("Error parsing user data:", error);
-      localStorage.removeItem("adminToken");
-      localStorage.removeItem("adminUser");
-      navigate("/admin/login");
-    } finally {
-      setIsLoading(false);
     }
-  }, [navigate]);
+    setIsLoading(false);
+  }, [user]);
 
   const fetchContactSubmissions = async () => {
     try {
-      const token = localStorage.getItem("adminToken");
       const response = await (
         await import("@/lib/adminApi")
       ).default("/api/admin/contact-submissions", {
