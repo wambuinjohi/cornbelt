@@ -188,12 +188,18 @@ export default function Footer() {
             reserved.
           </p>
           <div className="flex gap-6 mt-4 md:mt-0">
-            <a href="#" className="hover:opacity-100 transition-opacity">
+            <Link
+              to="/privacy-policy"
+              className="hover:opacity-100 transition-opacity"
+            >
               Privacy Policy
-            </a>
-            <a href="#" className="hover:opacity-100 transition-opacity">
+            </Link>
+            <Link
+              to="/terms-of-service"
+              className="hover:opacity-100 transition-opacity"
+            >
               Terms of Service
-            </a>
+            </Link>
           </div>
         </div>
       </div>
