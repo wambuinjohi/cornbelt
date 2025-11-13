@@ -453,13 +453,6 @@ export default function AdminHeroImages() {
     }
 
     try {
-      if (newActive) {
-        const ok = confirm(
-          "Marking this image active will unset other active images. Continue?",
-        );
-        if (!ok) return;
-      }
-
       const token = localStorage.getItem("adminToken");
       const adminFetch = (await import("@/lib/adminApi")).default;
       const response = await adminFetch(`/api/admin/hero-images/${id}`, {
@@ -472,14 +465,16 @@ export default function AdminHeroImages() {
       });
 
       if (!response || !response.ok) {
-        throw new Error("Failed to toggle active");
+        throw new Error("Failed to update visibility");
       }
 
-      toast.success("Updated");
+      toast.success(
+        newActive ? "Image shown in slider" : "Image hidden from slider",
+      );
       fetchImages();
     } catch (error) {
-      console.error("Error toggling active:", error);
-      toast.error("Failed to update");
+      console.error("Error updating visibility:", error);
+      toast.error("Failed to update visibility");
     }
   };
 
