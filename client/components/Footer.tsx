@@ -40,9 +40,7 @@ export default function Footer() {
         console.log("API response status:", response?.status);
 
         if (!response || !response.ok) {
-          throw new Error(
-            `HTTP ${response?.status || "unknown"}`
-          );
+          throw new Error(`HTTP ${response?.status || "unknown"}`);
         }
 
         const data = await response.json();
@@ -63,9 +61,7 @@ export default function Footer() {
         // Accept data if it has the expected structure
         if (
           footerSettings &&
-          (footerSettings.id ||
-            footerSettings.email ||
-            footerSettings.phone)
+          (footerSettings.id || footerSettings.email || footerSettings.phone)
         ) {
           console.log("Setting footer data:", footerSettings);
           setFooterData(footerSettings);

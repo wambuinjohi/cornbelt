@@ -9,6 +9,7 @@
 ## Root Cause Analysis
 
 ### The Problem
+
 When the footer requested data from `/api.php?table=footer_settings` on Apache, the request failed because:
 
 1. **Missing Public Handler**: The `api.php` file had special public (unauthenticated) GET handlers for:
@@ -17,7 +18,7 @@ When the footer requested data from `/api.php?table=footer_settings` on Apache, 
    - `testimonials`
    - `bot-responses`
    - `newsletter-requests`
-   
+
    **But NOT for `footer-settings`**
 
 2. **Authentication Fallthrough**: Requests for `footer-settings` fell through to the generic admin handler (line 670-700) which:
@@ -34,6 +35,7 @@ When the footer requested data from `/api.php?table=footer_settings` on Apache, 
 ## Solution Implemented
 
 ### 1. Added Public Handler in api.php (Lines 741-763)
+
 ```php
 if ($resource === 'footer-settings') {
     // Public endpoint - no authentication required
@@ -60,12 +62,15 @@ if ($resource === 'footer-settings') {
 ```
 
 **What this does:**
+
 - ✅ Returns footer data without requiring authentication
 - ✅ Auto-seeds default values if table is empty
 - ✅ Consistent with other public endpoints (testimonials, hero-images, etc.)
 
 ### 2. Footer Component Flow (Already Correct)
+
 The `client/components/Footer.tsx` already had the correct fallback logic:
+
 ```typescript
 // Try Node endpoint first (development)
 let response = await fetch("/api/footer-settings").catch(() => null);
@@ -81,6 +86,7 @@ if (!response || !response.ok) {
 ## Data Flow on Apache Deployment
 
 ### Before Fix ❌
+
 ```
 Footer Component
     ↓
@@ -92,6 +98,7 @@ Error caught → Display fallback data
 ```
 
 ### After Fix ✅
+
 ```
 Footer Component
     ↓
@@ -111,7 +118,7 @@ Database data returned → Display real contact info
    - Auto-seeds default values if table is empty
    - No authentication required
 
-2. **client/components/Footer.tsx** 
+2. **client/components/Footer.tsx**
    - No changes needed (already correct fallback logic)
 
 ---
@@ -119,11 +126,13 @@ Database data returned → Display real contact info
 ## Testing Checklist
 
 ### Development Environment
+
 - ✅ Footer fetches from `/api/footer-settings` (Node endpoint)
 - ✅ Falls back to `/api.php?table=footer_settings` if Node fails
 - ✅ Displays real data from database
 
 ### Apache Deployment
+
 - ✅ Footer attempts `/api/footer-settings` → Timeouts
 - ✅ Falls back to `/api.php?table=footer_settings` → 200 OK
 - ✅ Displays real data from database
@@ -131,7 +140,9 @@ Database data returned → Display real contact info
 - ✅ Auto-seeds default values on first request
 
 ### Browser Console Logs
+
 Should show:
+
 ```
 Starting footer settings fetch...
 API response status: 200
@@ -145,6 +156,7 @@ Setting footer data: {...}
 ## Database Auto-Seeding
 
 If the `footer_settings` table is empty on first request:
+
 1. Default values are automatically inserted:
    - Phone: `+254 (0) XXX XXX XXX`
    - Email: `info@cornbelt.co.ke`
@@ -162,6 +174,7 @@ If the `footer_settings` table is empty on first request:
 ✅ **Footer now loads dynamic database data on Apache deployment**
 
 The fix ensures:
+
 - Public (unauthenticated) access to footer settings
 - Consistent behavior across development and production
 - Automatic fallback for missing database values
@@ -170,6 +183,7 @@ The fix ensures:
 ---
 
 ## Related Files
+
 - `client/components/Footer.tsx` - Footer component with dual endpoint support
 - `server/index.ts` - Node.js fallback endpoint (development only)
 - `api.php` - PHP backend (production on Apache)
