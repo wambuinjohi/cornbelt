@@ -42,10 +42,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
 
         if (storedToken && storedUser) {
-          const parsedUser = JSON.parse(storedUser);
-          console.log("[Auth] Successfully parsed user:", parsedUser);
-          setToken(storedToken);
-          setUser(parsedUser);
+          try {
+            const parsedUser = JSON.parse(storedUser);
+            console.log("[Auth] Successfully parsed user:", parsedUser);
+            setToken(storedToken);
+            setUser(parsedUser);
+          } catch (parseError) {
+            console.error("[Auth] Failed to parse stored user:", parseError);
+            localStorage.removeItem("adminToken");
+            localStorage.removeItem("adminUser");
+          }
         } else {
           console.log("[Auth] No stored credentials found in localStorage");
         }
@@ -54,6 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.removeItem("adminToken");
         localStorage.removeItem("adminUser");
       } finally {
+        // Mark loading as complete after attempting to restore
         setIsLoading(false);
       }
     };
