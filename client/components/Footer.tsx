@@ -27,18 +27,11 @@ export default function Footer() {
   useEffect(() => {
     const fetchFooterSettings = async () => {
       try {
-        console.log("Starting footer settings fetch...");
+        console.log("Starting footer settings fetch from api.php...");
 
-        // Try the Node/Express endpoint first
-        let response = await fetch("/api/footer-settings");
-        console.log("Node endpoint response:", response.status);
-
-        // If that fails or returns empty, try the PHP endpoint
-        if (!response.ok) {
-          console.log("Node endpoint failed, trying PHP endpoint...");
-          response = await fetch("/api.php?table=footer_settings");
-          console.log("PHP endpoint response:", response.status);
-        }
+        // Use api.php endpoint directly (works on Apache without Node server)
+        const response = await fetch("/api.php?table=footer_settings");
+        console.log("API response status:", response.status);
 
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}`);
