@@ -52,7 +52,7 @@ export default function Footer() {
               <img
                 src="https://cdn.builder.io/api/v1/image/assets%2Fbf7a511dd4454ae88c7c49627a9a0f54%2F80b3bed3a8e14bf3ae5cc941d2cfab50?format=webp&width=100"
                 alt="Cornbelt Logo"
-                className="w-12 h-12 object-contain"
+                className="w-16 h-16 object-contain"
               />
               <div>
                 <div className="font-bold text-lg">CORNBELT</div>
