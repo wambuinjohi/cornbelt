@@ -62,8 +62,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['act
     exit;
 }
 
+$DB_HOST = getenv('DB_HOST');
+$DB_USER = getenv('DB_USER');
+$DB_PASS = getenv('DB_PASS');
+$DB_NAME = getenv('DB_NAME');
+
+if (!$DB_HOST || !$DB_USER || $DB_PASS === false || !$DB_NAME) {
+    http_response_code(500);
+    echo json_encode(["error" => "Database credentials not configured. Please set DB_HOST, DB_USER, DB_PASS and DB_NAME environment variables (or provide a .env file)."]);
+    exit;
+}
+
+// Connect
+$conn = new mysqli($DB_HOST, $DB_USER, $DB_PASS, $DB_NAME);
+if ($conn->connect_error) {
+    http_response_code(500);
+    echo json_encode(["error" => "Database connection failed: " . $conn->connect_error]);
+    exit;
+}
+
 // Public endpoint for footer settings (no authentication required)
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && strpos($_SERVER['REQUEST_URI'], '/api/footer-settings') !== false) {
+    // Check if table exists, create if not
+    $tableExists = $conn->query("SHOW TABLES LIKE 'footer_settings'");
+    if (!$tableExists || $tableExists->num_rows === 0) {
+        // Create the table
+        $createTableSql = "CREATE TABLE IF NOT EXISTS `footer_settings` (
+            `id` INT AUTO_INCREMENT PRIMARY KEY,
+            `phone` VARCHAR(255),
+            `email` VARCHAR(255),
+            `location` VARCHAR(255),
+            `facebookUrl` VARCHAR(500),
+            `instagramUrl` VARCHAR(500),
+            `twitterUrl` VARCHAR(500),
+            `createdAt` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            `updatedAt` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        )";
+        $conn->query($createTableSql);
+    }
+
+    // Try to fetch existing settings
     $res = $conn->query("SELECT * FROM `footer_settings` LIMIT 1");
     if ($res && $res->num_rows > 0) {
         $row = $res->fetch_assoc();
@@ -81,25 +119,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && strpos($_SERVER['REQUEST_URI'], '/ap
         ]);
     }
     $conn->close();
-    exit;
-}
-
-$DB_HOST = getenv('DB_HOST');
-$DB_USER = getenv('DB_USER');
-$DB_PASS = getenv('DB_PASS');
-$DB_NAME = getenv('DB_NAME');
-
-if (!$DB_HOST || !$DB_USER || $DB_PASS === false || !$DB_NAME) {
-    http_response_code(500);
-    echo json_encode(["error" => "Database credentials not configured. Please set DB_HOST, DB_USER, DB_PASS and DB_NAME environment variables (or provide a .env file)."]);
-    exit;
-}
-
-// Connect
-$conn = new mysqli($DB_HOST, $DB_USER, $DB_PASS, $DB_NAME);
-if ($conn->connect_error) {
-    http_response_code(500);
-    echo json_encode(["error" => "Database connection failed: " . $conn->connect_error]);
     exit;
 }
 
