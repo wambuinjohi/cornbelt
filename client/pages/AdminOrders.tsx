@@ -29,7 +29,7 @@ interface Order {
   deliveryDate: string;
   notes: string;
   status: string;
-  totalPrice: number;
+  totalPrice: number | string;
   createdAt: string;
   updatedAt: string;
 }
