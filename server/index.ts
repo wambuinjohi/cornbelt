@@ -1231,6 +1231,36 @@ Disallow: /api/`;
     return mimeTypes[ext || "jpeg"] || "jpeg";
   }
 
+  // Public endpoint to get footer settings (auto-initializes if empty)
+  app.get("/api/footer-settings", async (_req, res) => {
+    try {
+      const settings = await apiCall("GET", "footer_settings");
+      let arr = Array.isArray(settings) ? settings : [];
+
+      if (arr.length === 0) {
+        // Table is empty, insert default settings
+        const defaultSettings = {
+          phone: "+254 (0) XXX XXX XXX",
+          email: "info@cornbelt.co.ke",
+          location: "Kenya",
+          facebookUrl: "https://facebook.com",
+          instagramUrl: "https://instagram.com",
+          twitterUrl: "https://twitter.com",
+        };
+
+        const insertResult = await apiCall("POST", "footer_settings", defaultSettings);
+        if (!insertResult.error && insertResult.id) {
+          arr = [{ id: insertResult.id, ...defaultSettings }];
+        }
+      }
+
+      res.json(arr.length > 0 ? arr[0] : null);
+    } catch (error) {
+      console.error("Error fetching footer settings:", error);
+      res.json(null);
+    }
+  });
+
   // Public endpoint to get hero images
   app.get("/api/hero-images", async (_req, res) => {
     try {
