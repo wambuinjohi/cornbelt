@@ -820,9 +820,27 @@ export default function AdminHeroImages() {
 
               {/* Active Images Tab */}
               <TabsContent value="active" className="mt-6">
-                <h2 className="text-2xl font-bold text-foreground mb-6">
-                  Current Images
-                </h2>
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-bold text-foreground">
+                    Current Images
+                  </h2>
+                  {removedFallbackIds.size > 0 && isFallback && (
+                    <Button
+                      onClick={() => {
+                        setRemovedFallbackIds(new Set());
+                        localStorage.removeItem("removedFallbackIds");
+                        fetchImages();
+                        toast.success("All fallback images restored!");
+                      }}
+                      variant="outline"
+                      size="sm"
+                      className="gap-2"
+                    >
+                      <RotateCcw className="w-4 h-4" />
+                      Restore Fallbacks ({removedFallbackIds.size})
+                    </Button>
+                  )}
+                </div>
 
                 {images.length === 0 ? (
                   <div className="text-center py-12">
