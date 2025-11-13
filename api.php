@@ -62,6 +62,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['act
     exit;
 }
 
+// Public endpoint for footer settings (no authentication required)
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && strpos($_SERVER['REQUEST_URI'], '/api/footer-settings') !== false) {
+    $res = $conn->query("SELECT * FROM `footer_settings` LIMIT 1");
+    if ($res && $res->num_rows > 0) {
+        $row = $res->fetch_assoc();
+        echo json_encode($row);
+    } else {
+        // Return minimal default if no settings exist yet
+        echo json_encode([
+            'id' => 0,
+            'phone' => '+254 (0) XXX XXX XXX',
+            'email' => 'info@cornbelt.co.ke',
+            'location' => 'Kenya',
+            'facebookUrl' => '',
+            'instagramUrl' => '',
+            'twitterUrl' => ''
+        ]);
+    }
+    $conn->close();
+    exit;
+}
+
 $DB_HOST = getenv('DB_HOST');
 $DB_USER = getenv('DB_USER');
 $DB_PASS = getenv('DB_PASS');
