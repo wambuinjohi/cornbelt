@@ -528,6 +528,22 @@ if (strpos($uri, '/api/admin') !== false) {
         exit;
     }
 
+    // Footer settings GET - return single record
+    if ($resource === 'footer-settings' && $_SERVER['REQUEST_METHOD'] === 'GET') {
+        $authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? null;
+        $token = null; if ($authHeader && preg_match('/Bearer\s+(\S+)/', $authHeader, $m)) $token = $m[1];
+        if (!$token || !verify_jwt($token)) { http_response_code(401); echo json_encode(['error'=>'Unauthorized']); $conn->close(); exit; }
+
+        $res = $conn->query("SELECT * FROM `footer_settings`");
+        $records = [];
+        if ($res) {
+            while ($r = $res->fetch_assoc()) $records[] = $r;
+        }
+        echo json_encode($records);
+        $conn->close();
+        exit;
+    }
+
     // Visitor tracking with IP-to-location enrichment
     if ($resource === 'visitor-tracking' && $_SERVER['REQUEST_METHOD'] === 'GET') {
         $authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? null;
