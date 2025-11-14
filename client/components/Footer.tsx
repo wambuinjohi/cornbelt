@@ -26,41 +26,63 @@ export default function Footer() {
 
   useEffect(() => {
     const fetchFooterSettings = async () => {
-      try {
-        const response = await fetch("/api.php?action=get-footer-settings", {
-          method: "GET",
-          headers: { Accept: "application/json" },
-        });
+      console.log("Starting footer settings fetch...");
+      const endpoints = [
+        "/api/footer-settings", // Node.js endpoint (development/Node servers)
+        "/api.php?action=get-footer-settings", // PHP action handler (legacy/fallback)
+      ];
 
-        if (!response || !response.ok) {
-          throw new Error(`Failed to fetch footer settings`);
-        }
+      let footerSettings: FooterSettings | null = null;
 
-        const data = await response.json();
+      for (const endpoint of endpoints) {
+        try {
+          console.log(`Attempting to fetch from: ${endpoint}`);
+          const response = await fetch(endpoint, {
+            method: "GET",
+            headers: { Accept: "application/json" },
+          });
 
-        // Handle both single object and array responses
-        let footerSettings = null;
-        if (data && typeof data === "object") {
-          if (Array.isArray(data)) {
-            footerSettings = data.length > 0 ? data[0] : null;
-          } else {
-            footerSettings = data;
+          console.log(`API response status: ${response.status}`);
+
+          if (response && response.ok) {
+            const data = await response.json();
+            console.log("Fetched footer data:", data);
+
+            // Handle both single object and array responses
+            if (data && typeof data === "object") {
+              if (Array.isArray(data)) {
+                footerSettings = data.length > 0 ? data[0] : null;
+              } else {
+                footerSettings = data;
+              }
+            }
+
+            // Accept data if it has the expected structure
+            if (
+              footerSettings &&
+              (footerSettings.id ||
+                footerSettings.email ||
+                footerSettings.phone)
+            ) {
+              console.log("Processed footer settings:", footerSettings);
+              setFooterData(footerSettings);
+              console.log("Setting footer data:", footerSettings);
+              break;
+            }
           }
+        } catch (error) {
+          console.log(
+            `Endpoint ${endpoint} failed: ${error instanceof Error ? error.message : String(error)}`,
+          );
+          continue;
         }
-
-        // Accept data if it has the expected structure
-        if (
-          footerSettings &&
-          (footerSettings.id || footerSettings.email || footerSettings.phone)
-        ) {
-          setFooterData(footerSettings);
-        }
-      } catch (error) {
-        console.error("Error fetching footer settings:", error);
-        console.log("Falling back to default footer settings");
-      } finally {
-        setIsLoading(false);
       }
+
+      if (!footerSettings) {
+        console.log("Using default footer settings");
+      }
+
+      setIsLoading(false);
     };
 
     fetchFooterSettings();
