@@ -60,7 +60,9 @@ export default function Footer() {
             // Accept data if it has the expected structure
             if (
               footerSettings &&
-              (footerSettings.id || footerSettings.email || footerSettings.phone)
+              (footerSettings.id ||
+                footerSettings.email ||
+                footerSettings.phone)
             ) {
               console.log("Processed footer settings:", footerSettings);
               setFooterData(footerSettings);
@@ -70,7 +72,7 @@ export default function Footer() {
           }
         } catch (error) {
           console.log(
-            `Endpoint ${endpoint} failed: ${error instanceof Error ? error.message : String(error)}`
+            `Endpoint ${endpoint} failed: ${error instanceof Error ? error.message : String(error)}`,
           );
           continue;
         }

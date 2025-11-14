@@ -23,6 +23,7 @@ The footer component implements a dual-endpoint fetch strategy with proper fallb
 ```
 
 **Key Features**:
+
 - ✅ Loads settings on component mount
 - ✅ Handles both object and array responses
 - ✅ Validates data structure before rendering
@@ -45,6 +46,7 @@ app.get("/api/footer-settings", async (_req, res) => {
 ```
 
 **Behavior**:
+
 - ✅ Public access (no JWT required)
 - ✅ Auto-creates table if missing
 - ✅ Auto-seeds default values if empty
@@ -64,6 +66,7 @@ if ($_GET['action'] === 'get-footer-settings') {
 ```
 
 **Behavior**:
+
 - ✅ Public access (no authentication)
 - ✅ Auto-creates table with proper schema
 - ✅ Auto-seeds all default fields
@@ -84,11 +87,13 @@ if (strpos($_SERVER['REQUEST_URI'], '/api/footer-settings') !== false) {
 #### 4. Admin Management Endpoints
 
 **Node.js** (`server/index.ts`):
+
 - `GET /api/admin/footer-settings` - List all settings (authenticated)
 - `POST /api/admin/footer-settings` - Create new settings (authenticated)
 - `PATCH /api/admin/footer-settings` - Update settings (authenticated)
 
 **PHP** (`api.php`, Lines 726-745):
+
 - `GET /api/admin/footer-settings` - Special handler (no auth required for GET)
 
 ---
@@ -167,6 +172,7 @@ Footer displays data
 **✅ VERIFIED: Contact and Social Media sections fetch WITHOUT authentication**
 
 Both endpoints are publicly accessible:
+
 - No JWT token required
 - No admin credentials needed
 - Accessible from browser console
@@ -230,6 +236,7 @@ This ensures the homepage footer populates correctly for all visitors.
 ### Manual Testing Steps
 
 1. **Development (Node Server)**
+
    ```bash
    npm run dev
    # Visit http://localhost:5173
@@ -244,17 +251,23 @@ This ensures the homepage footer populates correctly for all visitors.
    - No authentication errors
 
 3. **Browser Console Testing**
+
    ```javascript
    // Test public endpoint
-   fetch('/api/footer-settings').then(r => r.json()).then(d => console.log(d))
-   
+   fetch("/api/footer-settings")
+     .then((r) => r.json())
+     .then((d) => console.log(d));
+
    // Test PHP fallback
-   fetch('/api.php?action=get-footer-settings').then(r => r.json()).then(d => console.log(d))
+   fetch("/api.php?action=get-footer-settings")
+     .then((r) => r.json())
+     .then((d) => console.log(d));
    ```
 
 ### Console Logs
 
 When working correctly, footer component logs:
+
 ```
 Starting footer settings fetch...
 Attempting to fetch from: /api/footer-settings
@@ -265,6 +278,7 @@ Setting footer data: {...}
 ```
 
 Or on fallback:
+
 ```
 Starting footer settings fetch...
 Attempting to fetch from: /api/footer-settings
@@ -295,6 +309,7 @@ Fetched footer data: {...}
 Both endpoints check for table existence and create if needed:
 
 **PHP**:
+
 ```php
 $tableExists = $conn->query("SHOW TABLES LIKE 'footer_settings'");
 if (!$tableExists || $tableExists->num_rows === 0) {
@@ -303,10 +318,11 @@ if (!$tableExists || $tableExists->num_rows === 0) {
 ```
 
 **Node.js**:
+
 ```typescript
 const settings = await apiCall("GET", "footer_settings");
 if (!Array.isArray(settings) || settings.length === 0) {
-    // Insert defaults...
+  // Insert defaults...
 }
 ```
 
@@ -317,6 +333,7 @@ if (!Array.isArray(settings) || settings.length === 0) {
 Admin users can update footer settings via authenticated endpoints:
 
 **Node.js** (Development):
+
 ```bash
 curl -X PATCH http://localhost:5173/api/admin/footer-settings?id=1 \
   -H "Authorization: Bearer <token>" \
@@ -364,6 +381,7 @@ Changes are immediately reflected in footer due to real-time fetch on component 
 ### Response Caching
 
 The public endpoints return minimal data:
+
 - Single record (not full table scan)
 - Limited fields (only necessary data)
 - Fast database queries
@@ -383,6 +401,7 @@ The public endpoints return minimal data:
 
 **Cause**: Both endpoints failed to fetch
 **Solution**:
+
 1. Check server is running: `npm run dev`
 2. Verify database connection in api.php
 3. Check browser console for fetch errors
@@ -392,6 +411,7 @@ The public endpoints return minimal data:
 
 **Cause**: Database connection issues
 **Solution**:
+
 1. Verify DB_HOST, DB_USER, DB_PASS, DB_NAME in environment
 2. Check MySQL/MariaDB is running
 3. Verify user has CREATE TABLE permissions
@@ -400,6 +420,7 @@ The public endpoints return minimal data:
 ### CORS Issues (if custom domain)
 
 **Solution**: api.php already has CORS headers:
+
 ```php
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
